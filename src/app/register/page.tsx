@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useGoogleLogin } from '@react-oauth/google';
-import { Sprout, Eye, EyeOff, Loader2, Mail, Lock, User, Phone, ArrowRight, Activity, ShieldCheck, Cpu } from 'lucide-react';
+import { Sprout, Eye, EyeOff, Loader2, Mail, Lock, User, Phone, ArrowRight, Activity, ShieldCheck, Cpu, X, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Static background glowing green nodes
 const BackgroundBlurs = () => {
@@ -27,6 +27,19 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [isShake, setIsShake] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
+
+  // SMS OTP Verification States
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
+  const [otpTimer, setOtpTimer] = useState(0);
+
+  // Resend OTP countdown
+  useEffect(() => {
+    if (otpTimer > 0) {
+      const id = setInterval(() => setOtpTimer((t) => t - 1), 1000);
+      return () => clearInterval(id);
+    }
+  }, [otpTimer]);
 
   // Dynamic Password Strength Calculator
   const getPasswordStrength = (pwd: string) => {
@@ -74,12 +87,43 @@ export default function RegisterPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
+  // OTP key listeners
+  const handleOtpChange = (index: number, value: string) => {
+    if (isNaN(Number(value))) return;
+    const newDigits = [...otpDigits];
+    newDigits[index] = value.slice(-1);
+    setOtpDigits(newDigits);
+
+    if (value && index < 5) {
+      const nextInput = document.getElementById(`otp-${index + 1}`);
+      if (nextInput) (nextInput as HTMLInputElement).focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      const prevInput = document.getElementById(`otp-${index - 1}`);
+      if (prevInput) {
+        (prevInput as HTMLInputElement).focus();
+        const newDigits = [...otpDigits];
+        newDigits[index - 1] = '';
+        setOtpDigits(newDigits);
+      }
+    }
+  };
+
+  // Trigger OTP SMS Flow
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.password || !form.confirm) {
       setIsShake(true);
       setTimeout(() => setIsShake(false), 500);
       return toast.error('Please fill in all required fields');
+    }
+    if (!form.phone) {
+      setIsShake(true);
+      setTimeout(() => setIsShake(false), 500);
+      return toast.error('Phone number is required for SMS OTP verification');
     }
     if (form.password !== form.confirm) {
       setIsShake(true);
@@ -99,13 +143,58 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      await register(form.name, form.email, form.password, form.role);
-      toast.success('Account created! Welcome to AgriGrowthRate 🌱');
-      router.push('/dashboard');
-    } catch (err: unknown) {
+      // Import dynamic authService client API
+      const { authService } = await import('@/services/authService');
+      await authService.sendOtp(form.phone, form.email);
+      toast.success('Verification OTP code sent to your phone! 📱');
+      setShowOtpModal(true);
+      setOtpTimer(30);
+    } catch (err: any) {
       setIsShake(true);
       setTimeout(() => setIsShake(false), 500);
-      const msg = err instanceof Error ? err.message : 'Registration failed';
+      const msg = err.response?.data?.message || err.message || 'Failed to send verification SMS';
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Verify Code & Final Account Registration
+  const handleVerifyAndRegister = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const otpCode = otpDigits.join('');
+    if (otpCode.length < 6) {
+      return toast.error('Please enter all 6 digits of your OTP code');
+    }
+
+    setLoading(true);
+    try {
+      await register(form.name, form.email, form.password, form.role, form.phone, otpCode);
+      toast.success('Verification complete! Account created 🌱');
+      setShowOtpModal(false);
+      router.push('/dashboard');
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'OTP verification failed';
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Resend OTP
+  const handleResendOtp = async () => {
+    if (otpTimer > 0) return;
+    setLoading(true);
+    try {
+      const { authService } = await import('@/services/authService');
+      await authService.sendOtp(form.phone, form.email);
+      toast.success('New OTP verification code sent! 📱');
+      setOtpTimer(30);
+      setOtpDigits(['', '', '', '', '', '']);
+      const firstInput = document.getElementById('otp-0');
+      if (firstInput) firstInput.focus();
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'Failed to resend OTP';
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -273,7 +362,7 @@ export default function RegisterPage() {
               {/* Phone number */}
               <div>
                 <label className="text-xs font-semibold text-slate-300 block mb-1.5 uppercase tracking-wider">
-                  Phone Number <span className="text-slate-500 lowercase">(optional)</span>
+                  Phone Number <span className="text-[#22C55E] lowercase">(required for SMS OTP verification)</span>
                 </label>
                 <div className="relative group">
                   <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-[#22C55E] transition-colors" />
@@ -284,7 +373,8 @@ export default function RegisterPage() {
                     value={form.phone}
                     onChange={handleChange}
                     className="w-full pl-10 pr-4 py-2.5 bg-[#0B1F14]/60 hover:bg-[#0B1F14]/80 focus:bg-[#0F2A1A]/80 border border-[#14532D] focus:border-[#22C55E] rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-4 focus:ring-[#22C55E]/10 transition-all text-sm font-medium"
-                    placeholder="+94 77 123 4567"
+                    placeholder="94771234567"
+                    required
                   />
                 </div>
               </div>
@@ -445,6 +535,104 @@ export default function RegisterPage() {
           </div>
         </div>
       </motion.div>
+
+      {/* Floating animated OTP Verification Modal */}
+      <AnimatePresence>
+        {showOtpModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Glass overlay backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowOtpModal(false)}
+              className="absolute inset-0 bg-[#0B1F14]/80 backdrop-blur-md cursor-pointer pointer-events-auto"
+            />
+
+            {/* Modal Card */}
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              className="relative z-10 w-full max-w-md bg-[#0F2A1A]/95 border border-[#14532D] rounded-3xl p-8 shadow-2xl text-center pointer-events-auto"
+            >
+              {/* Close button */}
+              <button 
+                onClick={() => setShowOtpModal(false)}
+                className="absolute top-4 right-4 text-slate-500 hover:text-slate-200 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* Shield key lock icon */}
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#22C55E] to-[#16A34A] flex items-center justify-center mx-auto mb-5 shadow-[0_0_20px_rgba(34,197,94,0.3)]">
+                <ShieldCheck className="w-7 h-7 text-white" />
+              </div>
+
+              <h3 className="text-xl font-bold text-white mb-2">Verify Phone Number</h3>
+              <p className="text-slate-400 text-xs leading-relaxed max-w-xs mx-auto mb-6">
+                We sent a 6-digit security code to <span className="text-[#22C55E] font-semibold">{form.phone}</span>. Please enter it below.
+              </p>
+
+              {/* OTP Input Fields */}
+              <div className="flex gap-2 justify-center mb-6">
+                {otpDigits.map((digit, i) => (
+                  <input
+                    key={i}
+                    id={`otp-${i}`}
+                    type="text"
+                    pattern="[0-9]*"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleOtpChange(i, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                    className="w-11 h-11 text-center bg-[#0B1F14] border border-[#14532D] focus:border-[#22C55E] focus:ring-4 focus:ring-[#22C55E]/10 text-white rounded-xl text-lg font-bold outline-none transition-all"
+                    autoFocus={i === 0}
+                  />
+                ))}
+              </div>
+
+              {/* Resend and Actions */}
+              <div className="mb-6">
+                {otpTimer > 0 ? (
+                  <p className="text-xs text-slate-500">
+                    Resend OTP code in <span className="text-slate-300 font-semibold">{otpTimer}s</span>
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    className="text-xs text-[#22C55E] hover:text-[#86EFAC] font-bold underline decoration-[#22C55E]/30 transition-colors cursor-pointer flex items-center gap-1.5 mx-auto"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" /> Resend Verification Code
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowOtpModal(false)}
+                  className="py-2.5 bg-[#0B1F14]/60 hover:bg-[#0B1F14] border border-[#14532D]/80 rounded-xl text-xs font-bold text-slate-400 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => handleVerifyAndRegister()}
+                  className="py-2.5 bg-gradient-to-r from-[#22C55E] to-[#16A34A] hover:from-[#4ADE80] hover:to-[#22C55E] text-white font-bold rounded-xl text-xs shadow-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-60"
+                >
+                  {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Verify Code'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

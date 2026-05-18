@@ -10,6 +10,8 @@ export interface RegisterPayload {
   email: string;
   password: string;
   role?: 'farmer' | 'consumer';
+  phone?: string;
+  otp?: string;
 }
 
 export const authService = {
@@ -19,6 +21,10 @@ export const authService = {
   },
   register: async (payload: RegisterPayload) => {
     const res = await api.post('/auth/register', payload);
+    return res.data;
+  },
+  sendOtp: async (phone: string, email: string) => {
+    const res = await api.post('/auth/send-otp', { phone, email });
     return res.data;
   },
   googleLogin: async (payload: { credential?: string; accessToken?: string }) => {
