@@ -31,27 +31,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const savedToken = localStorage.getItem('agri_token');
     const savedUser = localStorage.getItem('agri_user');
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
+    
+    if (savedToken && savedToken !== 'undefined' && savedUser && savedUser !== 'undefined') {
+      try {
+        setToken(savedToken);
+        setUser(JSON.parse(savedUser));
+      } catch (error) {
+        console.error('Error parsing stored user data:', error);
+        localStorage.removeItem('agri_token');
+        localStorage.removeItem('agri_user');
+      }
+    } else if (savedToken === 'undefined' || savedUser === 'undefined') {
+      localStorage.removeItem('agri_token');
+      localStorage.removeItem('agri_user');
     }
     setLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {
-    const data = await authService.login({ email, password });
-    setToken(data.token);
-    setUser(data.user);
-    localStorage.setItem('agri_token', data.token);
-    localStorage.setItem('agri_user', JSON.stringify(data.user));
+    const response = await authService.login({ email, password });
+    const userObj = response.data;
+    const tokenStr = response.accessToken;
+
+    setToken(tokenStr);
+    setUser(userObj);
+    localStorage.setItem('agri_token', tokenStr);
+    localStorage.setItem('agri_user', JSON.stringify(userObj));
   };
 
   const register = async (name: string, email: string, password: string, role: 'farmer' | 'consumer' = 'consumer') => {
-    const data = await authService.register({ name, email, password, role });
-    setToken(data.token);
-    setUser(data.user);
-    localStorage.setItem('agri_token', data.token);
-    localStorage.setItem('agri_user', JSON.stringify(data.user));
+    const response = await authService.register({ name, email, password, role });
+    const userObj = response.data;
+    const tokenStr = response.accessToken;
+
+    setToken(tokenStr);
+    setUser(userObj);
+    localStorage.setItem('agri_token', tokenStr);
+    localStorage.setItem('agri_user', JSON.stringify(userObj));
   };
 
   const logout = () => {
