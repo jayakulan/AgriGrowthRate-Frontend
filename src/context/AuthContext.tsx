@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { authService } from '@/services/authService';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 interface User {
   _id: string;
@@ -17,6 +18,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, role?: 'farmer' | 'consumer') => Promise<void>;
+  loginWithGoogle: (credential?: string, accessToken?: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -70,6 +72,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('agri_user', JSON.stringify(userObj));
   };
 
+  const loginWithGoogle = async (credential?: string, accessToken?: string) => {
+    const response = await authService.googleLogin({ credential, accessToken });
+    const userObj = response.data;
+    const tokenStr = response.accessToken;
+
+    setToken(tokenStr);
+    setUser(userObj);
+    localStorage.setItem('agri_token', tokenStr);
+    localStorage.setItem('agri_user', JSON.stringify(userObj));
+  };
+
   const logout = () => {
     authService.logout();
     setUser(null);
@@ -77,9 +90,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, isAuthenticated: !!user }}>
-      {children}
-    </AuthContext.Provider>
+    <GoogleOAuthProvider clientId="565853486536-3uokv8na3nvksjg9o393p5uhvn9jkfes.apps.googleusercontent.com">
+      <AuthContext.Provider value={{ user, token, loading, login, register, loginWithGoogle, logout, isAuthenticated: !!user }}>
+        {children}
+      </AuthContext.Provider>
+    </GoogleOAuthProvider>
   );
 }
 

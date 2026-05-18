@@ -21,6 +21,10 @@ export const authService = {
     const res = await api.post('/auth/register', payload);
     return res.data;
   },
+  googleLogin: async (payload: { credential?: string; accessToken?: string }) => {
+    const res = await api.post('/auth/google', payload);
+    return res.data;
+  },
   logout: () => {
     localStorage.removeItem('agri_token');
     localStorage.removeItem('agri_user');
