@@ -2,14 +2,14 @@
 
 /* ── CSS custom properties ────────────────────────────────── */
 :root {
-  --green-primary: #2d6a2d;
-  --green-dark:    #1a4d1a;
-  --green-light:   #4a9e4a;
-  --bg-main:       #f4f5f0;
-  --border:        #e4e6df;
-  --text-primary:  #1a1a1a;
-  --text-secondary:#4b5563;
-  --text-muted:    #9ca3af;
+  --green-primary: #22c55e;
+  --green-dark:    #15803d;
+  --green-light:   #86efac;
+  --bg-main:       #f2faf5; /* Premium soft eco-green light backdrop */
+  --border:        #e1f2e8;
+  --text-primary:  #0b1f14; /* Deep forest green */
+  --text-secondary:#2b4737;
+  --text-muted:    #7ca18b;
 }
 
 /* ── Base resets ──────────────────────────────────────────── */
@@ -23,9 +23,9 @@ body {
 }
 
 ::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: #f4f5f0; }
-::-webkit-scrollbar-thumb { background: #c8d5c8; border-radius: 3px; }
-::selection { background: rgba(45,106,45,0.15); color: #1a4d1a; }
+::-webkit-scrollbar-track { background: var(--bg-main); }
+::-webkit-scrollbar-thumb { background: #bde0cb; border-radius: 3px; }
+::selection { background: rgba(34, 197, 94, 0.15); color: #15803d; }
 
 /* ── Keyframes ────────────────────────────────────────────── */
 @keyframes fadeInUp {
@@ -81,8 +81,8 @@ body {
     transition: border-color 0.2s, background-color 0.2s;
   }
   .btn-outline:hover {
-    border-color: #aab5aa;
-    background-color: #f0f2ec;
+    border-color: #bfeecd;
+    background-color: #eefaf2;
   }
 
   /* Feature card */
@@ -121,9 +121,9 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    background-color: #e8f4e8;
-    color: var(--green-primary);
-    border: 1px solid #c8ddc8;
+    background-color: #e2fbe9;
+    color: var(--green-dark);
+    border: 1px solid #bfeecd;
     border-radius: 999px;
     padding: 0.3rem 0.9rem;
     font-size: 0.78rem;
@@ -135,8 +135,8 @@ body {
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 8px;
-    background-color: #e8f4e8;
-    border: 1px solid #c8ddc8;
+    background-color: #e2fbe9;
+    border: 1px solid #bfeecd;
     display: flex;
     align-items: center;
     justify-content: center;

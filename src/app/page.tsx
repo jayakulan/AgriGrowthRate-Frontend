@@ -55,7 +55,7 @@ const steps = [
 
 export default function HomePage() {
   return (
-    <div className="bg-[#f4f5f0] min-h-screen">
+    <div className="bg-[var(--bg-main)] min-h-screen">
 
       {/* ── HERO ─────────────────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12 text-center">
@@ -112,10 +112,10 @@ export default function HomePage() {
             </p>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5 text-xs text-gray-600 font-medium">
-                <TrendingUp className="w-3.5 h-3.5 text-[#2d6a2d]" /> Yield Increase
+                <TrendingUp className="w-3.5 h-3.5 text-[var(--green-dark)]" /> Yield Increase
               </div>
               <div className="flex items-center gap-1.5 text-xs text-gray-600 font-medium">
-                <Globe className="w-3.5 h-3.5 text-[#2d6a2d]" /> Global Reach
+                <Globe className="w-3.5 h-3.5 text-[var(--green-dark)]" /> Global Reach
               </div>
             </div>
           </div>
@@ -139,8 +139,8 @@ export default function HomePage() {
           <div className="grid md:grid-cols-3 gap-8">
             {steps.map((s) => (
               <div key={s.title} className="flex flex-col items-center text-center">
-                <div className="w-12 h-12 rounded-full border-2 border-[#e4e6df] flex items-center justify-center mb-4 bg-[#f4f5f0]">
-                  <s.icon className="w-5 h-5 text-[#2d6a2d]" />
+                <div className="w-12 h-12 rounded-full border-2 border-[#e4e6df] flex items-center justify-center mb-4 bg-white">
+                  <s.icon className="w-5 h-5 text-[var(--green-primary)]" />
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">{s.num}. {s.title}</h3>
                 <p className="text-gray-500 text-sm leading-relaxed max-w-xs">{s.desc}</p>
@@ -155,11 +155,11 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div>
-              <div className="flex items-center gap-1.5 font-bold text-[#2d6a2d] text-base mb-1">
+              <div className="flex items-center gap-1.5 font-bold text-[var(--green-dark)] text-base mb-1">
                 <Sprout className="w-5 h-5" /> AgriGrowthRate
               </div>
               <p className="text-gray-500 text-xs">
-                © 2024 AgriGrowthRate AI Platform. Sustainable Innovation for Global Agriculture.
+                © {new Date().getFullYear()} AgriGrowthRate AI Platform. Sustainable Innovation for Global Agriculture.
               </p>
             </div>
             <div className="flex flex-wrap gap-x-6 gap-y-2">
