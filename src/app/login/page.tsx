@@ -36,9 +36,9 @@ export default function LoginPage() {
     onSuccess: async (tokenResponse) => {
       setLoading(true);
       try {
-        await loginWithGoogle(undefined, tokenResponse.access_token);
+        const loggedInUser = await loginWithGoogle(undefined, tokenResponse.access_token);
         toast.success('Welcome back!');
-        router.push('/dashboard');
+        router.push(`/dashboard/${loggedInUser.role}`);
       } catch (error) {
         toast.error('Google login failed');
       } finally {
@@ -65,13 +65,14 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      await login(email, password);
+      const loggedInUser = await login(email, password);
       toast.success('Welcome back!');
-      router.push('/dashboard');
-    } catch {
+      router.push(`/dashboard/${loggedInUser.role}`);
+    } catch (err: any) {
       setIsShake(true);
       setTimeout(() => setIsShake(false), 500);
-      toast.error('Invalid email or password');
+      const msg = err.response?.data?.message || 'Invalid email or password';
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

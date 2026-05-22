@@ -70,9 +70,9 @@ export default function RegisterPage() {
     onSuccess: async (tokenResponse) => {
       setLoading(true);
       try {
-        await loginWithGoogle(undefined, tokenResponse.access_token);
+        const loggedInUser = await loginWithGoogle(undefined, tokenResponse.access_token);
         toast.success('Registration successful! Welcome 🌱');
-        router.push('/dashboard');
+        router.push(`/dashboard/${loggedInUser.role}`);
       } catch (error) {
         toast.error('Google registration failed');
       } finally {
@@ -169,10 +169,10 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      await register(form.name, form.email, form.password, form.role, form.phone, otpCode);
+      const loggedInUser = await register(form.name, form.email, form.password, form.role, form.phone, otpCode);
       toast.success('Verification complete! Account created 🌱');
       setShowOtpModal(false);
-      router.push('/dashboard');
+      router.push(`/dashboard/${loggedInUser.role}`);
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || 'OTP verification failed';
       toast.error(msg);

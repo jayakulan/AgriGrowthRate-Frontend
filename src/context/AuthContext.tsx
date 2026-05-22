@@ -16,9 +16,9 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, role?: 'farmer' | 'consumer', phone?: string, otp?: string) => Promise<void>;
-  loginWithGoogle: (credential?: string, accessToken?: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
+  register: (name: string, email: string, password: string, role?: 'farmer' | 'consumer', phone?: string, otp?: string) => Promise<User>;
+  loginWithGoogle: (credential?: string, accessToken?: string) => Promise<User>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -59,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userObj);
     localStorage.setItem('agri_token', tokenStr);
     localStorage.setItem('agri_user', JSON.stringify(userObj));
+    return userObj;
   };
 
   const register = async (name: string, email: string, password: string, role: 'farmer' | 'consumer' = 'consumer', phone?: string, otp?: string) => {
@@ -70,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userObj);
     localStorage.setItem('agri_token', tokenStr);
     localStorage.setItem('agri_user', JSON.stringify(userObj));
+    return userObj;
   };
 
   const loginWithGoogle = async (credential?: string, accessToken?: string) => {
@@ -81,6 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userObj);
     localStorage.setItem('agri_token', tokenStr);
     localStorage.setItem('agri_user', JSON.stringify(userObj));
+    return userObj;
   };
 
   const logout = () => {
