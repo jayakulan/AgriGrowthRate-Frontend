@@ -128,7 +128,7 @@ export default function ConsumerOrdersPage() {
               </div>
 
               <div className="flex items-center gap-3 w-full sm:w-auto">
-                {order.buttons.map((btn, btnIdx) => {
+                {order.buttons.map((btn: any, btnIdx: number) => {
                   const Icon = btn.icon;
                   return (
                     <button
