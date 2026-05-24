@@ -1,90 +1,110 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
-import { Sprout, Mail } from 'lucide-react';
-import { FaXTwitter, FaGithub, FaLinkedinIn } from 'react-icons/fa6';
-
-const footerLinks = {
-  Platform: [
-    { label: 'Marketplace', href: '/marketplace' },
-    { label: 'Disease Detect', href: '/disease-detect' },
-    { label: 'AI Advisory', href: '/ai-advisory' },
-    { label: 'Dashboard', href: '/dashboard' },
-  ],
-  Company: [
-    { label: 'About Us', href: '/about' },
-    { label: 'Contact', href: '/contact' },
-    { label: 'Blog', href: '/blog' },
-    { label: 'Careers', href: '/careers' },
-  ],
-  Legal: [
-    { label: 'Privacy Policy', href: '/privacy' },
-    { label: 'Terms of Service', href: '/terms' },
-    { label: 'Cookie Policy', href: '/cookies' },
-  ],
-};
+import { FaFacebookF, FaTwitter, FaPinterestP, FaGoogle, FaVimeoV } from 'react-icons/fa';
 
 export default function Footer() {
   return (
-    <footer className="border-t border-[#1e3a1e] bg-[#0a0f0a] mt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-10">
-          {/* Brand */}
-          <div className="md:col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-green-600 to-green-400 flex items-center justify-center">
-                <Sprout className="w-5 h-5 text-white" />
-              </div>
-              <span className="font-bold text-lg text-white">
-                Agri<span className="text-green-400">GrowthRate</span>
-              </span>
+    <footer className="relative bg-[#0b1f14] text-white py-12 overflow-hidden font-sans border-t border-[#1b3f27]/30">
+      
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-[url('/gardening_shears.png')] bg-cover bg-center bg-no-repeat pointer-events-none z-0"
+      />
+      
+      {/* Rich forest-green overlay matching the uploaded reference design */}
+      <div className="absolute inset-0 bg-[#0d3319]/85 pointer-events-none z-0" />
+
+      {/* Content Wrapper */}
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
+        
+        {/* Main Footer Container */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+          
+          {/* Left: Brand Logo & Subtitle */}
+          <div className="flex flex-col items-center md:items-start text-center md:text-left">
+            <span className="font-extrabold text-white text-xl tracking-[0.12em] font-sans">
+              AGRIGROWTHRATE
+            </span>
+            <span className="text-[9px] font-bold text-[#22c55e] tracking-[0.25em] mt-1.5 uppercase">
+              Smart Agriculture
+            </span>
+          </div>
+
+          {/* Center: Navigation Links (matching updated Navbar theme) */}
+          <div className="flex flex-wrap justify-center gap-x-6 lg:gap-x-8 gap-y-2">
+            <Link href="/" className="text-[11px] font-bold text-gray-300 hover:text-[#22c55e] uppercase tracking-[0.18em] transition-colors">
+              Home
             </Link>
-            <p className="text-gray-500 text-sm leading-relaxed max-w-xs">
-              Empowering farmers with AI-powered crop disease detection, smart recommendations, and a digital marketplace.
-            </p>
-            <div className="flex gap-3 mt-5">
-              {[
-                { Icon: FaXTwitter, href: '#', id: 'footer-twitter' },
-                { Icon: FaGithub, href: '#', id: 'footer-github' },
-                { Icon: FaLinkedinIn, href: '#', id: 'footer-linkedin' },
-                { Icon: Mail, href: 'mailto:support@agrigrowthrate.com', id: 'footer-email' },
-              ].map(({ Icon, href, id }) => (
-                <a
-                  key={id}
-                  id={id}
-                  href={href}
-                  className="w-9 h-9 rounded-lg border border-green-900/30 flex items-center justify-center text-gray-500 hover:text-green-400 hover:border-green-700 transition-all"
-                >
-                  <Icon className="w-4 h-4" />
-                </a>
-              ))}
-            </div>
+            <Link href="#feature" className="text-[11px] font-bold text-gray-300 hover:text-[#22c55e] uppercase tracking-[0.18em] transition-colors">
+              Features
+            </Link>
+            <Link href="#how-it-works" className="text-[11px] font-bold text-gray-300 hover:text-[#22c55e] uppercase tracking-[0.18em] transition-colors">
+              How it Works
+            </Link>
+            <Link href="#contact" className="text-[11px] font-bold text-gray-300 hover:text-[#22c55e] uppercase tracking-[0.18em] transition-colors">
+              Contact
+            </Link>
           </div>
 
-          {/* Links */}
-          {Object.entries(footerLinks).map(([group, links]) => (
-            <div key={group}>
-              <h4 className="text-sm font-semibold text-white mb-3">{group}</h4>
-              <ul className="space-y-2">
-                {links.map((link) => (
-                  <li key={link.href}>
-                    <Link href={link.href} className="text-sm text-gray-500 hover:text-green-400 transition-colors">
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {/* Right: Circular Social Media Icons */}
+          <div className="flex items-center gap-2.5">
+            <a 
+              href="https://facebook.com" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="w-[34px] h-[34px] rounded-full bg-[#3b5998] flex items-center justify-center text-white hover:opacity-90 transition-all hover:scale-105"
+            >
+              <FaFacebookF className="w-3.5 h-3.5" />
+            </a>
+            <a 
+              href="https://twitter.com" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="w-[34px] h-[34px] rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-[#22c55e] hover:border-[#22c55e] transition-all hover:scale-105"
+            >
+              <FaTwitter className="w-3.5 h-3.5" />
+            </a>
+            <a 
+              href="https://pinterest.com" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="w-[34px] h-[34px] rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-[#22c55e] hover:border-[#22c55e] transition-all hover:scale-105"
+            >
+              <FaPinterestP className="w-3.5 h-3.5" />
+            </a>
+            <a 
+              href="https://google.com" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="w-[34px] h-[34px] rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-[#22c55e] hover:border-[#22c55e] transition-all hover:scale-105"
+            >
+              <FaGoogle className="w-3.5 h-3.5" />
+            </a>
+            <a 
+              href="https://vimeo.com" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="w-[34px] h-[34px] rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-[#22c55e] hover:border-[#22c55e] transition-all hover:scale-105"
+            >
+              <FaVimeoV className="w-3.5 h-3.5" />
+            </a>
+          </div>
+
         </div>
 
-        <div className="border-t border-[#1e3a1e] mt-10 pt-6 flex flex-col md:flex-row items-center justify-between gap-3">
-          <p className="text-gray-600 text-xs">© {new Date().getFullYear()} AgriGrowthRate. All rights reserved.</p>
-          <div className="flex items-center gap-1 text-xs text-gray-600">
-            <span className="pulse-dot w-2 h-2" />
+        {/* Small Bottom Copyright */}
+        <div className="border-t border-white/5 mt-8 pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
+          <p className="text-gray-500 text-[10px] tracking-wider">
+            © {new Date().getFullYear()} AgriGrowthRate. All rights reserved.
+          </p>
+          <p className="text-gray-500 text-[9px] tracking-widest uppercase flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e] animate-pulse" />
             All systems operational
-          </div>
+          </p>
         </div>
+
       </div>
     </footer>
   );

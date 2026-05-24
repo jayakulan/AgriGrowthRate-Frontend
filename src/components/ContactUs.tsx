@@ -1,45 +1,45 @@
 import React from 'react';
 import { Phone, MessageCircle, Mail, ChevronDown } from 'lucide-react';
-import { FaFacebook, FaInstagram, FaTwitter, FaYoutube } from 'react-icons/fa';
 
 export default function ContactUs() {
   return (
-    <section id="contact" className="py-24 bg-[#F8F9FA] relative z-10 font-sans">
+    <section id="contact" className="py-10 bg-white relative z-10 font-sans">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <h2 className="text-3xl md:text-4xl font-extrabold text-center text-[#112031] mb-12">
+        <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-center text-[#3E5C27] mb-6 tracking-tight">
           Contact Us
         </h2>
 
-        <div className="relative flex flex-col lg:flex-row items-start justify-center gap-8 lg:gap-0">
+        {/* Outer White Card Container */}
+        <div className="bg-white rounded-[32px] p-6 md:p-8 shadow-sm border border-gray-100 flex flex-col lg:flex-row items-stretch gap-8 lg:gap-12 w-full">
           
-          {/* Left Form Card */}
-          <div className="w-full lg:w-[68%] bg-white rounded-[32px] p-8 md:p-12 shadow-sm z-10">
-            <h3 className="text-2xl font-bold text-[#112031] mb-3">
+          {/* Left Form Column */}
+          <div className="w-full lg:w-[60%] flex flex-col justify-center p-2 md:p-4">
+            <h3 className="text-2xl font-bold text-[#3E5C27] mb-3">
               Send us a message
             </h3>
-            <p className="text-gray-500 text-sm mb-10 max-w-lg leading-relaxed">
-              Do you have a question? A complaint? Or need any help to choose the right product from AgriGrowthRate. Feel free to contact us
+            <p className="text-gray-500 text-sm mb-8 max-w-lg leading-relaxed">
+              Do you have a question? A complaint? Or need any help to choose the right product from AgriGrowthRate. Feel free to contact us.
             </p>
 
             <form className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* First Name */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-bold text-[#112031]">First Name</label>
+                  <label className="text-sm font-bold text-[#3E5C27]">First Name</label>
                   <input 
                     type="text" 
                     placeholder="Enter your first name" 
-                    className="w-full border border-gray-200 rounded-full px-5 py-3.5 text-sm focus:outline-none focus:border-[#112031] focus:ring-1 focus:ring-[#112031] placeholder-gray-400 transition-colors"
+                    className="w-full border border-gray-200 rounded-full px-5 py-3.5 text-sm focus:outline-none focus:border-[#4A6D2F] focus:ring-1 focus:ring-[#4A6D2F] placeholder-gray-400 transition-colors"
                   />
                 </div>
                 {/* Last Name */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-bold text-[#112031]">Last Name</label>
+                  <label className="text-sm font-bold text-[#3E5C27]">Last Name</label>
                   <input 
                     type="text" 
                     placeholder="Enter your Last name" 
-                    className="w-full border border-gray-200 rounded-full px-5 py-3.5 text-sm focus:outline-none focus:border-[#112031] focus:ring-1 focus:ring-[#112031] placeholder-gray-400 transition-colors"
+                    className="w-full border border-gray-200 rounded-full px-5 py-3.5 text-sm focus:outline-none focus:border-[#4A6D2F] focus:ring-1 focus:ring-[#4A6D2F] placeholder-gray-400 transition-colors"
                   />
                 </div>
               </div>
@@ -47,17 +47,17 @@ export default function ContactUs() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Email */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-bold text-[#112031]">Email</label>
+                  <label className="text-sm font-bold text-[#3E5C27]">Email</label>
                   <input 
                     type="email" 
                     placeholder="Enter your email" 
-                    className="w-full border border-gray-200 rounded-full px-5 py-3.5 text-sm focus:outline-none focus:border-[#112031] focus:ring-1 focus:ring-[#112031] placeholder-gray-400 transition-colors"
+                    className="w-full border border-gray-200 rounded-full px-5 py-3.5 text-sm focus:outline-none focus:border-[#4A6D2F] focus:ring-1 focus:ring-[#4A6D2F] placeholder-gray-400 transition-colors"
                   />
                 </div>
                 {/* Contact Details */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-bold text-[#112031]">Contact Details</label>
-                  <div className="flex w-full border border-gray-200 rounded-full overflow-hidden focus-within:border-[#112031] focus-within:ring-1 focus-within:ring-[#112031] transition-colors">
+                  <label className="text-sm font-bold text-[#3E5C27]">Contact Details</label>
+                  <div className="flex w-full border border-gray-200 rounded-full overflow-hidden focus-within:border-[#4A6D2F] focus-within:ring-1 focus-within:ring-[#4A6D2F] transition-colors">
                     <div className="flex items-center gap-2 bg-white px-4 border-r border-gray-200 cursor-pointer">
                       <span className="text-sm font-bold text-gray-700">+1</span>
                       <ChevronDown className="w-4 h-4 text-gray-500" />
@@ -73,31 +73,31 @@ export default function ContactUs() {
 
               {/* Message */}
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-bold text-[#112031]">Message</label>
+                <label className="text-sm font-bold text-[#3E5C27]">Message</label>
                 <textarea 
                   placeholder="Enter your message" 
                   rows={4}
-                  className="w-full border border-gray-200 rounded-[20px] px-5 py-4 text-sm focus:outline-none focus:border-[#112031] focus:ring-1 focus:ring-[#112031] placeholder-gray-400 transition-colors resize-none"
+                  className="w-full border border-gray-200 rounded-[20px] px-5 py-4 text-sm focus:outline-none focus:border-[#4A6D2F] focus:ring-1 focus:ring-[#4A6D2F] placeholder-gray-400 transition-colors resize-none"
                 ></textarea>
               </div>
 
               {/* Submit Button */}
               <div className="flex justify-end pt-2">
-                <button type="button" className="bg-[#112031] hover:bg-[#1a2f4c] text-white px-8 py-3.5 rounded-full font-semibold text-sm transition-colors shadow-md">
+                <button type="button" className="bg-[#4A6D2F] hover:bg-[#3E5C27] text-white px-8 py-3.5 rounded-full font-bold text-sm transition-all hover:scale-[1.02] shadow-md hover:shadow-lg">
                   Send a Message
                 </button>
               </div>
             </form>
           </div>
 
-          {/* Right Info Card */}
-          <div className="w-full lg:w-[32%] bg-[#112031] lg:-ml-8 lg:mt-8 rounded-[32px] p-8 md:p-10 shadow-xl z-20 flex flex-col text-white min-h-[480px]">
-            <h3 className="text-[22px] font-semibold mb-8 leading-snug">
+          {/* Right Details Column (stays completely inside the outer card container) */}
+          <div className="w-full lg:w-[40%] bg-[#3E5C27] rounded-[24px] p-8 flex flex-col text-white justify-center shadow-lg">
+            <h3 className="text-2xl font-bold mb-8 leading-snug">
               Hi! We are always here to help you.
             </h3>
 
-            <div className="flex flex-col gap-4 mb-10">
-              <div className="bg-[#304156] rounded-xl p-4 flex items-center gap-4 shadow-sm border border-white/5">
+            <div className="flex flex-col gap-5">
+              <div className="bg-white/10 rounded-xl p-4.5 flex items-center gap-4 shadow-sm border border-white/10 backdrop-blur-sm hover:bg-white/15 transition-all">
                 <Phone className="w-5 h-5 text-white/90" strokeWidth={1.5} />
                 <div>
                   <div className="text-xs text-gray-300 mb-0.5">Hotline:</div>
@@ -105,7 +105,7 @@ export default function ContactUs() {
                 </div>
               </div>
 
-              <div className="bg-[#304156] rounded-xl p-4 flex items-center gap-4 shadow-sm border border-white/5">
+              <div className="bg-white/10 rounded-xl p-4.5 flex items-center gap-4 shadow-sm border border-white/10 backdrop-blur-sm hover:bg-white/15 transition-all">
                 <MessageCircle className="w-5 h-5 text-white/90" strokeWidth={1.5} />
                 <div>
                   <div className="text-xs text-gray-300 mb-0.5">SMS / Whatsapp</div>
@@ -113,24 +113,12 @@ export default function ContactUs() {
                 </div>
               </div>
 
-              <div className="bg-[#304156] rounded-xl p-4 flex items-center gap-4 shadow-sm border border-white/5">
+              <div className="bg-white/10 rounded-xl p-4.5 flex items-center gap-4 shadow-sm border border-white/10 backdrop-blur-sm hover:bg-white/15 transition-all">
                 <Mail className="w-5 h-5 text-white/90" strokeWidth={1.5} />
                 <div>
                   <div className="text-xs text-gray-300 mb-0.5">Email:</div>
                   <div className="text-sm font-medium">support@agrigrowthrate.com</div>
                 </div>
-              </div>
-            </div>
-
-            <hr className="border-gray-600/50 mb-8" />
-
-            <div className="mt-auto">
-              <div className="text-sm font-semibold mb-5 text-white/90">Connect with us</div>
-              <div className="flex items-center gap-5">
-                <FaFacebook className="w-5 h-5 text-white/80 hover:text-white cursor-pointer transition-colors" />
-                <FaInstagram className="w-5 h-5 text-white/80 hover:text-white cursor-pointer transition-colors" />
-                <FaYoutube className="w-5 h-5 text-white/80 hover:text-white cursor-pointer transition-colors" />
-                <FaTwitter className="w-5 h-5 text-white/80 hover:text-white cursor-pointer transition-colors" />
               </div>
             </div>
           </div>
