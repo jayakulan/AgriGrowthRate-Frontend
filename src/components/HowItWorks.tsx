@@ -58,11 +58,17 @@ export default function HowItWorks() {
           {/* Left Column: Steps */}
           <div className="lg:col-span-7 relative order-2 lg:order-1">
             {/* Vertical white pill (Desktop only) */}
-            <div className="hidden md:flex flex-col items-center justify-center bg-white w-24 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.05)] z-20 absolute left-0 top-0 bottom-0 py-8">
+            <motion.div 
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+              className="hidden md:flex flex-col items-center justify-center bg-white w-24 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.05)] z-20 absolute left-0 top-0 bottom-0 py-8"
+            >
               <div className="transform -rotate-90 text-[#3e5c27] font-black tracking-[0.2em] whitespace-nowrap text-3xl h-full flex items-center justify-center">
                 HOW IT WORKS
               </div>
-            </div>
+            </motion.div>
 
             <div className="w-full md:pl-36 flex flex-col gap-5">
               {steps.map((step, index) => (

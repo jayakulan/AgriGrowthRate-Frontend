@@ -15,10 +15,10 @@ export default function Navbar() {
           </div>
 
           <div className="hidden lg:flex items-center gap-6 xl:gap-8">
-            <Link href="#home" className="text-gray-900 font-semibold text-sm hover:text-[#4A6D2F] transition-colors">Home</Link>
-            <Link href="#feature" className="text-gray-900 font-semibold text-sm hover:text-[#4A6D2F] transition-colors">Feature</Link>
-            <Link href="#howitworks" className="text-gray-900 font-semibold text-sm hover:text-[#4A6D2F] transition-colors">How it Works</Link>
-            <Link href="#contact" className="text-gray-900 font-semibold text-sm hover:text-[#4A6D2F] transition-colors">Contact us</Link>
+            <Link href="/#home" className="text-gray-900 font-semibold text-sm hover:text-[#4A6D2F] transition-colors">Home</Link>
+            <Link href="/#feature" className="text-gray-900 font-semibold text-sm hover:text-[#4A6D2F] transition-colors">Features</Link>
+            <Link href="/#how-it-works" className="text-gray-900 font-semibold text-sm hover:text-[#4A6D2F] transition-colors">How It Works</Link>
+            <Link href="/#contact" className="text-gray-900 font-semibold text-sm hover:text-[#4A6D2F] transition-colors">Contact Us</Link>
           </div>
 
           <div className="flex items-center gap-3">

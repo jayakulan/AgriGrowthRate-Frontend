@@ -147,28 +147,12 @@ export default function RegisterPage() {
   return (
     <div className="min-h-[calc(100vh-56px)] bg-[#f9f9f6] flex flex-col justify-between">
       
-      {/* Main split container */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2">
-        
-        {/* Left Side: Stunning Misty tea hills visual panel */}
-        <div className="hidden lg:block relative w-full h-full min-h-[720px]">
-          <img
-            src="https://images.unsplash.com/photo-1558224492-db89a890d5f6?auto=format&fit=crop&w=1200&q=80"
-            alt="Misty tea gardens"
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          {/* Caption Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-12">
-            <h2 className="text-3xl font-bold text-white mb-2">Cultivate the Future</h2>
-            <p className="text-gray-200 text-sm max-w-sm">
-              Experience the precision of modern stewardship in the heart of nature.
-            </p>
-          </div>
-        </div>
+      {/* Main container */}
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-12">
 
-        {/* Right Side: Account registration form card */}
-        <div className="flex items-center justify-center p-6 sm:p-12">
-          <div className="w-full max-w-[540px] bg-white border border-[#e4e6df] rounded-2xl p-8 sm:p-10 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
+        {/* Account registration form card wrapper */}
+        <div className="w-full flex justify-center max-w-[540px]">
+          <div className="w-full bg-white border border-[#e4e6df] rounded-2xl p-8 sm:p-10 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
             
             {/* Header info */}
             <div className="mb-6">
@@ -373,21 +357,7 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="border-t border-[#e4e6df] bg-[#f4f5f0] py-6">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div>
-            <h2 className="font-bold text-[#1e4d1e] text-sm mb-0.5">AgriGrowthRate</h2>
-            <p className="text-xs text-gray-400">© 2024 AgriGrowthRate. All rights reserved.</p>
-          </div>
-          <div className="flex gap-6 text-xs text-gray-500">
-            <Link href="#" className="hover:text-gray-800 transition-colors">Privacy Policy</Link>
-            <Link href="#" className="hover:text-gray-800 transition-colors">Terms of Service</Link>
-            <Link href="#" className="hover:text-gray-800 transition-colors">Security</Link>
-            <Link href="#" className="hover:text-gray-800 transition-colors">Help Center</Link>
-          </div>
-        </div>
-      </footer>
+
 
       {/* Floating animated OTP Verification Modal */}
       <AnimatePresence>

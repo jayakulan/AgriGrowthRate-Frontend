@@ -34,17 +34,17 @@ export default function Footer() {
 
           {/* Center: Navigation Links (matching updated Navbar theme) */}
           <div className="flex flex-wrap justify-center gap-x-6 lg:gap-x-8 gap-y-2">
-            <Link href="/" className="text-[11px] font-bold text-gray-300 hover:text-[#22c55e] uppercase tracking-[0.18em] transition-colors">
+            <Link href="/#home" className="text-[11px] font-bold text-gray-300 hover:text-[#22c55e] uppercase tracking-[0.18em] transition-colors">
               Home
             </Link>
-            <Link href="#feature" className="text-[11px] font-bold text-gray-300 hover:text-[#22c55e] uppercase tracking-[0.18em] transition-colors">
+            <Link href="/#feature" className="text-[11px] font-bold text-gray-300 hover:text-[#22c55e] uppercase tracking-[0.18em] transition-colors">
               Features
             </Link>
-            <Link href="#how-it-works" className="text-[11px] font-bold text-gray-300 hover:text-[#22c55e] uppercase tracking-[0.18em] transition-colors">
-              How it Works
+            <Link href="/#how-it-works" className="text-[11px] font-bold text-gray-300 hover:text-[#22c55e] uppercase tracking-[0.18em] transition-colors">
+              How It Works
             </Link>
-            <Link href="#contact" className="text-[11px] font-bold text-gray-300 hover:text-[#22c55e] uppercase tracking-[0.18em] transition-colors">
-              Contact
+            <Link href="/#contact" className="text-[11px] font-bold text-gray-300 hover:text-[#22c55e] uppercase tracking-[0.18em] transition-colors">
+              Contact Us
             </Link>
           </div>
 
