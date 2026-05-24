@@ -15,10 +15,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (loading) return;
 
     // Check localStorage as a fallback to avoid React state update race condition on login transition
-    const storedToken = typeof window !== 'undefined' ? localStorage.getItem('agri_token') : null;
     const storedUserStr = typeof window !== 'undefined' ? localStorage.getItem('agri_user') : null;
 
-    const isActuallyAuthenticated = isAuthenticated || (!!storedToken && !!storedUserStr);
+    const isActuallyAuthenticated = isAuthenticated || !!storedUserStr;
 
     if (!isActuallyAuthenticated) {
       router.replace('/login');
@@ -49,9 +48,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [user, loading, isAuthenticated, pathname, router]);
 
   // Determine actual authentication using localStorage fallback to prevent flash of loading screen
-  const storedToken = typeof window !== 'undefined' ? localStorage.getItem('agri_token') : null;
   const storedUserStr = typeof window !== 'undefined' ? localStorage.getItem('agri_user') : null;
-  const isActuallyAuthenticated = isAuthenticated || (!!storedToken && !!storedUserStr);
+  const isActuallyAuthenticated = isAuthenticated || !!storedUserStr;
 
   if (loading || !isActuallyAuthenticated) {
     return (
