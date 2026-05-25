@@ -9,7 +9,7 @@ export default function HeroSection() {
       {/* Background Image Container */}
       <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
         <img
-          src="/smart_farm_hero.png"
+          src="/backgroundfinal.jpg"
           alt="Smart farm with lush crops"
           className="absolute inset-0 w-full h-full object-cover"
         />

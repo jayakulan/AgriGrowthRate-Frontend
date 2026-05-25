@@ -30,6 +30,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const checkSession = async () => {
+      const savedUser = localStorage.getItem('agri_user');
+      if (!savedUser || savedUser === 'undefined') {
+        setLoading(false);
+        return;
+      }
+
       try {
         const response = await authService.getMe();
         if (response.success && response.data) {
