@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { authService } from '@/services/authService';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
@@ -30,25 +30,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const checkSession = async () => {
-      const savedUser = localStorage.getItem('agri_user');
-      
-      if (savedUser && savedUser !== 'undefined') {
-        try {
-          const response = await authService.getMe();
-          if (response.success && response.data) {
-            setUser(response.data);
-            localStorage.setItem('agri_user', JSON.stringify(response.data));
-          } else {
-            localStorage.removeItem('agri_user');
-            setUser(null);
-          }
-        } catch (error) {
-          console.error('Session validation failed on startup:', error);
+      try {
+        const response = await authService.getMe();
+        if (response.success && response.data) {
+          setUser(response.data);
+          localStorage.setItem('agri_user', JSON.stringify(response.data));
+        } else {
           localStorage.removeItem('agri_user');
           setUser(null);
         }
+      } catch (error) {
+        console.error('Session validation failed on startup:', error);
+        localStorage.removeItem('agri_user');
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     
     checkSession();
@@ -81,10 +78,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return userObj;
   };
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     await authService.logout();
     setUser(null);
-  };
+  }, []);
+
+  // Inactivity timeout: 30 minutes
+  useEffect(() => {
+    if (!user) return;
+
+    const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+    let lastWrite = 0;
+
+    const updateActivity = () => {
+      const now = Date.now();
+      // Throttle updates to localStorage to once every 5 seconds
+      if (now - lastWrite > 5000) {
+        localStorage.setItem('agri_last_activity', now.toString());
+        lastWrite = now;
+      }
+    };
+
+    // Initialize activity timestamp on login/mount
+    localStorage.setItem('agri_last_activity', Date.now().toString());
+
+    // Event listeners for user activity
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    events.forEach((event) => {
+      window.addEventListener(event, updateActivity);
+    });
+
+    // Periodically check if the inactivity timeout has been exceeded
+    const intervalId = setInterval(async () => {
+      const lastActivityStr = localStorage.getItem('agri_last_activity');
+      if (lastActivityStr) {
+        const lastActivity = parseInt(lastActivityStr, 10);
+        const elapsed = Date.now() - lastActivity;
+        if (elapsed >= INACTIVITY_TIMEOUT) {
+          clearInterval(intervalId);
+          await logout();
+          window.location.href = '/login?reason=timeout';
+        }
+      }
+    }, 10000); // Check every 10 seconds
+
+    return () => {
+      events.forEach((event) => {
+        window.removeEventListener(event, updateActivity);
+      });
+      clearInterval(intervalId);
+    };
+  }, [user, logout]);
 
   return (
     <GoogleOAuthProvider clientId="565853486536-3uokv8na3nvksjg9o393p5uhvn9jkfes.apps.googleusercontent.com">

@@ -6,6 +6,12 @@ const api = axios.create({
   withCredentials: true, // Send cookies with all requests
 });
 
+// A clean instance specifically for token refreshes to avoid interceptor recursion
+const refreshApi = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api',
+  withCredentials: true,
+});
+
 let isRefreshing = false;
 let failedQueue: any[] = [];
 
@@ -47,7 +53,7 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        await api.post('/auth/refresh');
+        await refreshApi.post('/auth/refresh');
         processQueue(null);
         isRefreshing = false;
         return api(originalRequest);
@@ -57,7 +63,9 @@ api.interceptors.response.use(
         
         if (typeof window !== 'undefined') {
           localStorage.removeItem('agri_user');
-          window.location.href = '/login';
+          if (window.location.pathname.startsWith('/dashboard')) {
+            window.location.href = '/login';
+          }
         }
         return Promise.reject(refreshError);
       }
