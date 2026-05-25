@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Search, Lock, User, Sprout } from 'lucide-react';
+import { Sprout } from 'lucide-react';
 
 export default function Navbar() {
   return (
@@ -15,20 +15,18 @@ export default function Navbar() {
           </div>
 
           <div className="hidden lg:flex items-center gap-6 xl:gap-8">
-            <Link href="#home" className="text-gray-900 font-semibold text-sm hover:text-[#4A6D2F] transition-colors">Home</Link>
-            <Link href="#service" className="text-gray-900 font-semibold text-sm hover:text-[#4A6D2F] transition-colors">Service</Link>
-            <Link href="#feature" className="text-gray-900 font-semibold text-sm hover:text-[#4A6D2F] transition-colors">Feature</Link>
-            <Link href="#howitworks" className="text-gray-900 font-semibold text-sm hover:text-[#4A6D2F] transition-colors">How it Works</Link>
-            <Link href="#contact" className="text-gray-900 font-semibold text-sm hover:text-[#4A6D2F] transition-colors">Contact us</Link>
+            <Link href="/#home" className="text-gray-900 font-semibold text-sm hover:text-[#4A6D2F] transition-colors">Home</Link>
+            <Link href="/#feature" className="text-gray-900 font-semibold text-sm hover:text-[#4A6D2F] transition-colors">Features</Link>
+            <Link href="/#how-it-works" className="text-gray-900 font-semibold text-sm hover:text-[#4A6D2F] transition-colors">How It Works</Link>
+            <Link href="/#contact" className="text-gray-900 font-semibold text-sm hover:text-[#4A6D2F] transition-colors">Contact Us</Link>
           </div>
 
-          <div className="flex items-center gap-4">
-            <button className="text-gray-600 hover:text-gray-900 p-2">
-              <Search className="w-5 h-5" />
-            </button>
-            <Link href="/login" className="bg-[#4A6D2F] hover:bg-[#3E5C27] text-white px-5 py-2.5 rounded-full flex items-center gap-2 text-sm font-semibold transition-colors shadow-md">
-              <User className="w-4 h-4" />
-              Sign In
+          <div className="flex items-center gap-3">
+            <Link href="/login" className="text-gray-700 hover:text-[#4A6D2F] px-4 py-2.5 text-sm font-semibold transition-colors">
+              Login
+            </Link>
+            <Link href="/register" className="bg-[#4A6D2F] hover:bg-[#3E5C27] text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors shadow-sm hover:shadow-md">
+              Register
             </Link>
           </div>
         </div>

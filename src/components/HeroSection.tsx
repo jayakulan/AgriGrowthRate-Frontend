@@ -1,10 +1,11 @@
 import React from 'react';
-import { Search, User } from 'lucide-react';
+import { Phone, MapPin, Mail, User } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 export default function HeroSection() {
   return (
-    <div className="relative w-full min-h-[600px] md:min-h-[700px] flex flex-col justify-center font-sans">
+    <div id="home" className="relative w-full min-h-[600px] md:min-h-[700px] flex flex-col justify-center font-sans">
       {/* Background Image Container */}
       <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
         <img
@@ -20,9 +21,9 @@ export default function HeroSection() {
       {/* Text Content */}
       <div className="relative z-10 w-full max-w-7xl mx-auto px-8 md:px-20 text-white pt-24 pb-32">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          initial={{ opacity: 0, x: -35 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
           {/* Floating Badge */}
           <div className="inline-flex items-center gap-2 bg-[#4A6D2F] text-white px-4 py-2 rounded-full mb-6 shadow-lg backdrop-blur-sm bg-opacity-90">
@@ -45,50 +46,41 @@ export default function HeroSection() {
         </motion.div>
       </div>
 
-      {/* Floating Search Bar */}
+      {/* Floating Contact Info Bar */}
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 45 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-        className="absolute -bottom-12 left-1/2 -translate-x-1/2 w-[90%] md:w-auto max-w-5xl bg-[#B0C49F] p-3 rounded-full flex flex-col md:flex-row items-center gap-3 shadow-[0_20px_40px_rgba(0,0,0,0.15)] z-30 border-4 border-white"
+        transition={{ type: "spring", stiffness: 90, damping: 14, delay: 0.35 }}
+        className="absolute -bottom-12 left-1/2 -translate-x-1/2 w-[95%] md:w-auto max-w-6xl bg-[#B0C49F] p-4 rounded-[2rem] md:rounded-full flex flex-col md:flex-row items-center gap-4 shadow-[0_20px_40px_rgba(0,0,0,0.15)] z-30 border-4 border-white"
       >
-        {/* Inner White Pill */}
-        <div className="bg-white rounded-full flex flex-1 w-full md:w-auto items-center px-6 py-3 md:py-4 gap-4 shadow-inner">
-          <div className="flex-1 min-w-[200px]">
-            <input
-              type="text"
-              placeholder="Search crops or products..."
-              className="w-full bg-transparent border-none outline-none text-gray-800 placeholder-gray-400 font-medium text-sm md:text-base focus:ring-0"
-            />
+        {/* Inner White Pill displaying Contact Details */}
+        <div className="bg-white rounded-2xl md:rounded-full flex flex-1 w-full md:w-auto flex-col sm:flex-row items-center px-6 md:px-8 py-4 gap-4 md:gap-6 shadow-inner text-[#3E5C27] text-xs md:text-sm font-bold whitespace-nowrap">
+          <div className="flex items-center gap-2 hover:text-[#4A6D2F] transition-colors">
+            <Phone className="w-4 h-4 text-[#4A6D2F]" />
+            <span>Phone Number: 077 334 4195</span>
           </div>
 
-          <div className="w-px h-8 bg-gray-200 hidden md:block"></div>
+          <div className="w-px h-6 bg-gray-200 hidden sm:block"></div>
 
-          <div className="flex-1 min-w-[200px] hidden md:block">
-            <input
-              type="text"
-              placeholder="Location..."
-              className="w-full bg-transparent border-none outline-none text-gray-800 placeholder-gray-400 font-medium text-base focus:ring-0"
-            />
+          <div className="flex items-center gap-2 hover:text-[#4A6D2F] transition-colors">
+            <MapPin className="w-4 h-4 text-[#4A6D2F]" />
+            <span>Address: Manipay Road, Kopay Center.</span>
           </div>
 
-          <div className="flex items-center gap-3 border-l border-gray-200 pl-4">
-            <button className="text-gray-400 hover:text-gray-700 transition-colors">
-              <User className="w-5 h-5" />
-            </button>
-            <button className="text-gray-400 hover:text-gray-700 transition-colors">
-              <Search className="w-5 h-5" />
-            </button>
-            <div className="w-6 h-6 rounded-full bg-[#4A6D2F] text-white flex items-center justify-center text-xs font-bold">
-              1
-            </div>
+          <div className="w-px h-6 bg-gray-200 hidden sm:block"></div>
+
+          <div className="flex items-center gap-2 hover:text-[#4A6D2F] transition-colors">
+            <Mail className="w-4 h-4 text-[#4A6D2F]" />
+            <span>Email: info@agrlanka.com</span>
           </div>
         </div>
 
-        {/* Action Button */}
-        <button className="w-full md:w-auto bg-[#4A6D2F] hover:bg-[#3E5C27] text-white px-8 py-3 md:py-4 rounded-full font-bold text-sm transition-all shadow-md whitespace-nowrap">
-          Search
-        </button>
+        {/* Action Button: Get Started navigating to Register */}
+        <Link href="/register" className="w-full md:w-auto">
+          <button className="w-full md:w-auto bg-[#4A6D2F] hover:bg-[#3E5C27] text-white px-8 py-3.5 md:py-4 rounded-full font-bold text-sm transition-all shadow-md whitespace-nowrap cursor-pointer">
+            Get Started
+          </button>
+        </Link>
       </motion.div>
     </div>
   );

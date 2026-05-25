@@ -14,7 +14,6 @@ export default function DashboardRedirect() {
     if (loading) return;
 
     // Check localStorage as a fallback to avoid React state race conditions during transitions
-    const storedToken = typeof window !== 'undefined' ? localStorage.getItem('agri_token') : null;
     const storedUserStr = typeof window !== 'undefined' ? localStorage.getItem('agri_user') : null;
 
     let activeUser = user;
@@ -24,7 +23,7 @@ export default function DashboardRedirect() {
       } catch (e) {}
     }
 
-    if (!activeUser || !storedToken) {
+    if (!activeUser) {
       router.replace('/login');
     } else {
       router.replace(`/dashboard/${activeUser.role}`);

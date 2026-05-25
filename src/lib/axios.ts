@@ -3,29 +3,64 @@ import axios from 'axios';
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api',
   headers: { 'Content-Type': 'application/json' },
+  withCredentials: true, // Send cookies with all requests
 });
 
-// Attach JWT token to every request
-api.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('agri_token');
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+let isRefreshing = false;
+let failedQueue: any[] = [];
 
-// Handle 401 — token expired or invalid
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+// Handle 401 — token expired or invalid, trigger silent refresh
 api.interceptors.response.use(
   (res) => res,
-  (error) => {
-    const isAuthRequest = error.config?.url?.includes('/auth/login') || 
-                          error.config?.url?.includes('/auth/register') || 
-                          error.config?.url?.includes('/auth/google');
-                          
-    if (error.response?.status === 401 && !isAuthRequest && typeof window !== 'undefined') {
-      localStorage.removeItem('agri_token');
-      localStorage.removeItem('agri_user');
-      window.location.href = '/login';
+  async (error) => {
+    const originalRequest = error.config;
+    const isAuthRequest = originalRequest?.url?.includes('/auth/login') || 
+                          originalRequest?.url?.includes('/auth/register') || 
+                          originalRequest?.url?.includes('/auth/google') ||
+                          originalRequest?.url?.includes('/auth/refresh');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRequest) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then(() => {
+            return api(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        await api.post('/auth/refresh');
+        processQueue(null);
+        isRefreshing = false;
+        return api(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        isRefreshing = false;
+        
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('agri_user');
+          window.location.href = '/login';
+        }
+        return Promise.reject(refreshError);
+      }
     }
     return Promise.reject(error);
   }

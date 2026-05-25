@@ -31,12 +31,21 @@ export const authService = {
     const res = await api.post('/auth/google', payload);
     return res.data;
   },
-  logout: () => {
-    localStorage.removeItem('agri_token');
-    localStorage.removeItem('agri_user');
+  logout: async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (err) {
+      console.error('Error logging out on backend:', err);
+    } finally {
+      localStorage.removeItem('agri_user');
+    }
   },
   getMe: async () => {
     const res = await api.get('/auth/me');
+    return res.data;
+  },
+  refresh: async () => {
+    const res = await api.post('/auth/refresh');
     return res.data;
   },
 };

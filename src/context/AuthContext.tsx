@@ -14,12 +14,11 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<User>;
   register: (name: string, email: string, password: string, role?: 'farmer' | 'consumer', phone?: string, otp?: string) => Promise<User>;
   loginWithGoogle: (credential?: string, accessToken?: string) => Promise<User>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -27,37 +26,39 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem('agri_token');
-    const savedUser = localStorage.getItem('agri_user');
-    
-    if (savedToken && savedToken !== 'undefined' && savedUser && savedUser !== 'undefined') {
-      try {
-        setToken(savedToken);
-        setUser(JSON.parse(savedUser));
-      } catch (error) {
-        console.error('Error parsing stored user data:', error);
-        localStorage.removeItem('agri_token');
-        localStorage.removeItem('agri_user');
+    const checkSession = async () => {
+      const savedUser = localStorage.getItem('agri_user');
+      
+      if (savedUser && savedUser !== 'undefined') {
+        try {
+          const response = await authService.getMe();
+          if (response.success && response.data) {
+            setUser(response.data);
+            localStorage.setItem('agri_user', JSON.stringify(response.data));
+          } else {
+            localStorage.removeItem('agri_user');
+            setUser(null);
+          }
+        } catch (error) {
+          console.error('Session validation failed on startup:', error);
+          localStorage.removeItem('agri_user');
+          setUser(null);
+        }
       }
-    } else if (savedToken === 'undefined' || savedUser === 'undefined') {
-      localStorage.removeItem('agri_token');
-      localStorage.removeItem('agri_user');
-    }
-    setLoading(false);
+      setLoading(false);
+    };
+    
+    checkSession();
   }, []);
 
   const login = async (email: string, password: string) => {
     const response = await authService.login({ email, password });
     const userObj = response.data;
-    const tokenStr = response.accessToken;
 
-    setToken(tokenStr);
     setUser(userObj);
-    localStorage.setItem('agri_token', tokenStr);
     localStorage.setItem('agri_user', JSON.stringify(userObj));
     return userObj;
   };
@@ -65,11 +66,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (name: string, email: string, password: string, role: 'farmer' | 'consumer' = 'consumer', phone?: string, otp?: string) => {
     const response = await authService.register({ name, email, password, role, phone, otp });
     const userObj = response.data;
-    const tokenStr = response.accessToken;
 
-    setToken(tokenStr);
     setUser(userObj);
-    localStorage.setItem('agri_token', tokenStr);
     localStorage.setItem('agri_user', JSON.stringify(userObj));
     return userObj;
   };
@@ -77,24 +75,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithGoogle = async (credential?: string, accessToken?: string) => {
     const response = await authService.googleLogin({ credential, accessToken });
     const userObj = response.data;
-    const tokenStr = response.accessToken;
 
-    setToken(tokenStr);
     setUser(userObj);
-    localStorage.setItem('agri_token', tokenStr);
     localStorage.setItem('agri_user', JSON.stringify(userObj));
     return userObj;
   };
 
-  const logout = () => {
-    authService.logout();
+  const logout = async () => {
+    await authService.logout();
     setUser(null);
-    setToken(null);
   };
 
   return (
     <GoogleOAuthProvider clientId="565853486536-3uokv8na3nvksjg9o393p5uhvn9jkfes.apps.googleusercontent.com">
-      <AuthContext.Provider value={{ user, token, loading, login, register, loginWithGoogle, logout, isAuthenticated: !!user }}>
+      <AuthContext.Provider value={{ user, loading, login, register, loginWithGoogle, logout, isAuthenticated: !!user }}>
         {children}
       </AuthContext.Provider>
     </GoogleOAuthProvider>
