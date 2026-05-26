@@ -44,25 +44,25 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#f9f9f6] flex flex-col justify-between font-sans overflow-x-hidden relative pt-16">
-      
+
       {/* Dynamic background lighting elements */}
       <div className="absolute top-20 left-20 w-72 h-72 rounded-full bg-[#edf4e2] filter blur-3xl opacity-60 pointer-events-none select-none" />
       <div className="absolute bottom-20 right-20 w-80 h-80 rounded-full bg-[#cde8c8]/40 filter blur-3xl opacity-50 pointer-events-none select-none" />
 
       {/* Main Centered Login Section wrapper */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-12 z-10 relative">
-        
+
         {/* ── Enlarged & Optimized Login Box Container styled in signature green ── */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="w-full max-w-5xl bg-white rounded-[32px] shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12 md:h-[580px] border border-[#e4e6df]"
+          className="w-full max-w-4xl bg-white rounded-[32px] shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12 md:h-[580px] border border-[#e4e6df]"
         >
-          
+
           {/* Left Column: Soft Sage/Forest Green Abstract Shapes & curved contour */}
-          <div className="md:col-span-5 bg-[#edf4e2] relative p-8 flex flex-col justify-between overflow-hidden rounded-r-[50px] min-h-[350px] md:min-h-auto border-r border-[#e4e6df]">
-            
+          <div className="md:col-span-6 bg-[#edf4e2] relative p-8 flex flex-col justify-between overflow-hidden rounded-r-[50px] min-h-[350px] md:min-h-auto border-r border-[#e4e6df]">
+
             {/* Background overlay noise/glow */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
 
@@ -79,44 +79,44 @@ export default function LoginPage() {
             {/* Styled CSS Abstract Art animated with Framer Motion (Scaled to fit) */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
               <div className="relative w-64 h-64 scale-95">
-                
+
                 {/* Floating golden sun sphere base */}
-                <motion.div 
+                <motion.div
                   animate={{ y: [0, -8, 0] }}
                   transition={{ repeat: Infinity, duration: 4.5, ease: 'easeInOut' }}
                   className="absolute bottom-6 left-6 w-16 h-16 rounded-full bg-gradient-to-tr from-amber-100 to-amber-200 shadow-md blur-[0.2px]"
                 />
-                
+
                 {/* Large rotating sage green arc loop */}
-                <motion.div 
+                <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ repeat: Infinity, duration: 24, ease: 'linear' }}
                   className="absolute top-6 left-4 w-28 h-28 border-[12px] border-t-[#1e4d1e]/30 border-r-[#4A6D2F]/50 border-b-transparent border-l-transparent rounded-full"
                 />
-                
+
                 {/* Solid deep forest green block */}
-                <motion.div 
+                <motion.div
                   animate={{ rotate: [-12, -7, -12], y: [0, 4, 0] }}
                   transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
                   className="absolute top-1/3 right-8 w-24 h-12 bg-[#1e4d1e]/20 rounded-xl shadow-md"
                 />
 
                 {/* Cylindrical soft rod in green gradient */}
-                <motion.div 
+                <motion.div
                   animate={{ y: [0, 6, 0] }}
                   transition={{ repeat: Infinity, duration: 3.8, ease: 'easeInOut' }}
                   className="absolute bottom-12 left-10 w-32 h-6 bg-gradient-to-r from-green-50 to-[#cde8c8] rounded-full shadow-sm"
                 />
 
                 {/* Soft pink accessory orb */}
-                <motion.div 
+                <motion.div
                   animate={{ scale: [1, 1.05, 1] }}
                   transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
                   className="absolute top-1/2 left-8 w-10 h-10 rounded-full bg-gradient-to-br from-pink-50 to-pink-100/90 shadow-md"
                 />
 
                 {/* Translucent glassmorphism card overlay */}
-                <motion.div 
+                <motion.div
                   animate={{ x: [0, 4, 0], y: [0, -4, 0] }}
                   transition={{ repeat: Infinity, duration: 5.5, ease: 'easeInOut' }}
                   className="absolute top-10 left-16 w-20 h-20 bg-white/20 backdrop-blur-md rounded-2xl border border-white/40 transform rotate-12 shadow-lg"
@@ -131,7 +131,7 @@ export default function LoginPage() {
                 href="/"
                 className="inline-flex items-center gap-2 bg-[#cde8c8]/80 hover:bg-[#b8dcb2] text-[#1e4d1e] px-5 py-2.5 rounded-full text-xs font-bold transition-all shadow-sm"
               >
-                <span>Visit site</span>
+                <span>Back to Home</span>
                 <ArrowUpRight className="w-3.5 h-3.5" />
               </a>
             </div>
@@ -139,10 +139,10 @@ export default function LoginPage() {
           </div>
 
           {/* Right Column: Clean White Sign In Area (Enlarged) */}
-          <div className="md:col-span-7 bg-white p-8 sm:p-12 md:p-14 flex flex-col justify-center">
-            
-            <div className="max-w-md w-full mx-auto space-y-7">
-              
+          <div className="md:col-span-6 bg-white p-8 sm:p-12 md:p-14 flex flex-col justify-center">
+
+            <div className="max-w-sm w-full mx-auto space-y-7">
+
               {/* Header Title */}
               <div className="text-center md:text-left">
                 <h1 className="text-2xl font-extrabold text-[#1e4d1e] tracking-tight">
@@ -155,7 +155,7 @@ export default function LoginPage() {
 
               {/* Login form */}
               <form onSubmit={handleSubmit} className="space-y-4">
-                
+
                 {/* Email bottom-only line */}
                 <div className="text-left">
                   <input
@@ -219,10 +219,10 @@ export default function LoginPage() {
                 className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 bg-white border border-[#e4e6df] hover:border-gray-300 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm cursor-pointer"
               >
                 <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                 </svg>
                 <span>Sign in with Google</span>
               </button>

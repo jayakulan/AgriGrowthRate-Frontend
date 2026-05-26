@@ -167,13 +167,13 @@ export default function RegisterPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.65, ease: 'easeOut' }}
-          className="w-full max-w-5xl bg-white rounded-[32px] shadow-[0_20px_60px_rgba(30,77,30,0.06)] overflow-hidden grid grid-cols-1 md:grid-cols-12 md:h-[700px] border border-[#e4e6df] relative z-10"
+          className="w-full max-w-4xl bg-white rounded-[32px] shadow-[0_20px_60px_rgba(30,77,30,0.06)] overflow-hidden grid grid-cols-1 md:grid-cols-12 md:h-[700px] border border-[#e4e6df] relative z-10"
         >
           
-          {/* Swapped Layout - Left Column: Clean White Register Form Area (col-span-7) */}
-          <div className="md:col-span-7 bg-white p-8 sm:p-10 md:py-8 md:px-14 flex flex-col justify-center order-2 md:order-1">
+          {/* Swapped Layout - Left Column: Clean White Register Form Area (col-span-6) */}
+          <div className="md:col-span-6 bg-white p-8 sm:p-10 md:py-8 md:px-14 flex flex-col justify-center order-2 md:order-1">
             
-            <div className="max-w-lg w-full mx-auto space-y-6">
+            <div className="max-w-md w-full mx-auto space-y-6">
               
               {/* Header Title styled cleanly in Forest Green with Sparkles badge */}
               <div className="text-left space-y-1">
@@ -302,8 +302,8 @@ export default function RegisterPage() {
                       transition={{ duration: 0.3, ease: 'easeInOut' }}
                       className="overflow-hidden"
                     >
-                      <div className="relative group border-t border-[#f4f5f0] pt-4">
-                        <CreditCard className="absolute left-1 top-[26px] w-4 h-4 text-gray-400 group-focus-within:text-[#1e4d1e] transition-colors" />
+                      <div className="relative group">
+                        <CreditCard className="absolute left-1 top-2.5 w-4 h-4 text-gray-400 group-focus-within:text-[#1e4d1e] transition-colors" />
                         <input
                           name="farmerCardNo"
                           type="text"
@@ -384,8 +384,8 @@ export default function RegisterPage() {
 
           </div>
 
-          {/* Swapped Layout - Right Column: Soft Sage/Forest Green curved contour (col-span-5) */}
-          <div className="md:col-span-5 bg-[#edf4e2] relative p-8 flex flex-col justify-between overflow-hidden rounded-l-[50px] min-h-[350px] md:min-h-auto order-1 md:order-2 border-l border-[#e4e6df]">
+          {/* Swapped Layout - Right Column: Soft Sage/Forest Green curved contour (col-span-6) */}
+          <div className="md:col-span-6 bg-[#edf4e2] relative p-8 flex flex-col justify-between overflow-hidden rounded-l-[50px] min-h-[350px] md:min-h-auto order-1 md:order-2 border-l border-[#e4e6df]">
             
             {/* Background overlay noise/glow */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
