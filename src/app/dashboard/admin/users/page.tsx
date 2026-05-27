@@ -39,7 +39,7 @@ const ManageUsers = () => {
       if (roleFilter) params.role = roleFilter;
       if (statusFilter) params.status = statusFilter;
 
-      const response = await axios.get('http://localhost:5000/api/admin/users', {
+      const response = await axios.get('http://localhost:5001/api/admin/users', {
         headers: { Authorization: `Bearer ${token}` },
         params,
       });
@@ -56,7 +56,7 @@ const ManageUsers = () => {
     try {
       const token = localStorage.getItem('token');
       await axios.patch(
-        `http://localhost:5000/api/admin/users/${userId}/role`,
+        `http://localhost:5001/api/admin/users/${userId}/role`,
         { role: newRole },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -73,7 +73,7 @@ const ManageUsers = () => {
     try {
       const token = localStorage.getItem('token');
       await axios.patch(
-        `http://localhost:5000/api/admin/users/${userId}/status`,
+        `http://localhost:5001/api/admin/users/${userId}/status`,
         { isVerified: !currentStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -89,7 +89,7 @@ const ManageUsers = () => {
     if (!confirm('Are you sure you want to delete this user?')) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/admin/users/${userId}`, {
+      await axios.delete(`http://localhost:5001/api/admin/users/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success('User deleted');

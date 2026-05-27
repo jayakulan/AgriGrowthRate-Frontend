@@ -42,7 +42,7 @@ const AdminProfile = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/admin/profile', {
+      const response = await axios.get('http://localhost:5001/api/admin/profile', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setProfile(response.data.data);
@@ -62,7 +62,7 @@ const AdminProfile = () => {
   const handleUpdateProfile = async () => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put('http://localhost:5000/api/admin/profile', formData, {
+      await axios.put('http://localhost:5001/api/admin/profile', formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success('Profile updated successfully');

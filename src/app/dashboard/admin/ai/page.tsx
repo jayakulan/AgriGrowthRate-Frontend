@@ -24,7 +24,7 @@ const AIManagement = () => {
     const fetchAIData = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:5000/api/admin/ai-management', {
+        const response = await axios.get('http://localhost:5001/api/admin/ai-management', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setData(response.data.data);
@@ -81,150 +81,129 @@ const AIManagement = () => {
 
   return (
     <AdminLayout>
-      <div className="p-8 bg-gray-50 min-h-screen">
+      <div className="p-8 bg-white min-h-screen">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-start justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">AI Management</h1>
-            <p className="text-gray-600 mt-2">Monitor and optimize AgriGrowth AI Advisor performance.</p>
+            <h1 className="text-3xl font-bold text-[#1e4d1e]">AI Management</h1>
+            <p className="text-gray-600 mt-1 text-sm">Refine the cognitive core of your agricultural enterprise. Control datasets, monitor real-time sentiment, and balance operational precision.</p>
           </div>
-          <button className="flex items-center space-x-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-            <Settings size={20} />
-            <span>AI Settings</span>
-          </button>
+          <div className="flex items-center space-x-2">
+            <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition">
+              Export Report
+            </button>
+            <button className="px-4 py-2 bg-[#1e4d1e] text-white rounded-lg text-sm font-medium hover:bg-[#163d16] transition">
+              Force Retrain
+            </button>
+          </div>
         </div>
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard
-            icon={Zap}
-            label="Total Queries"
-            value={data?.totalQueries || 0}
-            change="↑ 23.5%"
-            color="bg-blue-500"
-          />
-          <StatCard
-            icon={TrendingUp}
-            label="Avg Response Time"
-            value={`${data?.avgResponseTime || 0}ms`}
-            change="↓ 12ms"
-            color="bg-green-500"
-          />
-          <StatCard
-            icon={Smile}
-            label="Positive Feedback"
-            value={data?.positiveReactions || 0}
-            color="bg-green-600"
-          />
-          <StatCard
-            icon={Frown}
-            label="Negative Feedback"
-            value={data?.negativeReactions || 0}
-            color="bg-red-500"
-          />
+        {/* KPI Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+            <p className="text-gray-600 text-xs font-semibold uppercase tracking-wide mb-1">Total Queries</p>
+            <p className="text-2xl font-bold text-gray-900 mb-3">{data?.totalQueries || 0}</p>
+            <span className="text-xs font-bold text-green-600">↑ 23.5%</span>
+          </div>
+          <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+            <p className="text-gray-600 text-xs font-semibold uppercase tracking-wide mb-1">Avg Response Time</p>
+            <p className="text-2xl font-bold text-gray-900 mb-3">{data?.avgResponseTime || 0}ms</p>
+            <span className="text-xs font-bold text-green-600">↓ 12ms</span>
+          </div>
+          <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+            <p className="text-gray-600 text-xs font-semibold uppercase tracking-wide mb-1">Positive Reactions</p>
+            <p className="text-2xl font-bold text-green-600">{data?.positiveReactions || 0}</p>
+          </div>
+          <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+            <p className="text-gray-600 text-xs font-semibold uppercase tracking-wide mb-1">Negative Reactions</p>
+            <p className="text-2xl font-bold text-red-600">{data?.negativeReactions || 0}</p>
+          </div>
         </div>
 
-        {/* Sentiment Analysis & Performance */}
+        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Sentiment Pie Chart */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-            <h2 className="text-lg font-bold text-gray-900 mb-6">Query Sentiment Distribution</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={sentimentData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={(entry) => `${entry.name}: ${entry.value}`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {sentimentData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* AI Performance Over Time */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-            <h2 className="text-lg font-bold text-gray-900 mb-6">AI Accuracy Over Time</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={performanceData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="time" />
-                <YAxis domain={[90, 100]} />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="accuracy" stroke="#16a34a" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Knowledge Base & Model Settings */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Knowledge Base */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+          {/* Knowledge Base Management */}
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <h2 className="text-lg font-bold text-gray-900 mb-6">Knowledge Base Management</h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-semibold text-gray-900">Soil Composition Database</p>
-                  <p className="text-sm text-gray-600">42.5 GB | Last updated 2h ago</p>
-                </div>
-                <button className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600 transition">
-                  Update
-                </button>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-semibold text-gray-900">Crop Disease Atlas</p>
-                  <p className="text-sm text-gray-600">12 TB | Last updated 1d ago</p>
-                </div>
-                <button className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600 transition">
-                  Update
-                </button>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-semibold text-gray-900">Weather & Climate Data</p>
-                  <p className="text-sm text-gray-600">8.7 TB | Streaming</p>
-                </div>
-                <button className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition">
-                  Sync
-                </button>
-              </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="border-b border-gray-200">
+                  <tr>
+                    <th className="text-left py-2 px-2 font-semibold text-gray-900">Dataset Name</th>
+                    <th className="text-left py-2 px-2 font-semibold text-gray-900">Size</th>
+                    <th className="text-left py-2 px-2 font-semibold text-gray-900">Last Sync</th>
+                    <th className="text-left py-2 px-2 font-semibold text-gray-900">Status</th>
+                    <th className="text-left py-2 px-2 font-semibold text-gray-900">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  <tr>
+                    <td className="py-3 px-2 font-medium text-gray-900">Soil Composition Metrics 2024</td>
+                    <td className="py-3 px-2 text-gray-600">42.5 GB</td>
+                    <td className="py-3 px-2 text-gray-600">2h ago</td>
+                    <td className="py-3 px-2"><span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">Trained</span></td>
+                    <td className="py-3 px-2"><button className="text-blue-600 hover:text-blue-700 text-xs font-semibold">Edit</button></td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 px-2 font-medium text-gray-900">Satellite Multi-Spectral Imagery</td>
+                    <td className="py-3 px-2 text-gray-600">12 TB</td>
+                    <td className="py-3 px-2 text-gray-600">14m ago</td>
+                    <td className="py-3 px-2"><div className="w-12 h-1 bg-gray-300 rounded"><div className="h-full w-4/5 bg-blue-500 rounded"></div></div></td>
+                    <td className="py-3 px-2"><button className="text-gray-600 hover:text-gray-700 text-xs font-semibold">Config</button></td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 px-2 font-medium text-gray-900">Historical Crop Yields (10yr)</td>
+                    <td className="py-3 px-2 text-gray-600">860 MB</td>
+                    <td className="py-3 px-2 text-gray-600">Oct 12, 2023</td>
+                    <td className="py-3 px-2"><span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">Trained</span></td>
+                    <td className="py-3 px-2"><button className="text-blue-600 hover:text-blue-700 text-xs font-semibold">Edit</button></td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 px-2 font-medium text-gray-900">Real-time IoT Sensor Stream</td>
+                    <td className="py-3 px-2 text-gray-600">Streaming</td>
+                    <td className="py-3 px-2 text-green-600 font-semibold">Live</td>
+                    <td className="py-3 px-2"><span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-semibold">Syncing</span></td>
+                    <td className="py-3 px-2"><button className="text-gray-600 hover:text-gray-700 text-xs font-semibold">Config</button></td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
+            <button className="w-full mt-4 py-2 border border-dashed border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition text-sm font-medium">
+              + Add New Data Source
+            </button>
           </div>
 
           {/* Model Settings */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <h2 className="text-lg font-bold text-gray-900 mb-6">Model Settings</h2>
             <div className="space-y-4">
-              <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex items-center justify-between mb-2">
                   <p className="font-semibold text-gray-900">Model Version</p>
-                  <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">v2.4</span>
+                  <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded font-semibold">v2.4</span>
                 </div>
                 <p className="text-sm text-gray-600">Latest production model</p>
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="font-semibold text-gray-900">Optimization Priority</p>
+                  <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded font-semibold">Precision</span>
+                </div>
+                <p className="text-sm text-gray-600">Precision mode increases hallucination checks and cross-references multi-spectral data before responding.</p>
+              </div>
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex items-center justify-between mb-2">
                   <p className="font-semibold text-gray-900">Inference Engine</p>
-                  <span className="text-sm text-gray-600">GPU - RTX A6000</span>
+                  <span className="text-xs text-gray-600 font-medium">GPU - RTX A6000</span>
                 </div>
                 <p className="text-sm text-gray-600">Optimized for low latency</p>
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex items-center justify-between mb-2">
                   <p className="font-semibold text-gray-900">Training Mode</p>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" className="sr-only peer" defaultChecked />
-                    <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                    <div className="w-9 h-5 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#1e4d1e] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#1e4d1e]"></div>
                   </label>
                 </div>
                 <p className="text-sm text-gray-600">Continuous learning enabled</p>
@@ -233,16 +212,45 @@ const AIManagement = () => {
           </div>
         </div>
 
-        {/* Recent AI Activity */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-          <h2 className="text-lg font-bold text-gray-900 mb-6">Recent AI Activity Logs</h2>
+        {/* AI Activity Logs & Sentiment */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-bold text-gray-900">AI Activity Logs & Sentiment</h2>
+            <button className="text-xs text-gray-600 hover:text-gray-900">Last 24 Hours</button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <p className="text-2xl font-bold text-gray-900">14,282</p>
+              <p className="text-xs text-gray-600 mt-1">Total Queries</p>
+              <p className="text-xs text-green-600 font-semibold mt-1">+2% ↑</p>
+            </div>
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <p className="text-2xl font-bold text-green-600">88%</p>
+              <p className="text-xs text-gray-600 mt-1">Positive Sentiment</p>
+              <p className="text-xs text-gray-600 mt-1">Optimistic</p>
+            </div>
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <p className="text-2xl font-bold text-gray-900">420ms</p>
+              <p className="text-xs text-gray-600 mt-1">Processing Category</p>
+              <p className="text-xs text-green-600 font-semibold mt-1">Optimal</p>
+            </div>
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <p className="text-2xl font-bold text-green-600">0.02%</p>
+              <p className="text-xs text-gray-600 mt-1">Hallucination Rate</p>
+              <p className="text-xs text-green-600 font-semibold mt-1">Safe</p>
+            </div>
+          </div>
+
           <div className="space-y-3 max-h-80 overflow-y-auto">
-            {(data?.recentActivity || []).slice(0, 10).map((activity, idx) => (
-              <div key={idx} className="flex items-start space-x-4 pb-3 border-b border-gray-200">
-                <div className="w-2 h-2 mt-2 rounded-full bg-green-500 flex-shrink-0"></div>
+            {(data?.recentActivity || []).slice(0, 5).map((activity, idx) => (
+              <div key={idx} className="flex items-start space-x-4 p-3 bg-gray-50 rounded-lg border-l-2 border-blue-500">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <span className="text-sm font-bold text-blue-600">Q</span>
+                </div>
                 <div className="flex-1">
-                  <p className="text-gray-900 font-medium text-sm">{activity.query?.substring(0, 100)}</p>
-                  <p className="text-gray-600 text-xs mt-1">Response confidence: 94% | {new Date(activity.createdAt).toLocaleTimeString()}</p>
+                  <p className="text-sm font-medium text-gray-900">{activity.query?.substring(0, 80)}...</p>
+                  <p className="text-xs text-gray-600 mt-1">Response Accuracy: 98% | {new Date(activity.createdAt).toLocaleTimeString()}</p>
                 </div>
               </div>
             ))}

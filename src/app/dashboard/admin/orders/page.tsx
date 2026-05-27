@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import axios from 'axios';
-import { Search, ChevronDown, Eye } from 'lucide-react';
+import { Search, ChevronDown, Eye, ShoppingCart, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Order {
@@ -35,7 +35,7 @@ const OrdersMonitoring = () => {
       const params: any = { page: currentPage, limit };
       if (statusFilter) params.status = statusFilter;
 
-      const response = await axios.get('http://localhost:5000/api/admin/orders', {
+      const response = await axios.get('http://localhost:5001/api/admin/orders', {
         headers: { Authorization: `Bearer ${token}` },
         params,
       });
@@ -52,7 +52,7 @@ const OrdersMonitoring = () => {
     try {
       const token = localStorage.getItem('token');
       await axios.patch(
-        `http://localhost:5000/api/admin/orders/${orderId}/status`,
+        `http://localhost:5001/api/admin/orders/${orderId}/status`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -89,34 +89,61 @@ const OrdersMonitoring = () => {
 
   return (
     <AdminLayout>
-      <div className="p-8 bg-gray-50 min-h-screen">
+      <div className="p-8 bg-white min-h-screen">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Orders Monitoring</h1>
-          <p className="text-gray-600 mt-2">Real-time oversight of agricultural transactions across the platform.</p>
+          <h1 className="text-3xl font-bold text-[#1e4d1e]">Live Orders Monitoring</h1>
+          <p className="text-gray-600 mt-1 text-sm">Real-time oversight of all agricultural transactions across the platform. High-density data for precise stewardship.</p>
         </div>
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-            <p className="text-gray-600 text-sm mb-2">Total Orders</p>
-            <p className="text-3xl font-bold text-gray-900">1,284</p>
-            <p className="text-green-600 text-sm mt-2">↑ 12% vs last month</p>
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-start justify-between mb-2">
+              <div>
+                <p className="text-gray-600 text-xs font-semibold uppercase tracking-wide mb-1">Total Orders Today</p>
+                <p className="text-2xl font-bold text-gray-900">1,284</p>
+              </div>
+              <span className="text-xs font-bold text-green-600">+12%</span>
+            </div>
+            <div className="p-3 rounded-full w-fit bg-emerald-500">
+              <ShoppingCart className="text-white" size={20} />
+            </div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-            <p className="text-gray-600 text-sm mb-2">Daily Revenue</p>
-            <p className="text-3xl font-bold text-gray-900">$42,930</p>
-            <p className="text-green-600 text-sm mt-2">↑ 5.4% vs yesterday</p>
+          <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-start justify-between mb-2">
+              <div>
+                <p className="text-gray-600 text-xs font-semibold uppercase tracking-wide mb-1">Daily Revenue</p>
+                <p className="text-2xl font-bold text-gray-900">$42,930</p>
+              </div>
+              <span className="text-xs font-bold text-green-600">+5.4%</span>
+            </div>
+            <div className="p-3 rounded-full w-fit bg-blue-500">
+              <Eye className="text-white" size={20} />
+            </div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-            <p className="text-gray-600 text-sm mb-2">Pending Orders</p>
-            <p className="text-3xl font-bold text-yellow-600">312</p>
-            <p className="text-yellow-600 text-sm mt-2">Need attention</p>
+          <div className="bg-white p-5 rounded-lg shadow-sm border border-yellow-200 border-l-4 border-l-yellow-500">
+            <div className="flex items-start justify-between mb-2">
+              <div>
+                <p className="text-gray-600 text-xs font-semibold uppercase tracking-wide mb-1">Pending Orders</p>
+                <p className="text-2xl font-bold text-yellow-600">312</p>
+              </div>
+            </div>
+            <div className="p-3 rounded-full w-fit bg-yellow-500">
+              <AlertCircle className="text-white" size={20} />
+            </div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-            <p className="text-gray-600 text-sm mb-2">Cancelled Orders</p>
-            <p className="text-3xl font-bold text-red-600">14</p>
-            <p className="text-red-600 text-sm mt-2">-2% vs last month</p>
+          <div className="bg-white p-5 rounded-lg shadow-sm border border-red-200">
+            <div className="flex items-start justify-between mb-2">
+              <div>
+                <p className="text-gray-600 text-xs font-semibold uppercase tracking-wide mb-1">Failed/Cancelled</p>
+                <p className="text-2xl font-bold text-red-600">14</p>
+              </div>
+              <span className="text-xs font-bold text-red-600">-2%</span>
+            </div>
+            <div className="p-3 rounded-full w-fit bg-red-500">
+              <ShoppingCart className="text-white" size={20} />
+            </div>
           </div>
         </div>
 
