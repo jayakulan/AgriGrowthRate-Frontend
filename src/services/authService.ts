@@ -17,10 +17,18 @@ export interface RegisterPayload {
 export const authService = {
   login: async (payload: LoginPayload) => {
     const res = await api.post('/auth/login', payload);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('token', res.data.accessToken);
+      localStorage.setItem('refreshToken', res.data.refreshToken);
+    }
     return res.data;
   },
   register: async (payload: RegisterPayload) => {
     const res = await api.post('/auth/register', payload);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('token', res.data.accessToken);
+      localStorage.setItem('refreshToken', res.data.refreshToken);
+    }
     return res.data;
   },
   sendOtp: async (phone: string, email: string) => {
@@ -29,6 +37,10 @@ export const authService = {
   },
   googleLogin: async (payload: { credential?: string; accessToken?: string }) => {
     const res = await api.post('/auth/google', payload);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('token', res.data.accessToken);
+      localStorage.setItem('refreshToken', res.data.refreshToken);
+    }
     return res.data;
   },
   logout: async () => {
@@ -38,6 +50,8 @@ export const authService = {
       console.error('Error logging out on backend:', err);
     } finally {
       localStorage.removeItem('agri_user');
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
     }
   },
   getMe: async () => {

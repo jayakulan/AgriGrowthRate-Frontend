@@ -33,7 +33,13 @@ export default function LoginPage() {
     try {
       const loggedInUser = await login(email, password);
       toast.success('Welcome back!');
-      router.push(`/dashboard/${loggedInUser.role}`);
+      
+      // Route to appropriate dashboard based on role
+      if (loggedInUser.role === 'admin') {
+        router.push('/dashboard/admin');
+      } else {
+        router.push(`/dashboard/${loggedInUser.role}`);
+      }
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Invalid email or password';
       toast.error(msg);
