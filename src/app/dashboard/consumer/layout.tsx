@@ -14,6 +14,7 @@ import {
   Search,
   Bell,
   Settings,
+  LogOut,
 } from 'lucide-react';
 
 const menuItems = [
@@ -27,7 +28,7 @@ const menuItems = [
 
 export default function ConsumerLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [cartCount] = useState(3);
 
   const isActive = (href: string) => {
@@ -76,15 +77,25 @@ export default function ConsumerLayout({ children }: { children: React.ReactNode
             </nav>
           </div>
 
-          {/* Bottom: User Profile Card */}
-          <div className="mt-8 flex items-center gap-3 p-3 bg-[#1e4d1e] rounded-xl">
-            <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center text-white">
-              <UserIcon className="w-5 h-5" />
+          {/* Bottom: User Profile Card & Logout Stack */}
+          <div className="mt-8 space-y-3">
+            <div className="flex items-center gap-3 p-3 bg-[#1e4d1e] rounded-xl">
+              <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center text-white">
+                <UserIcon className="w-5 h-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h4 className="text-[12px] font-bold text-white leading-tight truncate">{user?.name || 'Consumer'}</h4>
+                <p className="text-[10px] text-white/60 font-medium">Premium Buyer</p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <h4 className="text-[12px] font-bold text-white leading-tight truncate">{user?.name || 'Consumer'}</h4>
-              <p className="text-[10px] text-white/60 font-medium">Premium Buyer</p>
-            </div>
+            
+            <button
+              onClick={logout}
+              className="w-full flex items-center justify-center gap-2 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/50 font-bold rounded-xl transition-colors text-[12px] cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Logout</span>
+            </button>
           </div>
         </aside>
 

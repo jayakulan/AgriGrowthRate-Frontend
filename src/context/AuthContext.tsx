@@ -10,6 +10,8 @@ interface User {
   email: string;
   role: 'farmer' | 'consumer' | 'admin';
   avatar?: string;
+  phone?: string;
+  address?: string;
 }
 
 interface AuthContextType {
