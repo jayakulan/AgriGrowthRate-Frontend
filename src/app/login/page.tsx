@@ -33,7 +33,7 @@ export default function LoginPage() {
     try {
       const loggedInUser = await login(email, password);
       toast.success('Welcome back!');
-      
+
       // Route to appropriate dashboard based on role
       if (loggedInUser.role === 'admin') {
         router.push('/dashboard/admin');
@@ -66,73 +66,23 @@ export default function LoginPage() {
           className="w-full max-w-4xl bg-white rounded-[32px] shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12 md:h-[580px] border border-[#e4e6df]"
         >
 
-          {/* Left Column: Soft Sage/Forest Green Abstract Shapes & curved contour */}
-          <div className="md:col-span-6 bg-[#edf4e2] relative p-8 flex flex-col justify-between overflow-hidden rounded-r-[50px] min-h-[350px] md:min-h-auto border-r border-[#e4e6df]">
+          {/* Left Column: Image Background (col-span-6) */}
+          <div className="md:col-span-6 relative p-8 flex flex-col justify-between overflow-hidden rounded-r-[50px] min-h-[350px] md:min-h-auto border-r border-[#e4e6df]">
 
-            {/* Background overlay noise/glow */}
-            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-
-            {/* Top text */}
-            <div className="relative z-10 space-y-1">
-              <h2 className="text-xl font-bold text-[#1e4d1e] tracking-tight leading-snug">
-                AgriGrowthRate
-              </h2>
-              <p className="text-xs text-[#4A6D2F] font-semibold">
-                Modern Agricultural Stewardship.
-              </p>
+            {/* Background Image with Transparency */}
+            <div className="absolute inset-0 z-0">
+              <img
+                src="/login.jpg"
+                alt="Agriculture background"
+                className="w-full h-full object-cover opacity-80"
+              />
+              <div className="absolute inset-0 bg-[#1e4d1e]/30 mix-blend-multiply" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#1e4d1e]/90 via-[#1e4d1e]/10 to-transparent" />
             </div>
 
-            {/* Styled CSS Abstract Art animated with Framer Motion (Scaled to fit) */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-              <div className="relative w-64 h-64 scale-95">
 
-                {/* Floating golden sun sphere base */}
-                <motion.div
-                  animate={{ y: [0, -8, 0] }}
-                  transition={{ repeat: Infinity, duration: 4.5, ease: 'easeInOut' }}
-                  className="absolute bottom-6 left-6 w-16 h-16 rounded-full bg-gradient-to-tr from-amber-100 to-amber-200 shadow-md blur-[0.2px]"
-                />
-
-                {/* Large rotating sage green arc loop */}
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 24, ease: 'linear' }}
-                  className="absolute top-6 left-4 w-28 h-28 border-[12px] border-t-[#1e4d1e]/30 border-r-[#4A6D2F]/50 border-b-transparent border-l-transparent rounded-full"
-                />
-
-                {/* Solid deep forest green block */}
-                <motion.div
-                  animate={{ rotate: [-12, -7, -12], y: [0, 4, 0] }}
-                  transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
-                  className="absolute top-1/3 right-8 w-24 h-12 bg-[#1e4d1e]/20 rounded-xl shadow-md"
-                />
-
-                {/* Cylindrical soft rod in green gradient */}
-                <motion.div
-                  animate={{ y: [0, 6, 0] }}
-                  transition={{ repeat: Infinity, duration: 3.8, ease: 'easeInOut' }}
-                  className="absolute bottom-12 left-10 w-32 h-6 bg-gradient-to-r from-green-50 to-[#cde8c8] rounded-full shadow-sm"
-                />
-
-                {/* Soft pink accessory orb */}
-                <motion.div
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
-                  className="absolute top-1/2 left-8 w-10 h-10 rounded-full bg-gradient-to-br from-pink-50 to-pink-100/90 shadow-md"
-                />
-
-                {/* Translucent glassmorphism card overlay */}
-                <motion.div
-                  animate={{ x: [0, 4, 0], y: [0, -4, 0] }}
-                  transition={{ repeat: Infinity, duration: 5.5, ease: 'easeInOut' }}
-                  className="absolute top-10 left-16 w-20 h-20 bg-white/20 backdrop-blur-md rounded-2xl border border-white/40 transform rotate-12 shadow-lg"
-                />
-
-              </div>
-            </div>
-
-            {/* Bottom "Visit site" pill action in theme green */}
-            <div className="relative z-10 self-start">
+            {/* Bottom "Visit site" pill action */}
+            <div className="relative z-10 self-start mt-auto">
               <a
                 href="/"
                 className="inline-flex items-center gap-2 bg-[#cde8c8]/80 hover:bg-[#b8dcb2] text-[#1e4d1e] px-5 py-2.5 rounded-full text-xs font-bold transition-all shadow-sm"
@@ -151,7 +101,7 @@ export default function LoginPage() {
 
               {/* Header Title */}
               <div className="text-center md:text-left">
-                <h1 className="text-2xl font-extrabold text-[#1e4d1e] tracking-tight">
+                <h1 className="text-4xl font-extrabold text-[#1e4d1e] tracking-tight">
                   Sign In
                 </h1>
                 <p className="text-[10px] text-gray-400 font-semibold mt-0.5">
