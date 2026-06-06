@@ -39,14 +39,8 @@ export default function FarmerSidebar({ activeMenu }: FarmerSidebarProps) {
     <aside className="w-64 border-r border-[#e4e6df] bg-[#f4f5f0] flex flex-col justify-between p-6 shrink-0 min-h-screen">
       <div className="space-y-8">
         {/* Logo */}
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-xl bg-[#1e4d1e] flex items-center justify-center text-white">
-            <Sprout className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="font-extrabold text-[#1e4d1e] text-base leading-tight">AgriGrowthRate</h2>
-            <p className="text-[10px] text-gray-400 font-semibold tracking-wider uppercase">Modern Stewardship</p>
-          </div>
+        <div className="flex items-center">
+          <img src="/logo.png" alt="Logo" className="w-full h-12 object-contain object-left" />
         </div>
 
         {/* Menu Items */}

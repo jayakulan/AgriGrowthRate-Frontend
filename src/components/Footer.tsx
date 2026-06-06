@@ -24,12 +24,7 @@ export default function Footer() {
           
           {/* Left: Brand Logo & Subtitle */}
           <div className="flex flex-col items-center md:items-start text-center md:text-left">
-            <span className="font-extrabold text-white text-xl tracking-[0.12em] font-sans">
-              AGRIGROWTHRATE
-            </span>
-            <span className="text-[9px] font-bold text-[#22c55e] tracking-[0.25em] mt-1.5 uppercase">
-              Smart Agriculture
-            </span>
+            <img src="/logo.png" alt="Logo" className="w-auto h-12 object-contain" />
           </div>
 
           {/* Center: Navigation Links (matching updated Navbar theme) */}
