@@ -122,7 +122,7 @@ export default function AIAdvisorPage() {
         <FarmerSidebar activeMenu="AI Assistant" />
 
         {/* ── Right Dashboard Layout ─────────────────────────── */}
-        <div className="flex-1 flex flex-col min-w-0 bg-white">
+        <div className="flex-1 flex flex-col min-w-0 bg-[#f9f9f6]">
           
           {/* Top Navbar */}
           <header className="h-16 border-b border-[#e4e6df] bg-white flex items-center justify-between px-8 shrink-0">

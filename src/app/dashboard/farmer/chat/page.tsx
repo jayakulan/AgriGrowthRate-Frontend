@@ -181,7 +181,7 @@ export default function FarmerChatPage() {
           </header>
 
           {/* Main Messaging Layout (Double Column Split) */}
-          <main className="flex-1 flex min-h-0 bg-white">
+          <main className="flex-1 flex min-h-0 bg-[#f9f9f6]">
             
             {/* ── Chat Sidebar (Left List) ───────────────────── */}
             <section className="w-80 border-r border-[#e4e6df] flex flex-col shrink-0">
