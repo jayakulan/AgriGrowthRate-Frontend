@@ -27,6 +27,7 @@ import {
   X,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { productService } from '@/services/productService';
 
 export default function AddProductPage() {
   const router = useRouter();
@@ -75,12 +76,22 @@ export default function AddProductPage() {
 
     setLoading(true);
     try {
-      // Simulate API submit delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const productData = {
+        name,
+        category: category.toLowerCase(),
+        isOrganic,
+        price: Number(price),
+        unit,
+        stock: Number(stock),
+        description,
+        images: imagePreview ? [imagePreview] : [],
+      };
+
+      await productService.create(productData);
       toast.success('Product listed successfully in the marketplace! 🌱');
       router.push('/dashboard/farmer/products');
-    } catch {
-      toast.error('Failed to create listing');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to create listing');
     } finally {
       setLoading(false);
     }

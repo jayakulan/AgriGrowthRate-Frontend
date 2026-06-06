@@ -5,14 +5,16 @@ export const productService = {
     const res = await api.get('/products', { params });
     return res.data;
   },
+  getMyProducts: async (params?: Record<string, string>) => {
+    const res = await api.get('/products/my', { params });
+    return res.data;
+  },
   getById: async (id: string) => {
     const res = await api.get(`/products/${id}`);
     return res.data;
   },
-  create: async (formData: FormData) => {
-    const res = await api.post('/products', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+  create: async (data: Record<string, any>) => {
+    const res = await api.post('/products', data);
     return res.data;
   },
   update: async (id: string, data: Record<string, unknown>) => {
