@@ -71,7 +71,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f9f9f6] flex flex-col justify-between font-sans overflow-x-hidden relative pt-16">
+    <div className="min-h-screen bg-[#f9f9f6] flex flex-col justify-between font-sans overflow-x-hidden relative pt-18 ">
 
       {/* Dynamic background lighting elements */}
       <div className="absolute top-20 left-20 w-72 h-72 rounded-full bg-[#edf4e2] filter blur-3xl opacity-60 pointer-events-none select-none" />
@@ -85,7 +85,7 @@ export default function LoginPage() {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="w-full max-w-4xl bg-white rounded-[32px] shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12 md:h-[580px] border border-[#e4e6df]"
+          className="w-full max-w-5xl bg-white rounded-[32px] shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12 md:h-[620px] border border-[#e4e6df]"
         >
 
           {/* Left Column: Image Background (col-span-6) */}
@@ -119,14 +119,17 @@ export default function LoginPage() {
           {/* Right Column: Clean White Sign In Area (Enlarged) */}
           <div className="md:col-span-6 bg-white p-8 sm:p-12 md:p-14 flex flex-col justify-center">
 
-            <div className="max-w-sm w-full mx-auto space-y-7">
+            <div className="max-w-sm w-full mx-auto space-y-12">
 
               {/* Header Title */}
               <div className="text-center md:text-left">
-                <h1 className="text-4xl font-extrabold text-[#1e4d1e] tracking-tight">
-                  Sign In
-                </h1>
-                <p className="text-[10px] text-gray-400 font-semibold mt-0.5">
+                <div className="flex items-center justify-center md:justify-start gap-3 mb-1">
+                  <img src="/logo.png" alt="Logo" className="w-12 h-10 object-contain" />
+                  <h1 className="text-4xl font-extrabold text-[#1e4d1e] tracking-tight">
+                    Sign In
+                  </h1>
+                </div>
+                <p className="text-xs md:text-sm text-gray-400 font-semibold mt-0.5">
                   Enter your credentials to access your dashboard.
                 </p>
               </div>
@@ -141,7 +144,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Email Address"
-                    className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2 text-xs text-gray-800 placeholder-gray-400"
+                    className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2 text-sm text-gray-800 placeholder-gray-400"
                     required
                   />
                 </div>
@@ -153,7 +156,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Password"
-                    className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2 pr-10 text-xs text-gray-800 placeholder-gray-400"
+                    className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2 pr-10 text-sm text-gray-800 placeholder-gray-400"
                     required
                   />
                   <button
@@ -169,7 +172,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 py-3 mt-4 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed text-xs shadow-md uppercase tracking-wider"
+                  className="w-full flex items-center justify-center gap-2 py-3 mt-4 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed text-sm shadow-md uppercase tracking-wider"
                 >
                   {loading ? (
                     <><Loader2 className="w-4 h-4 animate-spin" /> Signing In...</>
@@ -185,7 +188,7 @@ export default function LoginPage() {
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-100"></div>
                 </div>
-                <span className="relative bg-white px-3 text-[9px] font-extrabold text-gray-400 tracking-widest uppercase">
+                <span className="relative bg-white px-3 text-[10px] md:text-xs font-extrabold text-gray-400 tracking-widest uppercase">
                   - OR CONTINUE WITH -
                 </span>
               </div>
@@ -195,7 +198,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => handleGoogleLogin()}
                 disabled={googleLoading}
-                className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 bg-white border border-[#e4e6df] hover:border-gray-300 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 bg-white border border-[#e4e6df] hover:border-gray-300 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {googleLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
@@ -211,7 +214,7 @@ export default function LoginPage() {
               </button>
 
               {/* Register redirection links matching Forest Green theme */}
-              <p className="text-center text-[10px] text-gray-400 font-bold tracking-wide">
+              <p className="text-center text-xs text-gray-400 font-bold tracking-wide">
                 Don&apos;t have an account?{' '}
                 <Link href="/register" className="text-[#1e4d1e] hover:text-[#4A6D2F] transition-colors ml-1 uppercase hover:underline">
                   Register

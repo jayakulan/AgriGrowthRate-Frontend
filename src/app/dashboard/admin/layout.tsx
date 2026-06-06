@@ -58,13 +58,8 @@ export default function AdminLayout({
         <div>
           {/* Logo & Header branding matching AgriGrowthRate theme */}
           <div className="p-6">
-            <Link href="/dashboard/admin" className="block select-none text-left">
-              <h1 className="text-xl font-extrabold text-[#1e4d1e] tracking-tight">
-                AgriGrowthRate
-              </h1>
-              <p className="text-[10px] text-gray-400 font-bold tracking-wider uppercase mt-0.5">
-                Modern Stewardship
-              </p>
+            <Link href="/dashboard/admin" className="block select-none">
+              <img src="/logo.png" alt="Logo" className="w-full h-12 object-contain object-left" />
             </Link>
           </div>
 

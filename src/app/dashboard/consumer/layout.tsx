@@ -46,8 +46,7 @@ export default function ConsumerLayout({ children }: { children: React.ReactNode
 
             {/* Logo / Brand */}
             <div className="px-1">
-              <h2 className="font-extrabold text-[#1e4d1e] text-[15px] leading-tight tracking-tight">AgriGrowthRate</h2>
-              <p className="text-[10px] text-gray-400 font-semibold tracking-wider uppercase mt-0.5">Marketplace Hub</p>
+              <img src="/logo.png" alt="Logo" className="w-full h-10 object-contain object-left" />
             </div>
 
             {/* Navigation Items */}
