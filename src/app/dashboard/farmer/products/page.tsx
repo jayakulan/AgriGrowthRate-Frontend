@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import FarmerSidebar from '@/components/FarmerSidebar';
 import {
   Search,
   Bell,
@@ -160,48 +159,8 @@ export default function MyProductsPage() {
     if (status === 'Out of Stock') return 'bg-red-500 text-white';
     return 'bg-gray-500 text-white';
   };
-
   return (
-    <div className="min-h-screen bg-[#f9f9f6] flex flex-col font-sans">
-      <div className="flex flex-1">
-
-        {/* ── Sidebar ──────────────────────────────────────────────────────── */}
-        <FarmerSidebar activeMenu="My Products" />
-
-        {/* ── Main layout ──────────────────────────────────────────────────── */}
-        <div className="flex-1 flex flex-col min-w-0">
-
-          {/* Top Navbar */}
-          <header className="h-16 border-b border-[#e4e6df] bg-white flex items-center justify-between px-8 shrink-0">
-            <div className="relative w-full max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search farm analytics, orders, or crops..."
-                className="w-full pl-9 pr-4 py-2 bg-[#f4f5f0] border border-[#e4e6df] rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#1e4d1e]"
-              />
-            </div>
-            <div className="flex items-center gap-6">
-              <button className="text-gray-500 hover:text-gray-900 transition-colors p-1"><Bell className="w-5 h-5" /></button>
-              <button className="text-gray-500 hover:text-gray-900 transition-colors p-1"><Settings className="w-5 h-5" /></button>
-              <button className="text-gray-500 hover:text-gray-900 transition-colors p-1"><HelpCircle className="w-5 h-5" /></button>
-              <div className="w-px h-6 bg-[#e4e6df]" />
-              <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <h4 className="text-sm font-bold text-gray-900 leading-tight">Thomas Miller</h4>
-                  <span className="text-[10px] font-extrabold text-[#4A6D2F] tracking-wide uppercase">Premium Plan</span>
-                </div>
-                <img
-                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop"
-                  alt="Thomas Miller Profile"
-                  className="w-9 h-9 rounded-full object-cover border border-[#e4e6df]"
-                />
-              </div>
-            </div>
-          </header>
-
-          {/* Main */}
-          <main className="flex-1 p-8 overflow-y-auto">
+    <div className="p-8">
 
             {/* Page Title */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
@@ -573,20 +532,6 @@ export default function MyProductsPage() {
               </div>
             )}
 
-          </main>
-
-          {/* Footer */}
-          <footer className="h-16 border-t border-[#e4e6df] bg-[#f4f5f0]/50 shrink-0 flex items-center justify-between px-8 text-xs text-gray-400">
-            <p>© 2024 AgriGrowthRate. All rights reserved.</p>
-            <div className="flex gap-6 font-semibold">
-              <Link href="#" className="hover:text-gray-800 transition-colors">Privacy Policy</Link>
-              <Link href="#" className="hover:text-gray-800 transition-colors">Terms of Service</Link>
-              <Link href="#" className="hover:text-gray-800 transition-colors">Support</Link>
-            </div>
-          </footer>
-
-        </div>
-      </div>
     </div>
   );
 }

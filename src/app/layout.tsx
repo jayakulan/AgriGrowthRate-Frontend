@@ -16,11 +16,14 @@ export const metadata: Metadata = {
     description: 'Smart Agriculture Platform powered by AI',
     type: 'website',
   },
+  icons: {
+    icon: '/logo.png',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={inter.variable} data-scroll-behavior="smooth">
       <body className="bg-[#f4f5f0] text-gray-900 min-h-screen">
         <AuthProvider>
           <Toaster

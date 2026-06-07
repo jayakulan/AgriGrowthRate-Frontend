@@ -16,6 +16,8 @@ import {
   Loader2,
   Camera,
   Trash2,
+  Shield,
+  ChevronRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -45,6 +47,47 @@ export default function ConsumerProfilePage() {
   const [newCardNumber, setNewCardNumber] = useState('');
   const [newCardExpiry, setNewCardExpiry] = useState('');
   const [newCardCvv, setNewCardCvv] = useState('');
+
+  // Password modal states
+  const [showUpdatePasswordModal, setShowUpdatePasswordModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [updatingPassword, setUpdatingPassword] = useState(false);
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error('New password must be at least 6 characters long');
+      return;
+    }
+    setUpdatingPassword(true);
+    try {
+      const response = await api.put('/auth/update-password', {
+        currentPassword,
+        newPassword
+      });
+      if (response.data && response.data.success) {
+        toast.success('Password updated successfully! 🔐');
+        setShowUpdatePasswordModal(false);
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        toast.error('Failed to update password');
+      }
+    } catch (error: any) {
+      console.error(error);
+      const msg = error.response?.data?.message || 'Failed to update password';
+      toast.error(msg);
+    } finally {
+      setUpdatingPassword(false);
+    }
+  };
 
   // Notification states
   const [priceAlerts, setPriceAlerts] = useState(true);
@@ -372,55 +415,79 @@ export default function ConsumerProfilePage() {
           </div>
         </div>
 
-        {/* ── Payments ──────────────────────────────────────── */}
-        <div className="bg-white border border-[#e4e6df] rounded-2xl p-8 shadow-sm">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-xl font-bold text-[#1e4d1e]">Payments</h2>
-            <CreditCard className="w-5 h-5 text-gray-400" />
-          </div>
+        {/* ── Payments & Security Column ────────────────────── */}
+        <div className="flex flex-col gap-6">
+          {/* ── Payments Card ── */}
+          <div className="bg-white border border-[#e4e6df] rounded-2xl p-8 shadow-sm text-left">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-xl font-bold text-[#1e4d1e]">Payments</h2>
+              <CreditCard className="w-5 h-5 text-gray-400" />
+            </div>
 
-          <div className="space-y-4 max-h-[160px] overflow-y-auto mb-4 pr-1">
-            {cards.length === 0 ? (
-              <p className="text-xs text-gray-400 text-center py-6">No saved cards.</p>
-            ) : (
-              cards.map((card) => (
-                <div
-                  key={card.id}
-                  className="bg-[#f4f5f0] border border-[#e4e6df] rounded-xl p-4 flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-3">
-                    <CreditCard className="w-6 h-6 text-[#1e4d1e]" />
-                    <div>
-                      <p className="text-sm font-bold text-gray-900">•••• {card.last4}</p>
-                      <p className="text-[10px] text-gray-500">EXPIRES {card.expiry}</p>
+            <div className="space-y-4 max-h-[160px] overflow-y-auto mb-4 pr-1">
+              {cards.length === 0 ? (
+                <p className="text-xs text-gray-400 text-center py-6">No saved cards.</p>
+              ) : (
+                cards.map((card) => (
+                  <div
+                    key={card.id}
+                    className="bg-[#f4f5f0] border border-[#e4e6df] rounded-xl p-4 flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <CreditCard className="w-6 h-6 text-[#1e4d1e]" />
+                      <div>
+                        <p className="text-sm font-bold text-gray-900">•••• {card.last4}</p>
+                        <p className="text-[10px] text-gray-500">EXPIRES {card.expiry}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {card.isDefault && (
+                        <span className="bg-[#e2fbe9] text-[#1e4d1e] text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider">
+                          Default
+                        </span>
+                      )}
+                      <button
+                        onClick={() => handleDeleteCard(card.id)}
+                        className="text-gray-400 hover:text-red-600 transition-colors"
+                        title="Remove card"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {card.isDefault && (
-                      <span className="bg-[#e2fbe9] text-[#1e4d1e] text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider">
-                        Default
-                      </span>
-                    )}
-                    <button
-                      onClick={() => handleDeleteCard(card.id)}
-                      className="text-gray-400 hover:text-red-600 transition-colors"
-                      title="Remove card"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
+
+            <button
+              onClick={() => setShowAddCardModal(true)}
+              className="w-full border border-dashed border-[#d1d5db] text-gray-500 hover:text-gray-800 hover:border-gray-400 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              Add New Method
+            </button>
           </div>
 
-          <button
-            onClick={() => setShowAddCardModal(true)}
-            className="w-full border border-dashed border-[#d1d5db] text-gray-500 hover:text-gray-800 hover:border-gray-400 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            Add New Method
-          </button>
+          {/* ── Security Card ── */}
+          <div className="bg-white border border-[#e4e6df] rounded-2xl p-8 shadow-sm text-left">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-xl font-bold text-[#1e4d1e]">Security</h2>
+              <Shield className="w-5 h-5 text-gray-400" />
+            </div>
+
+            <div className="space-y-4">
+              <button
+                onClick={() => setShowUpdatePasswordModal(true)}
+                className="w-full flex items-center justify-between p-3 border border-[#e4e6df] hover:border-[#1e4d1e] rounded-xl text-left bg-gray-50/50 transition-colors cursor-pointer"
+              >
+                <div>
+                  <p className="text-xs font-bold text-gray-900">Update Password</p>
+                  <p className="text-[10px] text-gray-400 font-semibold mt-0.5">Change your account password</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -614,6 +681,98 @@ export default function ConsumerProfilePage() {
                   className="flex-1 bg-[#1e4d1e] hover:bg-[#163d16] text-white py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer"
                 >
                   Save Card
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* ── Update Password Modal ────────────────────────── */}
+      {showUpdatePasswordModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white border border-[#e4e6df] rounded-2xl p-6 max-w-sm w-full shadow-2xl relative text-left">
+            <button
+              onClick={() => {
+                setShowUpdatePasswordModal(false);
+                setCurrentPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+              }}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            <div className="flex items-center gap-2 mb-4 pb-2 border-b border-[#f4f5f0]">
+              <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-[#1e4d1e]">
+                <Shield className="w-4 h-4" />
+              </div>
+              <h3 className="text-sm font-extrabold text-[#1e4d1e] uppercase tracking-wider">Update Password</h3>
+            </div>
+
+            <form onSubmit={handleUpdatePassword} className="space-y-4">
+              <div>
+                <label className="text-[10px] font-bold uppercase text-gray-500 block mb-1">
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-3 py-2 bg-[#f4f5f0] border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-lg text-xs font-bold text-gray-800 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold uppercase text-gray-500 block mb-1">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-3 py-2 bg-[#f4f5f0] border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-lg text-xs font-bold text-gray-800 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold uppercase text-gray-500 block mb-1">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-3 py-2 bg-[#f4f5f0] border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-lg text-xs font-bold text-gray-800 outline-none"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowUpdatePasswordModal(false);
+                    setCurrentPassword('');
+                    setNewPassword('');
+                    setConfirmPassword('');
+                  }}
+                  className="flex-1 bg-[#f4f5f0] hover:bg-[#e4e6df] text-gray-700 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={updatingPassword}
+                  className="flex-1 bg-[#1e4d1e] hover:bg-[#163d16] text-white py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-1.5"
+                >
+                  {updatingPassword && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  Save Password
                 </button>
               </div>
             </form>
