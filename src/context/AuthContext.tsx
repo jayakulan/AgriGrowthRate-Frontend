@@ -22,6 +22,7 @@ interface AuthContextType {
   loginWithGoogle: (credential?: string, accessToken?: string) => Promise<User>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
+  updateUser: (updatedUser: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,6 +30,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const updateUser = useCallback((updatedFields: Partial<User>) => {
+    setUser((prev) => {
+      if (!prev) return null;
+      const merged = { ...prev, ...updatedFields };
+      localStorage.setItem('agri_user', JSON.stringify(merged));
+      return merged;
+    });
+  }, []);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -140,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <GoogleOAuthProvider clientId="565853486536-3uokv8na3nvksjg9o393p5uhvn9jkfes.apps.googleusercontent.com">
-      <AuthContext.Provider value={{ user, loading, login, register, loginWithGoogle, logout, isAuthenticated: !!user }}>
+      <AuthContext.Provider value={{ user, loading, login, register, loginWithGoogle, logout, isAuthenticated: !!user, updateUser }}>
         {children}
       </AuthContext.Provider>
     </GoogleOAuthProvider>
