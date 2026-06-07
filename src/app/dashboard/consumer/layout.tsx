@@ -14,6 +14,7 @@ import {
   Search,
   Bell,
   Settings,
+  HelpCircle,
   LogOut,
 } from 'lucide-react';
 
@@ -41,58 +42,66 @@ export default function ConsumerLayout({ children }: { children: React.ReactNode
       <div className="flex flex-1">
 
         {/* ── Left Sidebar ───────────────────────────────────── */}
-        <aside className="w-[220px] border-r border-[#e4e6df] bg-white flex flex-col justify-between py-8 px-5 shrink-0 min-h-screen">
+        <aside className="w-[220px] bg-[#edf4e2] flex flex-col justify-between pt-8 pb-4 shrink-0 min-h-screen">
           <div className="space-y-8">
 
             {/* Logo / Brand */}
-            <div className="px-1">
-              <img src="/logo.png" alt="Logo" className="w-full h-10 object-contain object-left" />
+            <div className="px-6 flex justify-center">
+              <img src="/logo.png" alt="Logo" className="w-full h-10 object-contain object-center" />
             </div>
 
             {/* Navigation Items */}
-            <nav className="space-y-1">
+            <nav className="pl-4 space-y-1 pr-0">
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.href);
+                const activeBgColorClass = 'bg-[#f9f9f6]';
+                const shadowColorHex = '#f9f9f6';
+
                 return (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-semibold transition-all ${
-                      active
-                        ? 'text-[#1e4d1e] bg-transparent'
-                        : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'
-                    }`}
+                    className="block"
                   >
-                    {/* Active left bar indicator */}
-                    {active && (
-                      <span className="absolute left-[-20px] top-1/2 -translate-y-1/2 w-[3px] h-6 bg-[#1e4d1e] rounded-r-full" />
-                    )}
-                    <Icon className="w-[18px] h-[18px] shrink-0" />
-                    <span>{item.name}</span>
+                    <div
+                      className={`relative flex items-center justify-between px-4 py-3 transition-colors duration-200 cursor-pointer group ${
+                        active
+                          ? `${activeBgColorClass} text-[#1e4d1e] font-bold rounded-l-3xl`
+                          : 'text-[#1e4d1e]/80 hover:text-[#1e4d1e] hover:bg-white/30 mr-4 rounded-3xl'
+                      }`}
+                    >
+                      {active && (
+                        <>
+                          <div 
+                            className="absolute right-0 -top-5 w-5 h-5 bg-transparent rounded-br-[20px] pointer-events-none" 
+                            style={{ boxShadow: `10px 10px 0 10px ${shadowColorHex}` }}
+                          />
+                          <div 
+                            className="absolute right-0 -bottom-5 w-5 h-5 bg-transparent rounded-tr-[20px] pointer-events-none" 
+                            style={{ boxShadow: `10px -10px 0 10px ${shadowColorHex}` }}
+                          />
+                        </>
+                      )}
+                      <div className="flex items-center gap-3">
+                        <Icon className={`w-[18px] h-[18px] shrink-0 transition-colors ${active ? 'text-[#1e4d1e]' : 'text-[#1e4d1e]/70 group-hover:text-[#1e4d1e]'}`} />
+                        <span className="text-[13px] tracking-wide">{item.name}</span>
+                      </div>
+                    </div>
                   </Link>
                 );
               })}
             </nav>
           </div>
 
-          {/* Bottom: User Profile Card & Logout Stack */}
-          <div className="mt-8 space-y-3">
-            <div className="flex items-center gap-3 p-3 bg-[#1e4d1e] rounded-xl">
-              <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center text-white">
-                <UserIcon className="w-5 h-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h4 className="text-[12px] font-bold text-white leading-tight truncate">{user?.name || 'Consumer'}</h4>
-                <p className="text-[10px] text-white/60 font-medium">Premium Buyer</p>
-              </div>
-            </div>
-            
+          {/* Bottom stack */}
+          <div className="space-y-3 mt-8 px-4">
+            {/* Logout Button */}
             <button
               onClick={logout}
-              className="w-full flex items-center justify-center gap-2 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/50 font-bold rounded-xl transition-colors text-[12px] cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/50 font-bold rounded-xl transition-colors text-[12px] cursor-pointer"
             >
-              <LogOut className="w-3.5 h-3.5" />
+              <LogOut className="w-4 h-4" />
               <span>Logout</span>
             </button>
           </div>
@@ -113,27 +122,42 @@ export default function ConsumerLayout({ children }: { children: React.ReactNode
               />
             </div>
 
-            {/* Right utility actions */}
-            <div className="flex items-center gap-4 ml-6">
-              <button className="relative text-gray-500 hover:text-gray-900 transition-colors p-1.5">
+            {/* Utility Actions */}
+            <div className="flex items-center gap-6">
+              <button className="text-gray-500 hover:text-gray-900 transition-colors p-1">
                 <Bell className="w-5 h-5" />
-                <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-500 rounded-full" />
               </button>
-              <button className="text-gray-500 hover:text-gray-900 transition-colors p-1.5">
+              <button className="text-gray-500 hover:text-gray-900 transition-colors p-1">
                 <Settings className="w-5 h-5" />
+              </button>
+              <button className="text-gray-500 hover:text-gray-900 transition-colors p-1">
+                <HelpCircle className="w-5 h-5" />
               </button>
 
               {/* Divider */}
               <div className="w-px h-6 bg-[#e4e6df]" />
 
-              {/* Cart Button */}
-              <Link
-                href="/dashboard/consumer/orders"
-                className="flex items-center gap-2 bg-[#1e4d1e] hover:bg-[#163d16] text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
-              >
-                <ShoppingCart className="w-4 h-4" />
-                <span>Cart ({cartCount})</span>
-              </Link>
+              {/* Profile Avatar & Cart */}
+              <div className="flex items-center gap-4">
+                <Link
+                  href="/dashboard/consumer/orders"
+                  className="flex items-center gap-2 bg-[#1e4d1e] hover:bg-[#163d16] text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                >
+                  <ShoppingCart className="w-3.5 h-3.5" />
+                  <span>Cart ({cartCount})</span>
+                </Link>
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <h4 className="text-sm font-bold text-gray-900 leading-tight">{user?.name || 'Consumer'}</h4>
+                    <span className="text-[10px] font-extrabold text-[#4A6D2F] tracking-wide uppercase">Premium Buyer</span>
+                  </div>
+                  <img
+                    src={user?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256&h=256"}
+                    alt="Profile"
+                    className="w-9 h-9 rounded-full object-cover border border-[#e4e6df]"
+                  />
+                </div>
+              </div>
             </div>
           </header>
 

@@ -4,8 +4,6 @@ import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import NavbarWrapper from '@/components/NavbarWrapper';
-import ChatWidgetLoader from '@/components/ChatWidgetLoader';
-
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
@@ -37,7 +35,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
           <NavbarWrapper />
           <main>{children}</main>
-          <ChatWidgetLoader />
         </AuthProvider>
       </body>
     </html>
