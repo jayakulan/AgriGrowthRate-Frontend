@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import FarmerSidebar from '@/components/FarmerSidebar';
 import {
   Sprout,
   LayoutDashboard,
@@ -114,60 +113,7 @@ export default function AIAdvisorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f9f9f6] flex flex-col font-sans">
-      
-      <div className="flex flex-1">
-        
-        {/* ── Left Sidebar (Consistent Dashboard Theme) ───────── */}
-        <FarmerSidebar activeMenu="AI Assistant" />
-
-        {/* ── Right Dashboard Layout ─────────────────────────── */}
-        <div className="flex-1 flex flex-col min-w-0 bg-[#f9f9f6]">
-          
-          {/* Top Navbar */}
-          <header className="h-16 border-b border-[#e4e6df] bg-white flex items-center justify-between px-8 shrink-0">
-            {/* Search Input */}
-            <div className="relative w-full max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Ask AI anything..."
-                className="w-full pl-9 pr-4 py-2 bg-[#f4f5f0] border border-[#e4e6df] rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#1e4d1e]"
-              />
-            </div>
-
-            {/* Utility Actions */}
-            <div className="flex items-center gap-6">
-              <button className="text-gray-500 hover:text-gray-900 transition-colors p-1">
-                <Bell className="w-5 h-5" />
-              </button>
-              <button className="text-gray-500 hover:text-gray-900 transition-colors p-1">
-                <Settings className="w-5 h-5" />
-              </button>
-              <button className="text-gray-500 hover:text-gray-900 transition-colors p-1">
-                <HelpCircle className="w-5 h-5" />
-              </button>
-
-              {/* Divider */}
-              <div className="w-px h-6 bg-[#e4e6df]" />
-
-              {/* Profile Avatar */}
-              <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <h4 className="text-sm font-bold text-gray-900 leading-tight">Silas Thorne</h4>
-                  <span className="text-[10px] font-extrabold text-[#4A6D2F] tracking-wide uppercase">Chief Steward</span>
-                </div>
-                <img
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop"
-                  alt="Silas Thorne Profile"
-                  className="w-9 h-9 rounded-full object-cover border border-[#e4e6df]"
-                />
-              </div>
-            </div>
-          </header>
-
-          {/* AI Advisor Chat Area */}
-          <main className="flex-1 flex flex-col justify-between p-8 bg-[#f9f9f6]/20 overflow-y-auto">
+    <div className="flex flex-col h-[calc(100vh-120px)] justify-between p-6">
             
             {/* Conversations Feed Scroll Container */}
             <div className="flex-grow space-y-6 max-w-4xl mx-auto w-full">
@@ -317,12 +263,6 @@ export default function AIAdvisorPage() {
               </p>
 
             </div>
-
-          </main>
-
-        </div>
-
-      </div>
 
     </div>
   );

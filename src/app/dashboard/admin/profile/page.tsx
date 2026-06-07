@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import api from '@/lib/axios';
+import { useAuth } from '@/context/AuthContext';
 import { 
   Lock, 
   Shield, 
@@ -35,18 +36,31 @@ interface AdminProfile {
 }
 
 export default function AdminProfilePage() {
+  const { user, updateUser } = useAuth();
   const [profile, setProfile] = useState<AdminProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   // Form states
   const [formData, setFormData] = useState({
-    name: 'Alex Rivera',
-    email: 'alex.rivera@agrigrowth.com',
-    phone: '+1 (555) 342-9012',
+    name: user?.name || 'Alex Rivera',
+    email: user?.email || 'alex.rivera@agrigrowth.com',
+    phone: user?.phone || '+1 (555) 342-9012',
     department: 'IT Systems Operations',
     bio: "Managing digital stewardship and infrastructural integrity for AgriGrowthRate's enterprise ecosystem. Focused on sustainable AgTech scalability and secure user governance.",
   });
+
+  // Sync user context when user loaded
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        name: user.name || prev.name,
+        email: user.email || prev.email,
+        phone: user.phone || prev.phone,
+      }));
+    }
+  }, [user]);
 
   // Password modal states
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -108,9 +122,11 @@ export default function AdminProfilePage() {
     try {
       const response = await api.put('/admin/profile', formData).catch(() => null);
 
-      if (response) {
+      if (response && response.data && response.data.success) {
+        updateUser(response.data.data);
         toast.success('Admin changes saved to remote server! 🌳');
       } else {
+        updateUser({ name: formData.name, phone: formData.phone });
         toast.success('Profile preferences simulated successfully! 🌱');
       }
     } catch (error) {
@@ -129,14 +145,31 @@ export default function AdminProfilePage() {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       return toast.error('Passwords do not match');
     }
+    if (passwordData.newPassword.length < 6) {
+      return toast.error('New password must be at least 6 characters long');
+    }
 
-    toast.loading('Updating security keys...');
-    setTimeout(() => {
-      toast.dismiss();
-      toast.success('Security keys rotated successfully! 🔑');
-      setShowPasswordModal(false);
-      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    }, 1000);
+    const loadId = toast.loading('Updating security keys...');
+    try {
+      const response = await api.put('/auth/update-password', {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
+
+      toast.dismiss(loadId);
+      if (response.data && response.data.success) {
+        toast.success('Security keys rotated successfully! 🔑');
+        setShowPasswordModal(false);
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      } else {
+        toast.error('Failed to update password');
+      }
+    } catch (error: any) {
+      toast.dismiss(loadId);
+      console.error(error);
+      const msg = error.response?.data?.message || 'Failed to update password';
+      toast.error(msg);
+    }
   };
 
   const handleTerminateSession = (id: string) => {

@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import FarmerSidebar from '@/components/FarmerSidebar';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
 import {
@@ -33,7 +31,7 @@ import {
 import toast from 'react-hot-toast';
 
 export default function FarmerProfilePage() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [harvestAlerts, setHarvestAlerts] = useState(true);
   const [marketUpdates, setMarketUpdates] = useState(false);
 
@@ -45,6 +43,13 @@ export default function FarmerProfilePage() {
   const [phone, setPhone] = useState('+1 (555) 824-9102');
   const [address, setAddress] = useState('Verdant Valley Estates, Plot 42-B, North Highlands, CA 95660');
   const [avatar, setAvatar] = useState('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop');
+
+  // Password modal states
+  const [showUpdatePasswordModal, setShowUpdatePasswordModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [updatingPassword, setUpdatingPassword] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -65,15 +70,12 @@ export default function FarmerProfilePage() {
     try {
       const response = await api.put('/auth/profile', { name, phone, address, avatar }).catch(() => null);
       if (response && response.data && response.data.success) {
-        // Sync local storage state
-        const updatedUser = { ...user, name, phone, address, avatar };
-        localStorage.setItem('agri_user', JSON.stringify(updatedUser));
+        updateUser(response.data.data);
         setIsEditing(false);
         toast.success('Farmer profile changes saved successfully! 🌾');
       } else {
         // Graceful simulated update if backend isn't up
-        const updatedUser = { ...user, name, phone, address, avatar };
-        localStorage.setItem('agri_user', JSON.stringify(updatedUser));
+        updateUser({ name, phone, address, avatar });
         setIsEditing(false);
         toast.success('Farmer profile changes simulated successfully! 🚜');
       }
@@ -89,6 +91,40 @@ export default function FarmerProfilePage() {
     toast.success(`${actionName} settings loaded`);
   };
 
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error('New password must be at least 6 characters long');
+      return;
+    }
+    setUpdatingPassword(true);
+    try {
+      const response = await api.put('/auth/update-password', {
+        currentPassword,
+        newPassword
+      });
+      if (response.data && response.data.success) {
+        toast.success('Password updated successfully! 🔐');
+        setShowUpdatePasswordModal(false);
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        toast.error('Failed to update password');
+      }
+    } catch (error: any) {
+      console.error(error);
+      const msg = error.response?.data?.message || 'Failed to update password';
+      toast.error(msg);
+    } finally {
+      setUpdatingPassword(false);
+    }
+  };
+
   const handleDeleteAccount = () => {
     if (confirm('Are you sure you want to permanently deactivate your AgriGrowthRate account? This action is irreversible.')) {
       toast.error('Account deactivation requested.');
@@ -96,60 +132,7 @@ export default function FarmerProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f9f9f6] flex flex-col font-sans">
-      
-      <div className="flex flex-1">
-        
-        {/* ── Left Sidebar (Consistent Dashboard Theme) ───────── */}
-        <FarmerSidebar activeMenu="Profile" />
-
-        {/* ── Right Dashboard Layout ─────────────────────────── */}
-        <div className="flex-1 flex flex-col min-w-0">
-          
-          {/* Top Navbar */}
-          <header className="h-16 border-b border-[#e4e6df] bg-white flex items-center justify-between px-8 shrink-0">
-            {/* Search Input */}
-            <div className="relative w-full max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search resources..."
-                className="w-full pl-9 pr-4 py-2 bg-[#f4f5f0] border border-[#e4e6df] rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#1e4d1e]"
-              />
-            </div>
-
-            {/* Utility Actions */}
-            <div className="flex items-center gap-6">
-              <button className="text-gray-500 hover:text-gray-900 transition-colors p-1">
-                <Bell className="w-5 h-5" />
-              </button>
-              <button className="text-gray-500 hover:text-gray-900 transition-colors p-1">
-                <Settings className="w-5 h-5" />
-              </button>
-              <button className="text-gray-500 hover:text-gray-900 transition-colors p-1">
-                <HelpCircle className="w-5 h-5" />
-              </button>
-
-              {/* Divider */}
-              <div className="w-px h-6 bg-[#e4e6df]" />
-
-              {/* Profile Avatar */}
-              <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <h4 className="text-sm font-bold text-gray-900 leading-tight">{name}</h4>
-                  <span className="text-[10px] font-extrabold text-[#4A6D2F] tracking-wide uppercase">Master Farmer</span>
-                </div>
-                <img
-                  src={avatar}
-                  alt={`${name} Profile`}
-                  className="w-9 h-9 rounded-full object-cover border border-[#e4e6df]"
-                />
-              </div>
-            </div>
-          </header>
-
-          {/* Main Profile Content Panel */}
-          <main className="flex-1 p-8 overflow-y-auto">
+    <div className="p-8">
             
             {/* Header with edit button */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
@@ -348,7 +331,7 @@ export default function FarmerProfilePage() {
                   {/* Buttons stack */}
                   <div className="space-y-2">
                     <button
-                      onClick={() => handleSecurityAction('Password')}
+                      onClick={() => setShowUpdatePasswordModal(true)}
                       className="w-full flex items-center justify-between p-3 border border-[#e4e6df] hover:border-[#1e4d1e] rounded-xl text-left bg-gray-50/50 transition-colors"
                     >
                       <div>
@@ -450,22 +433,98 @@ export default function FarmerProfilePage() {
               </button>
             </div>
 
-          </main>
-
-          {/* Footer */}
-          <footer className="h-16 border-t border-[#e4e6df] bg-[#f4f5f0]/50 shrink-0 flex items-center justify-between px-8 text-xs text-gray-400 font-semibold">
-            <p>© 2024 AgriGrowthRate. All rights reserved.</p>
-            <div className="flex gap-6">
-              <Link href="#" className="hover:text-gray-800 transition-colors">Privacy Policy</Link>
-              <Link href="#" className="hover:text-gray-800 transition-colors">Terms of Service</Link>
-              <Link href="#" className="hover:text-gray-800 transition-colors">Support</Link>
+      {/* ── Update Password Modal ────────────────────────── */}
+      {showUpdatePasswordModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white border border-[#e4e6df] rounded-2xl p-6 max-w-sm w-full shadow-2xl relative text-left">
+            <button
+              onClick={() => {
+                setShowUpdatePasswordModal(false);
+                setCurrentPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+              }}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            <div className="flex items-center gap-2 mb-4 pb-2 border-b border-[#f4f5f0]">
+              <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-[#1e4d1e]">
+                <Shield className="w-4 h-4" />
+              </div>
+              <h3 className="text-sm font-extrabold text-[#1e4d1e] uppercase tracking-wider">Update Password</h3>
             </div>
-          </footer>
 
+            <form onSubmit={handleUpdatePassword} className="space-y-4">
+              <div>
+                <label className="text-[10px] font-bold uppercase text-gray-500 block mb-1">
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-3 py-2 bg-[#f4f5f0] border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-lg text-xs font-bold text-gray-800 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold uppercase text-gray-500 block mb-1">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-3 py-2 bg-[#f4f5f0] border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-lg text-xs font-bold text-gray-800 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold uppercase text-gray-500 block mb-1">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-3 py-2 bg-[#f4f5f0] border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-lg text-xs font-bold text-gray-800 outline-none"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowUpdatePasswordModal(false);
+                    setCurrentPassword('');
+                    setNewPassword('');
+                    setConfirmPassword('');
+                  }}
+                  className="flex-1 bg-[#f4f5f0] hover:bg-[#e4e6df] text-gray-700 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={updatingPassword}
+                  className="flex-1 bg-[#1e4d1e] hover:bg-[#163d16] text-white py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-1.5"
+                >
+                  {updatingPassword && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  Save Password
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-
-      </div>
-
+      )}
     </div>
   );
 }

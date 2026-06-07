@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import FarmerSidebar from '@/components/FarmerSidebar';
 import {
   Sprout,
   LayoutDashboard,
@@ -128,60 +127,7 @@ export default function FarmerChatPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f9f9f6] flex flex-col font-sans">
-      
-      <div className="flex flex-1">
-        
-        {/* ── Left Sidebar (Consistent Dashboard Theme) ───────── */}
-        <FarmerSidebar activeMenu="Chat" />
-
-        {/* ── Right Dashboard Layout ─────────────────────────── */}
-        <div className="flex-1 flex flex-col min-w-0">
-          
-          {/* Top Navbar */}
-          <header className="h-16 border-b border-[#e4e6df] bg-white flex items-center justify-between px-8 shrink-0">
-            {/* Search Input */}
-            <div className="relative w-full max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search conversations..."
-                className="w-full pl-9 pr-4 py-2 bg-[#f4f5f0] border border-[#e4e6df] rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#1e4d1e]"
-              />
-            </div>
-
-            {/* Utility Actions */}
-            <div className="flex items-center gap-6">
-              <button className="text-gray-500 hover:text-gray-900 transition-colors p-1">
-                <Bell className="w-5 h-5" />
-              </button>
-              <button className="text-gray-500 hover:text-gray-900 transition-colors p-1">
-                <Settings className="w-5 h-5" />
-              </button>
-              <button className="text-gray-500 hover:text-gray-900 transition-colors p-1">
-                <HelpCircle className="w-5 h-5" />
-              </button>
-
-              {/* Divider */}
-              <div className="w-px h-6 bg-[#e4e6df]" />
-
-              {/* Silas Thorne Profile Avatar */}
-              <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <h4 className="text-sm font-bold text-gray-900 leading-tight">Silas Thorne</h4>
-                  <span className="text-[10px] font-extrabold text-[#4A6D2F] tracking-wide uppercase">Chief Steward</span>
-                </div>
-                <img
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop"
-                  alt="Silas Thorne Profile"
-                  className="w-9 h-9 rounded-full object-cover border border-[#e4e6df]"
-                />
-              </div>
-            </div>
-          </header>
-
-          {/* Main Messaging Layout (Double Column Split) */}
-          <main className="flex-1 flex min-h-0 bg-[#f9f9f6]">
+    <div className="flex h-[calc(100vh-64px)] overflow-hidden">
             
             {/* ── Chat Sidebar (Left List) ───────────────────── */}
             <section className="w-80 border-r border-[#e4e6df] flex flex-col shrink-0">
@@ -403,12 +349,6 @@ export default function FarmerChatPage() {
               </form>
 
             </section>
-
-          </main>
-
-        </div>
-
-      </div>
 
     </div>
   );
