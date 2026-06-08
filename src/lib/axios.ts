@@ -18,7 +18,7 @@ let failedQueue: any[] = [];
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('token');
-    if (token && config.headers) {
+    if (token && token !== 'undefined' && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
   }
@@ -63,7 +63,11 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        await refreshApi.post('/auth/refresh');
+        const response = await refreshApi.post('/auth/refresh');
+        if (typeof window !== 'undefined' && response.data.accessToken) {
+          localStorage.setItem('token', response.data.accessToken);
+          localStorage.setItem('refreshToken', response.data.refreshToken);
+        }
         processQueue(null);
         isRefreshing = false;
         return api(originalRequest);
