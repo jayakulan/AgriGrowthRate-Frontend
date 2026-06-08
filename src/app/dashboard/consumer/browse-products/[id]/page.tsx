@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import {
   Heart,
   Star,
@@ -12,25 +13,74 @@ import {
   ShoppingCart,
   ArrowRight,
   ChevronRight,
+  Loader2,
 } from 'lucide-react';
+import { productService } from '@/services/productService';
+import toast from 'react-hot-toast';
 
 export default function ProductDetailsPage() {
+  const { id } = useParams() as { id: string };
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
 
-  const images = [
-    'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=800&h=600&fit=crop',
-    'https://images.unsplash.com/photo-1582515073490-39981397c445?w=200&h=200&fit=crop',
-    'https://images.unsplash.com/photo-1590868309235-ea34bed7bd7f?w=200&h=200&fit=crop',
-    'https://images.unsplash.com/photo-1445282768818-728615cc910a?w=200&h=200&fit=crop',
-  ];
+  useEffect(() => {
+    const fetchProductDetails = async () => {
+      try {
+        setLoading(true);
+        const res = await productService.getById(id);
+        if (res && res.success) {
+          setProduct(res.data);
+          
+          // Fetch some related products of the same category
+          if (res.data.category) {
+            const relRes = await productService.getAll({ category: res.data.category, limit: '4' });
+            if (relRes && relRes.success) {
+              // Exclude current product
+              const filtered = (relRes.data || []).filter((p: any) => p._id !== id);
+              setRelatedProducts(filtered.slice(0, 4));
+            }
+          }
+        }
+      } catch (err: any) {
+        console.error('Failed to load product details:', err);
+        toast.error('Failed to load product details');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const relatedProducts = [
-    { id: 1, name: 'Ruby Radish Bunch', price: '$4.50', image: 'https://images.unsplash.com/photo-1582515073490-39981397c445?w=400&h=400&fit=crop' },
-    { id: 2, name: 'Heritage Tomato Mix', price: '$8.20', image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=400&fit=crop' },
-    { id: 3, name: 'Lacinato Dinosaur Kale', price: '$3.95', image: 'https://images.unsplash.com/photo-1524584282361-b541bb924e2c?w=400&h=400&fit=crop' },
-    { id: 4, name: 'Organic Purple Kohlrabi', price: '$5.50', image: 'https://images.unsplash.com/photo-1590868309235-ea34bed7bd7f?w=400&h=400&fit=crop' },
-  ];
+    if (id) {
+      fetchProductDetails();
+    }
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 text-[#1e4d1e] animate-spin" />
+        <p className="text-sm text-gray-500 mt-2">Loading product details...</p>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="text-center py-20 bg-white border border-[#e4e6df] rounded-2xl m-8">
+        <p className="text-gray-500">Product not found.</p>
+        <Link href="/dashboard/consumer/browse-products" className="text-sm font-bold text-[#1e4d1e] underline mt-4 inline-block">
+          Back to Browse Products
+        </Link>
+      </div>
+    );
+  }
+
+  // Get image URLs, with fallbacks
+  const productImages = product.images && product.images.length > 0 
+    ? product.images.map((img: string) => img.startsWith('http') || img.startsWith('data:') ? img : `http://localhost:5001${img}`)
+    : ['https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=800&h=600&fit=crop'];
 
   return (
     <div className="p-8 max-w-[1200px] mx-auto font-sans">
@@ -41,9 +91,11 @@ export default function ProductDetailsPage() {
           Browse Products
         </Link>
         <ChevronRight className="w-3.5 h-3.5" />
-        <span className="hover:text-gray-900 transition-colors cursor-pointer">Organic Vegetables</span>
+        <span className="hover:text-gray-900 transition-colors cursor-pointer capitalize">
+          {product.category}
+        </span>
         <ChevronRight className="w-3.5 h-3.5" />
-        <span className="text-gray-900">Heirloom Heritage Carrots</span>
+        <span className="text-gray-900">{product.name}</span>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
@@ -52,24 +104,26 @@ export default function ProductDetailsPage() {
         <div className="flex flex-col gap-4">
           <div className="w-full aspect-[4/3] bg-[#f4f5f0] rounded-2xl overflow-hidden border border-[#e4e6df] shadow-sm">
             <img 
-              src={images[activeImage]} 
-              alt="Heirloom Heritage Carrots main" 
+              src={productImages[activeImage] || productImages[0]} 
+              alt={`${product.name} main`} 
               className="w-full h-full object-cover"
             />
           </div>
-          <div className="grid grid-cols-4 gap-4">
-            {images.map((img, idx) => (
-              <button 
-                key={idx}
-                onClick={() => setActiveImage(idx)}
-                className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${
-                  activeImage === idx ? 'border-[#1e4d1e] shadow-md' : 'border-[#e4e6df] opacity-70 hover:opacity-100'
-                }`}
-              >
-                <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
-              </button>
-            ))}
-          </div>
+          {productImages.length > 1 && (
+            <div className="grid grid-cols-4 gap-4">
+              {productImages.map((img: string, idx: number) => (
+                <button 
+                  key={idx}
+                  onClick={() => setActiveImage(idx)}
+                  className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${
+                    activeImage === idx ? 'border-[#1e4d1e] shadow-md' : 'border-[#e4e6df] opacity-70 hover:opacity-100'
+                  }`}
+                >
+                  <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* ── Right Column: Details Card ───────────────────── */}
@@ -78,7 +132,7 @@ export default function ProductDetailsPage() {
             
             <div className="flex items-start justify-between mb-4">
               <span className="bg-[#c6efc6] text-[#1e4d1e] text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-widest">
-                In Season
+                {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
               </span>
               <button className="text-gray-400 hover:text-red-500 transition-colors">
                 <Heart className="w-6 h-6" />
@@ -86,28 +140,26 @@ export default function ProductDetailsPage() {
             </div>
 
             <h1 className="text-4xl font-extrabold text-[#1e4d1e] leading-tight mb-3">
-              Heirloom Heritage Carrots
+              {product.name}
             </h1>
 
             <div className="flex items-center gap-2 mb-6">
               <div className="flex text-yellow-400">
                 <Star className="w-4 h-4 fill-current" />
-                <Star className="w-4 h-4 fill-current" />
-                <Star className="w-4 h-4 fill-current" />
-                <Star className="w-4 h-4 fill-current" />
-                <Star className="w-4 h-4 fill-current opacity-50" />
+                <span className="text-xs font-bold text-gray-500 ml-1">
+                  {product.rating || 'No ratings'}
+                </span>
               </div>
-              <span className="text-xs font-bold text-gray-500">
-                4.8 • 124 reviews
-              </span>
             </div>
 
             <div className="mb-8">
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-extrabold text-gray-900">$12.50</span>
-                <span className="text-sm font-bold text-gray-500">/ bunch</span>
+                <span className="text-4xl font-extrabold text-gray-900">${product.price.toFixed(2)}</span>
+                <span className="text-sm font-bold text-gray-500">/ {product.unit || 'kg'}</span>
               </div>
-              <p className="text-xs text-gray-400 font-medium mt-1">(approx. 500g)</p>
+              {product.stock > 0 && (
+                <p className="text-xs text-gray-400 font-medium mt-1">({product.stock} {product.unit || 'kg'} available)</p>
+              )}
             </div>
 
             <div className="space-y-6 mb-8">
@@ -118,26 +170,28 @@ export default function ProductDetailsPage() {
                 <div>
                   <p className="text-xs font-extrabold text-gray-900 mb-0.5">Origin</p>
                   <p className="text-xs text-gray-600 leading-relaxed">
-                    Emerald Valley Sustainable Farm,<br />Oregon
+                    {product.location || product.farmer?.location || 'Local Farm'}
                   </p>
                 </div>
               </div>
               
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-[#e2fbe9] rounded-xl flex items-center justify-center shrink-0">
-                  <Leaf className="w-5 h-5 text-[#1e4d1e]" />
+              {product.isOrganic && (
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-[#e2fbe9] rounded-xl flex items-center justify-center shrink-0">
+                    <Leaf className="w-5 h-5 text-[#1e4d1e]" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-extrabold text-gray-900 mb-0.5">Farming Method</p>
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      Regenerative Organic, No Synthetic Pesticides
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-extrabold text-gray-900 mb-0.5">Farming Method</p>
-                  <p className="text-xs text-gray-600 leading-relaxed">
-                    Regenerative Organic, No Synthetic Pesticides
-                  </p>
-                </div>
-              </div>
+              )}
             </div>
 
             <p className="text-[13px] text-gray-600 leading-relaxed mb-8">
-              Taste the rainbow with our hand-picked heritage carrots. These aren't your typical grocery store varieties; they offer a complex profile ranging from earthy sweetness to subtle spicy undertones. Perfect for raw salads or slow-roasting to caramelize their natural sugars.
+              {product.description}
             </p>
 
             <div className="flex items-center gap-6 mb-8">
@@ -153,7 +207,7 @@ export default function ProductDetailsPage() {
                   {quantity}
                 </div>
                 <button 
-                  onClick={() => setQuantity(quantity + 1)}
+                  onClick={() => setQuantity(prev => (product.stock ? Math.min(product.stock, prev + 1) : prev + 1))}
                   className="w-10 h-10 flex items-center justify-center text-gray-500 hover:bg-[#e4e6df] transition-colors"
                 >
                   <Plus className="w-4 h-4" />
@@ -173,61 +227,71 @@ export default function ProductDetailsPage() {
           </div>
 
           {/* Seller Profile Card */}
-          <div className="bg-[#e2fbe9] border border-[#c6efc6] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#d4f8de] transition-colors group">
-            <div className="flex items-center gap-4">
-              <img 
-                src="https://images.unsplash.com/photo-1595858688461-8f5bc289569e?w=80&h=80&fit=crop" 
-                alt="Seller" 
-                className="w-12 h-12 rounded-full border-2 border-white object-cover"
-              />
-              <div>
-                <p className="text-sm font-extrabold text-[#1e4d1e]">Emerald Valley Farms</p>
-                <p className="text-[10px] font-bold text-[#1e4d1e]/70 uppercase tracking-widest mt-0.5">Verified Trusted Seller</p>
+          {product.farmer && (
+            <div className="bg-[#e2fbe9] border border-[#c6efc6] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#d4f8de] transition-colors group">
+              <div className="flex items-center gap-4">
+                <img 
+                  src={product.farmer.avatar ? (product.farmer.avatar.startsWith('http') ? product.farmer.avatar : `http://localhost:5001${product.farmer.avatar}`) : "https://images.unsplash.com/photo-1595858688461-8f5bc289569e?w=80&h=80&fit=crop"} 
+                  alt={product.farmer.name} 
+                  className="w-12 h-12 rounded-full border-2 border-white object-cover"
+                />
+                <div>
+                  <p className="text-sm font-extrabold text-[#1e4d1e]">{product.farmer.name}</p>
+                  <p className="text-[10px] font-bold text-[#1e4d1e]/70 uppercase tracking-widest mt-0.5">Verified Trusted Seller</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 text-xs font-bold text-[#1e4d1e] group-hover:translate-x-1 transition-transform">
+                View Profile
+                <ArrowRight className="w-4 h-4" />
               </div>
             </div>
-            <div className="flex items-center gap-1 text-xs font-bold text-[#1e4d1e] group-hover:translate-x-1 transition-transform">
-              View Profile
-              <ArrowRight className="w-4 h-4" />
-            </div>
-          </div>
+          )}
 
         </div>
       </div>
 
       {/* ── Related Products ───────────────────────────────── */}
-      <div>
-        <div className="flex items-end justify-between mb-8">
-          <div>
-            <h2 className="text-xl font-extrabold text-[#1e4d1e] mb-1">Related Premium Produce</h2>
-            <p className="text-xs text-gray-500 font-medium">Recommended based on your current selection</p>
-          </div>
-          <Link href="/dashboard/consumer/browse-products" className="text-xs font-extrabold text-gray-900 hover:text-[#1e4d1e] transition-colors">
-            Browse All
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {relatedProducts.map((prod) => (
-            <div key={prod.id} className="bg-white border border-[#e4e6df] rounded-2xl overflow-hidden shadow-sm group">
-              <div className="relative aspect-square">
-                <img src={prod.image} alt={prod.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                <button className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shadow-sm">
-                  <Heart className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="p-4 flex flex-col justify-between h-28">
-                <h3 className="text-xs font-extrabold text-gray-900 leading-snug line-clamp-2">{prod.name}</h3>
-                <div className="flex items-end justify-between mt-auto">
-                  <span className="text-sm font-extrabold text-[#1e4d1e]">{prod.price}</span>
-                  <button className="w-8 h-8 bg-[#e2fbe9] hover:bg-[#c6efc6] text-[#1e4d1e] rounded-lg flex items-center justify-center transition-colors">
-                    <ShoppingCart className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
+      {relatedProducts.length > 0 && (
+        <div>
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <h2 className="text-xl font-extrabold text-[#1e4d1e] mb-1">Related Premium Produce</h2>
+              <p className="text-xs text-gray-500 font-medium">Recommended based on your current selection</p>
             </div>
-          ))}
+            <Link href="/dashboard/consumer/browse-products" className="text-xs font-extrabold text-gray-900 hover:text-[#1e4d1e] transition-colors">
+              Browse All
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {relatedProducts.map((prod) => {
+              const prodImg = prod.images && prod.images[0] 
+                ? (prod.images[0].startsWith('http') || prod.images[0].startsWith('data:') ? prod.images[0] : `http://localhost:5001${prod.images[0]}`) 
+                : 'https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=400&h=300&fit=crop';
+
+              return (
+                <Link key={prod._id} href={`/dashboard/consumer/browse-products/${prod._id}`} className="bg-white border border-[#e4e6df] rounded-2xl overflow-hidden shadow-sm group block">
+                  <div className="relative aspect-square">
+                    <img src={prodImg} alt={prod.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <button className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shadow-sm">
+                      <Heart className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="p-4 flex flex-col justify-between h-28">
+                    <h3 className="text-xs font-extrabold text-gray-900 leading-snug line-clamp-2">{prod.name}</h3>
+                    <div className="flex items-end justify-between mt-auto">
+                      <span className="text-sm font-extrabold text-[#1e4d1e]">${prod.price.toFixed(2)}</span>
+                      <button className="w-8 h-8 bg-[#e2fbe9] hover:bg-[#c6efc6] text-[#1e4d1e] rounded-lg flex items-center justify-center transition-colors">
+                        <ShoppingCart className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
     </div>
   );
