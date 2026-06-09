@@ -15,6 +15,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { productService } from '@/services/productService';
+import { orderService } from '@/services/orderService';
 
 const categories = [
   { name: 'All Products', icon: Grid3X3, key: 'all' },
@@ -32,7 +33,32 @@ export default function BrowseProductsPage() {
   const [loading, setLoading] = useState(true);
   const [totalProducts, setTotalProducts] = useState(0);
   const [sortBy, setSortBy] = useState('Latest Arrivals');
+  const [pendingProductIds, setPendingProductIds] = useState<Set<string>>(new Set());
   const limit = 12;
+
+  // Fetch consumer's pending order product IDs once on mount
+  useEffect(() => {
+    const fetchPendingOrders = async () => {
+      try {
+        const res = await orderService.getMyOrders();
+        if (res && res.success && res.data) {
+          const ids = new Set<string>();
+          res.data.forEach((order: any) => {
+            if (order.status === 'pending') {
+              (order.items || []).forEach((item: any) => {
+                const productId = item.product?._id || item.product;
+                if (productId) ids.add(productId.toString());
+              });
+            }
+          });
+          setPendingProductIds(ids);
+        }
+      } catch {
+        // If not logged in or error, just show all products
+      }
+    };
+    fetchPendingOrders();
+  }, []);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -130,13 +156,13 @@ export default function BrowseProductsPage() {
           <Loader2 className="w-8 h-8 text-[#1e4d1e] animate-spin" />
           <p className="text-sm text-gray-500 mt-2">Loading products...</p>
         </div>
-      ) : products.length === 0 ? (
+      ) : products.filter(p => !pendingProductIds.has(p._id?.toString())).length === 0 ? (
         <div className="text-center py-20 bg-white border border-[#e4e6df] rounded-2xl">
           <p className="text-gray-500">No products found in this category.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-          {products.map((product) => {
+          {products.filter(p => !pendingProductIds.has(p._id?.toString())).map((product) => {
             const productImg = product.images && product.images[0] 
               ? (product.images[0].startsWith('http') || product.images[0].startsWith('data:') ? product.images[0] : `http://localhost:5001${product.images[0]}`) 
               : 'https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=400&h=300&fit=crop';

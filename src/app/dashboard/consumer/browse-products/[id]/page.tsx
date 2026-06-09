@@ -14,8 +14,13 @@ import {
   ArrowRight,
   ChevronRight,
   Loader2,
+  Phone,
+  User,
+  BadgeCheck,
+  CheckCircle,
 } from 'lucide-react';
 import { productService } from '@/services/productService';
+import { orderService } from '@/services/orderService';
 import toast from 'react-hot-toast';
 
 export default function ProductDetailsPage() {
@@ -25,6 +30,9 @@ export default function ProductDetailsPage() {
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [orderResult, setOrderResult] = useState<any>(null);
 
   useEffect(() => {
     const fetchProductDetails = async () => {
@@ -220,35 +228,223 @@ export default function ProductDetailsPage() {
                 <ShoppingCart className="w-5 h-5" />
                 Add to Cart
               </button>
-              <button className="flex-1 bg-[#1e4d1e] hover:bg-[#163d16] text-white px-6 py-4 rounded-xl text-sm font-bold transition-colors shadow-sm">
-                Buy Now
+              <button 
+                onClick={() => setShowConfirmModal(true)}
+                disabled={product.stock <= 0}
+                className="flex-1 bg-[#1e4d1e] hover:bg-[#163d16] disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white px-6 py-4 rounded-xl text-sm font-bold transition-colors shadow-sm"
+              >
+                {product.stock > 0 ? 'Buy Now' : 'Out of Stock'}
               </button>
             </div>
           </div>
 
-          {/* Seller Profile Card */}
+          {/* Farmer Details Card */}
           {product.farmer && (
-            <div className="bg-[#e2fbe9] border border-[#c6efc6] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#d4f8de] transition-colors group">
-              <div className="flex items-center gap-4">
-                <img 
-                  src={product.farmer.avatar ? (product.farmer.avatar.startsWith('http') ? product.farmer.avatar : `http://localhost:5001${product.farmer.avatar}`) : "https://images.unsplash.com/photo-1595858688461-8f5bc289569e?w=80&h=80&fit=crop"} 
-                  alt={product.farmer.name} 
-                  className="w-12 h-12 rounded-full border-2 border-white object-cover"
-                />
-                <div>
-                  <p className="text-sm font-extrabold text-[#1e4d1e]">{product.farmer.name}</p>
-                  <p className="text-[10px] font-bold text-[#1e4d1e]/70 uppercase tracking-widest mt-0.5">Verified Trusted Seller</p>
-                </div>
+            <div className="bg-white border border-[#e4e6df] rounded-2xl overflow-hidden shadow-sm">
+              {/* Card header */}
+              <div className="bg-[#1e4d1e] px-5 py-3 flex items-center gap-2">
+                <BadgeCheck className="w-4 h-4 text-[#a8e6a3]" />
+                <span className="text-xs font-extrabold text-white uppercase tracking-widest">Verified Farmer</span>
               </div>
-              <div className="flex items-center gap-1 text-xs font-bold text-[#1e4d1e] group-hover:translate-x-1 transition-transform">
-                View Profile
-                <ArrowRight className="w-4 h-4" />
+
+              {/* Card body */}
+              <div className="p-5">
+                {/* Avatar + Name row */}
+                <div className="flex items-center gap-4 mb-4">
+                  <img 
+                    src={
+                      product.farmer.avatar 
+                        ? (product.farmer.avatar.startsWith('http') || product.farmer.avatar.startsWith('data:') 
+                            ? product.farmer.avatar 
+                            : `http://localhost:5001${product.farmer.avatar}`)
+                        : 'https://images.unsplash.com/photo-1595858688461-8f5bc289569e?w=80&h=80&fit=crop'
+                    } 
+                    alt={product.farmer.name} 
+                    className="w-14 h-14 rounded-full border-2 border-[#c6efc6] object-cover shadow-sm"
+                  />
+                  <div>
+                    <p className="text-base font-extrabold text-gray-900 leading-tight">{product.farmer.name}</p>
+                    <span className="inline-block text-[10px] font-bold text-[#1e4d1e] bg-[#e2fbe9] px-2 py-0.5 rounded-full mt-1 uppercase tracking-wider">Trusted Seller</span>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-[#f4f5f0] mb-4" />
+
+                {/* Contact details */}
+                <div className="space-y-3">
+                  {product.farmer.phone && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-[#e2fbe9] rounded-lg flex items-center justify-center shrink-0">
+                        <Phone className="w-4 h-4 text-[#1e4d1e]" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Phone</p>
+                        <p className="text-sm font-semibold text-gray-800">{product.farmer.phone}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {(product.farmer.location || product.location) && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-[#e2fbe9] rounded-lg flex items-center justify-center shrink-0">
+                        <MapPin className="w-4 h-4 text-[#1e4d1e]" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Address</p>
+                        <p className="text-sm font-semibold text-gray-800">{product.farmer.location || product.location}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {!product.farmer.phone && !(product.farmer.location || product.location) && (
+                    <p className="text-xs text-gray-400 text-center py-2">No contact details available</p>
+                  )}
+                </div>
               </div>
             </div>
           )}
 
         </div>
       </div>
+
+      {/* ── Confirmation Modal ───────────────────────────────── */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 border border-[#e4e6df]">
+            
+            {/* Modal Header */}
+            <div className="bg-[#1e4d1e] p-6 text-white text-center">
+              <h3 className="text-xl font-black mb-1">
+                {orderResult ? '🎉 Order Confirmed!' : 'Confirm Your Order'}
+              </h3>
+              <p className="text-xs text-white/80">
+                {orderResult ? 'Your transaction has been processed' : 'Double-check your order information before checkout'}
+              </p>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-5">
+              
+              {!orderResult ? (
+                <>
+                  {/* Product and Quantity Summary */}
+                  <div className="bg-[#f4f5f0] p-4 rounded-2xl flex gap-3 border border-[#e4e6df]">
+                    <img 
+                      src={productImages[0]} 
+                      alt={product.name} 
+                      className="w-16 h-16 rounded-xl object-cover border border-[#e4e6df]"
+                    />
+                    <div>
+                      <h4 className="text-sm font-extrabold text-gray-900 leading-snug line-clamp-1">{product.name}</h4>
+                      <p className="text-xs text-gray-500 mt-1">Quantity: <span className="font-extrabold text-gray-900">{quantity}</span></p>
+                      <p className="text-xs text-[#1e4d1e] font-extrabold mt-0.5">Price: ${product.price.toFixed(2)} / {product.unit || 'kg'}</p>
+                    </div>
+                  </div>
+
+                  {/* Order total amount calculation */}
+                  <div className="flex justify-between items-center px-1">
+                    <span className="text-sm font-bold text-gray-500">Order Total</span>
+                    <span className="text-2xl font-black text-[#1e4d1e]">${(product.price * quantity).toFixed(2)}</span>
+                  </div>
+
+                  <div className="border-t border-[#e4e6df] pt-4 text-center">
+                    <p className="text-xs font-semibold text-gray-500">
+                      The confirmation code will be sent to your registered phone number via SMS.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-4 space-y-4">
+                  <div className="w-16 h-16 bg-[#e2fbe9] text-[#1e4d1e] rounded-full flex items-center justify-center mx-auto shadow-sm">
+                    <CheckCircle className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-extrabold text-gray-400 uppercase tracking-widest mb-1">Confirmation Number</p>
+                    <p className="text-3xl font-black text-[#1e4d1e] bg-[#e2fbe9]/50 border border-[#c6efc6] rounded-2xl py-3 px-4 inline-block tracking-wider">
+                      {orderResult.orderConfirmationNumber}
+                    </p>
+                  </div>
+                  <p className="text-xs font-bold text-gray-600 leading-relaxed max-w-xs mx-auto">
+                    We've stored all order details in the Order database and dispatched your SMS receipt.
+                  </p>
+                </div>
+              )}
+
+            </div>
+
+            {/* Modal Action Buttons */}
+            <div className="bg-[#f4f5f0] px-6 py-4 flex gap-3 border-t border-[#e4e6df]">
+              {!orderResult ? (
+                <>
+                  <button 
+                    onClick={() => setShowConfirmModal(false)}
+                    disabled={isPlacingOrder}
+                    className="flex-1 bg-white border border-[#e4e6df] text-gray-700 px-4 py-3 rounded-xl text-xs font-bold hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={async () => {
+                      try {
+                        setIsPlacingOrder(true);
+                        
+                        const response = await orderService.create({
+                          items: [{
+                            product: product._id,
+                            quantity: quantity
+                          }],
+                          paymentMethod: 'cash'
+                        });
+
+                        if (response && response.success) {
+                          toast.success('Order placed successfully!');
+                          setOrderResult(response.data);
+                          
+                          // Deduct local quantity/stock reflection
+                          setProduct((prev: any) => ({
+                            ...prev,
+                            stock: Math.max(0, prev.stock - quantity)
+                          }));
+                        } else {
+                          toast.error(response.message || 'Failed to place order.');
+                        }
+                      } catch (err: any) {
+                        console.error('Checkout error:', err);
+                        toast.error(err.response?.data?.message || 'Failed to place order.');
+                      } finally {
+                        setIsPlacingOrder(false);
+                      }
+                    }}
+                    disabled={isPlacingOrder}
+                    className="flex-1 bg-[#1e4d1e] hover:bg-[#163d16] disabled:bg-gray-400 text-white px-4 py-3 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2"
+                  >
+                    {isPlacingOrder ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Placing Order...
+                      </>
+                    ) : (
+                      'Confirm Order'
+                    )}
+                  </button>
+                </>
+              ) : (
+                <button 
+                  onClick={() => {
+                    setShowConfirmModal(false);
+                    setOrderResult(null);
+                  }}
+                  className="w-full bg-[#1e4d1e] hover:bg-[#163d16] text-white py-3 rounded-xl text-xs font-bold transition-colors text-center"
+                >
+                  Continue Shopping
+                </button>
+              )}
+            </div>
+
+          </div>
+        </div>
+      )}
 
       {/* ── Related Products ───────────────────────────────── */}
       {relatedProducts.length > 0 && (

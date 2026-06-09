@@ -47,7 +47,7 @@ export default function ConsumerChatPage() {
     {
       id: 'chat-4',
       name: 'Sunrise Equipment',
-      avatar: 'https://images.unsplash.com/photo-1592982537447-6f2c6e6d1ebf?w=80&h=80&fit=crop',
+      avatar: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=80&h=80&fit=crop',
       lastMsg: "We've updated...",
       time: 'Oct 12',
       isActive: false,
