@@ -12,6 +12,7 @@ export interface RegisterPayload {
   role?: 'farmer' | 'consumer';
   phone?: string;
   otp?: string;
+  farmerCardNo?: string;
 }
 
 export const authService = {

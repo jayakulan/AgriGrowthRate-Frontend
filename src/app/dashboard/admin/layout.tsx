@@ -30,7 +30,8 @@ export default function AdminLayout({
 
   const mainSidebarMenus = [
     { label: 'Dashboard', href: '/dashboard/admin', icon: LayoutDashboard },
-    { label: 'Manage Users', href: '/dashboard/admin/users', icon: Users },
+    { label: 'Manage Farmers', href: '/dashboard/admin/farmers', icon: Users },
+    { label: 'Manage Retailers', href: '/dashboard/admin/retailers', icon: Users },
     { label: 'Manage Products', href: '/dashboard/admin/products', icon: Package },
     { label: 'Orders Monitoring', href: '/dashboard/admin/orders', icon: ShoppingCart },
     { label: 'Reports / Analytics', href: '/dashboard/admin/reports', icon: BarChart3 },
