@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Sprout,
@@ -26,79 +26,72 @@ import {
   ChevronRight,
   TrendingUp,
   Sparkles,
+  Loader2,
+  CircleAlert,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { orderService } from '@/services/orderService';
 
 export default function OrdersManagementPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  
+  // Confirmation popup states
+  const [confirmingOrder, setConfirmingOrder] = useState<any | null>(null);
+  const [userInputRef, setUserInputRef] = useState('');
+  const [validationError, setValidationError] = useState<string | null>(null);
 
-  // Dummy orders data matching screenshot exactly
-  const initialOrders = [
-    {
-      id: '#AGR-29384',
-      customer: 'Elena Mitchell',
-      initials: 'EM',
-      bgColor: 'bg-emerald-100 text-emerald-700',
-      product: 'Premium Organic Wheat',
-      quantity: '500 kg',
-      price: '$1,250.00',
-      status: 'COMPLETED',
-      statusClass: 'bg-[#edf4e2] text-[#4A6D2F]',
-      date: 'Oct 24, 2023',
-    },
-    {
-      id: '#AGR-29385',
-      customer: 'Julian Sterling',
-      initials: 'JS',
-      bgColor: 'bg-blue-100 text-blue-700',
-      product: 'Heirloom Tomato Seeds',
-      quantity: '15 Units',
-      price: '$450.00',
-      status: 'PENDING',
-      statusClass: 'bg-amber-50 text-amber-600',
-      date: 'Oct 25, 2023',
-    },
-    {
-      id: '#AGR-29386',
-      customer: 'Aria Halloway',
-      initials: 'AH',
-      bgColor: 'bg-purple-100 text-purple-700',
-      product: 'Sustainable Fertilizer Mix',
-      quantity: '20 Bags',
-      price: '$3,200.00',
-      status: 'COMPLETED',
-      statusClass: 'bg-[#edf4e2] text-[#4A6D2F]',
-      date: 'Oct 25, 2023',
-    },
-    {
-      id: '#AGR-29387',
-      customer: 'Marcus Thorne',
-      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop',
-      product: 'Winter Barley Seedlings',
-      quantity: '1,200 Units',
-      price: '$8,450.00',
-      status: 'PENDING',
-      statusClass: 'bg-amber-50 text-amber-600',
-      date: 'Oct 26, 2023',
-    },
-    {
-      id: '#AGR-29388',
-      customer: 'Lydia West',
-      initials: 'LW',
-      bgColor: 'bg-pink-100 text-pink-700',
-      product: 'Drip Irrigation Kit',
-      quantity: '2 Sets',
-      price: '$590.00',
-      status: 'COMPLETED',
-      statusClass: 'bg-[#edf4e2] text-[#4A6D2F]',
-      date: 'Oct 26, 2023',
-    },
-  ];
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const res = await orderService.getFarmerOrders();
+      if (res && res.success) {
+        setOrders(res.data || []);
+      } else {
+        toast.error(res.message || 'Failed to fetch orders');
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error('Could not fetch orders from server.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const handleUpdateStatus = async (orderId: string, status: string) => {
+    try {
+      setUpdatingId(orderId);
+      const res = await orderService.updateStatus(orderId, status);
+      if (res && res.success) {
+        toast.success(`Order successfully completed`);
+        setConfirmingOrder(null);
+        setUserInputRef('');
+        setValidationError(null);
+        fetchOrders();
+      } else {
+        toast.error(res.message || 'Failed to update order');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to change order status');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   const handleExport = () => {
     toast.success('Orders data exported successfully! 📊');
   };
+
+  const totalPending = orders.filter(o => o.status === 'pending').length;
+  const totalCompleted = orders.filter(o => o.status === 'delivered').length;
 
   return (
     <div className="p-8">
@@ -123,7 +116,7 @@ export default function OrdersManagementPage() {
                   </div>
                   <div>
                     <span className="text-xs font-semibold text-gray-400">Pending</span>
-                    <h4 className="text-xl font-extrabold text-gray-900 mt-0.5">24</h4>
+                    <h4 className="text-xl font-extrabold text-gray-900 mt-0.5">{totalPending}</h4>
                   </div>
                 </div>
 
@@ -134,7 +127,7 @@ export default function OrdersManagementPage() {
                   </div>
                   <div>
                     <span className="text-xs font-semibold text-gray-400">Completed</span>
-                    <h4 className="text-xl font-extrabold text-gray-900 mt-0.5">1,482</h4>
+                    <h4 className="text-xl font-extrabold text-gray-900 mt-0.5">{totalCompleted}</h4>
                   </div>
                 </div>
               </div>
@@ -173,110 +166,147 @@ export default function OrdersManagementPage() {
                 <span>Export CSV</span>
               </button>
             </div>
-
             {/* Orders Details Table */}
             <div className="bg-white border border-[#e4e6df] rounded-2xl overflow-hidden shadow-sm mb-8">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-[#f4f5f0]/50 border-b border-[#e4e6df] text-xs font-bold text-gray-500">
-                      <th className="py-4 px-6">Order ID</th>
-                      <th className="py-4 px-6">Customer Name</th>
-                      <th className="py-4 px-6">Product</th>
-                      <th className="py-4 px-6">Quantity</th>
-                      <th className="py-4 px-6">Total Price</th>
-                      <th className="py-4 px-6">Status</th>
-                      <th className="py-4 px-6">Date</th>
-                      <th className="py-4 px-6">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#f4f5f0]">
-                    {initialOrders.map((ord) => (
-                      <tr key={ord.id} className="text-xs text-gray-700 hover:bg-[#f9f9f6]/40 transition-colors">
-                        {/* Order ID */}
-                        <td className="py-4 px-6 font-bold font-mono text-[#1e4d1e]">{ord.id}</td>
-                        
-                        {/* Customer */}
-                        <td className="py-4 px-6 font-bold text-gray-900">
-                          <div className="flex items-center gap-2.5">
-                            {ord.image ? (
-                              <img
-                                src={ord.image}
-                                alt={ord.customer}
-                                className="w-7 h-7 rounded-full object-cover border border-[#e4e6df]"
-                              />
-                            ) : (
-                              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-extrabold ${ord.bgColor}`}>
-                                {ord.initials}
-                              </div>
-                            )}
-                            <span>{ord.customer}</span>
-                          </div>
-                        </td>
-
-                        {/* Product */}
-                        <td className="py-4 px-6 font-medium text-gray-900">{ord.product}</td>
-                        
-                        {/* Quantity */}
-                        <td className="py-4 px-6 font-bold text-gray-500">{ord.quantity}</td>
-                        
-                        {/* Total Price */}
-                        <td className="py-4 px-6 font-extrabold text-gray-900">{ord.price}</td>
-                        
-                        {/* Status Badge */}
-                        <td className="py-4 px-6">
-                          <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md tracking-wider ${ord.statusClass}`}>
-                            {ord.status}
-                          </span>
-                        </td>
-                        
-                        {/* Date */}
-                        <td className="py-4 px-6 font-medium text-gray-400">{ord.date}</td>
-                        
-                        {/* Action Dots */}
-                        <td className="py-4 px-6">
-                          <button className="text-gray-400 hover:text-gray-600 p-1">
-                            <MoreVertical className="w-4 h-4" />
-                          </button>
-                        </td>
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-20">
+                  <Loader2 className="w-8 h-8 text-[#1e4d1e] animate-spin" />
+                  <p className="text-sm text-gray-500 mt-2">Loading orders...</p>
+                </div>
+              ) : orders.length === 0 ? (
+                <div className="text-center py-20">
+                  <Package className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                  <p className="text-gray-500 text-sm">No orders received yet.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-[#f4f5f0]/50 border-b border-[#e4e6df] text-xs font-bold text-gray-500">
+                        <th className="py-4 px-6">Order ID</th>
+                        <th className="py-4 px-6">Customer Name</th>
+                        <th className="py-4 px-6">Product</th>
+                        <th className="py-4 px-6">Quantity</th>
+                        <th className="py-4 px-6">Total Price</th>
+                        <th className="py-4 px-6">Status</th>
+                        <th className="py-4 px-6">Date</th>
+                        <th className="py-4 px-6">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-[#f4f5f0]">
+                      {orders
+                        .filter(ord => {
+                          const customerName = ord.consumer?.name || 'Guest';
+                          const orderNo = ord.orderConfirmationNumber || '';
+                          const pName = ord.items?.[0]?.product?.name || '';
+                          return (
+                            customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            orderNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            pName.toLowerCase().includes(searchQuery.toLowerCase())
+                          );
+                        })
+                        .map((ord) => {
+                          const firstItem = ord.items?.[0];
+                          const product = firstItem?.product;
+                          const formattedDate = new Date(ord.createdAt).toLocaleDateString(undefined, {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          });
+
+                          return (
+                            <tr key={ord._id} className="text-xs text-gray-700 hover:bg-[#f9f9f6]/40 transition-colors">
+                              {/* Order ID */}
+                              <td className="py-4 px-6 font-bold font-mono text-[#1e4d1e]">
+                                {ord.orderConfirmationNumber || `#ORD-${ord._id.slice(-6).toUpperCase()}`}
+                              </td>
+                              
+                              {/* Customer */}
+                              <td className="py-4 px-6 font-bold text-gray-900">
+                                <div className="flex items-center gap-2.5">
+                                  {ord.consumer?.avatar ? (
+                                    <img
+                                      src={ord.consumer.avatar}
+                                      alt={ord.consumer.name}
+                                      className="w-7 h-7 rounded-full object-cover border border-[#e4e6df]"
+                                    />
+                                  ) : (
+                                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-extrabold bg-[#1e4d1e]/10 text-[#1e4d1e]">
+                                      {(ord.consumer?.name || 'G').slice(0, 2).toUpperCase()}
+                                    </div>
+                                  )}
+                                  <div className="flex flex-col">
+                                    <span>{ord.consumer?.name || 'Anonymous'}</span>
+                                    <span className="text-[10px] text-gray-400 font-semibold font-sans">{ord.consumer?.phone || ''}</span>
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* Product */}
+                              <td className="py-4 px-6 font-medium text-gray-900">{product?.name || 'N/A'}</td>
+                              
+                              {/* Quantity */}
+                              <td className="py-4 px-6 font-bold text-gray-500">
+                                {firstItem?.quantity} {product?.unit || 'items'}
+                              </td>
+                              
+                              {/* Total Price */}
+                              <td className="py-4 px-6 font-extrabold text-gray-900">
+                                ${ord.totalAmount.toFixed(2)}
+                              </td>
+                              
+                              {/* Status Badge */}
+                              <td className="py-4 px-6">
+                                <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md tracking-wider uppercase ${
+                                  ord.status === 'delivered' ? 'bg-[#edf4e2] text-[#4A6D2F]' :
+                                  ord.status === 'pending' ? 'bg-amber-50 text-amber-600' :
+                                  ord.status === 'cancelled' ? 'bg-red-50 text-red-600' :
+                                  'bg-blue-50 text-blue-600'
+                                }`}>
+                                  {ord.status}
+                                </span>
+                              </td>
+                              
+                              {/* Date */}
+                              <td className="py-4 px-6 font-medium text-gray-400">{formattedDate}</td>
+                              
+                              {/* Action Button */}
+                              <td className="py-4 px-6">
+                                {ord.status === 'delivered' ? (
+                                  <span className="text-[#1e4d1e] font-extrabold text-xs">Completed</span>
+                                ) : (
+                                  <button
+                                    disabled={updatingId === ord._id}
+                                    onClick={() => {
+                                      setConfirmingOrder(ord);
+                                      setUserInputRef('');
+                                      setValidationError(null);
+                                    }}
+                                    className="bg-[#1e4d1e] hover:bg-[#163d16] text-white text-[11px] font-extrabold px-3.5 py-1.5 rounded-lg transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
+                                  >
+                                    Complete
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
               {/* Table pagination stats footer */}
-              <div className="bg-[#f4f5f0]/30 border-t border-[#e4e6df] px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <span className="text-[10px] font-semibold text-gray-400">Showing 1 to 5 of 1,506 orders</span>
-                
-                {/* Pages selection stack */}
-                <div className="flex items-center gap-1">
-                  <button className="w-8 h-8 rounded-lg border border-[#e4e6df] bg-white text-gray-500 flex items-center justify-center hover:bg-gray-50 transition-colors">
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button className="w-8 h-8 rounded-lg bg-[#1e4d1e] text-white flex items-center justify-center font-bold">
-                    1
-                  </button>
-                  <button className="w-8 h-8 rounded-lg border border-[#e4e6df] bg-white text-gray-700 flex items-center justify-center hover:bg-gray-50 transition-colors font-semibold">
-                    2
-                  </button>
-                  <button className="w-8 h-8 rounded-lg border border-[#e4e6df] bg-white text-gray-700 flex items-center justify-center hover:bg-gray-50 transition-colors font-semibold">
-                    3
-                  </button>
-                  <span className="text-gray-400 px-1 font-semibold">...</span>
-                  <button className="w-8 h-8 rounded-lg border border-[#e4e6df] bg-white text-gray-700 flex items-center justify-center hover:bg-gray-50 transition-colors font-semibold">
-                    302
-                  </button>
-                  <button className="w-8 h-8 rounded-lg border border-[#e4e6df] bg-white text-gray-500 flex items-center justify-center hover:bg-gray-50 transition-colors">
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+              {!loading && orders.length > 0 && (
+                <div className="bg-[#f4f5f0]/30 border-t border-[#e4e6df] px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <span className="text-[10px] font-semibold text-gray-400">Showing all {orders.length} orders</span>
                 </div>
-              </div>
+              )}
 
             </div>
 
             {/* Bottom Row Statistics Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               
               {/* Box 1: Top Selling Crop */}
               <div className="bg-white border border-[#e4e6df] rounded-2xl p-5 shadow-sm flex flex-col justify-between h-40">
@@ -337,6 +367,88 @@ export default function OrdersManagementPage() {
               </div>
 
             </div>
+
+            {/* ── Order Confirmation Popup ──────────────────── */}
+            {confirmingOrder && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
+                <div className="bg-white border border-[#e4e6df] rounded-2xl max-w-md w-full p-6 shadow-xl relative animate-scale-up">
+                  <h3 className="text-lg font-extrabold text-[#1e4d1e] mb-2">Confirm Order Completion</h3>
+                  <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+                    Please ask the consumer for the <b>Order Reference Number</b> sent to their phone to verify delivery. Enter it below to complete fulfillment.
+                  </p>
+
+                  {/* Info details */}
+                  <div className="bg-[#f4f5f0] border border-[#e4e6df] rounded-xl p-4 mb-4 text-xs font-semibold text-gray-700 space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Customer:</span>
+                      <span>{confirmingOrder.consumer?.name || 'Anonymous'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Product:</span>
+                      <span>{confirmingOrder.items?.[0]?.product?.name || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Amount:</span>
+                      <span className="font-bold text-[#1e4d1e]">${confirmingOrder.totalAmount.toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  {/* Input field */}
+                  <div className="mb-6">
+                    <label className="block text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mb-2">
+                      Order Reference Number
+                    </label>
+                    <div className={`flex items-center bg-[#f4f5f0] border-2 ${validationError ? 'border-red-400' : 'border-[#e4e6df]'} focus-within:border-[#1e4d1e] rounded-xl overflow-hidden`}>
+                      <span className="pl-4 pr-1 py-3 text-sm font-extrabold text-[#1e4d1e] select-none tracking-widest">AGR-</span>
+                      <input
+                        type="text"
+                        placeholder="XXXXXX"
+                        value={userInputRef}
+                        onChange={(e) => {
+                          setUserInputRef(e.target.value.replace(/[^0-9]/g, '').slice(0, 6));
+                          setValidationError(null);
+                        }}
+                        className="flex-1 py-3 pr-4 bg-transparent text-sm font-bold text-gray-800 placeholder-gray-400 focus:outline-none tracking-widest uppercase"
+                      />
+                    </div>
+                    {validationError && (
+                      <div className="mt-2 bg-red-50 border border-red-200 text-red-600 text-[11px] font-bold px-3 py-2 rounded-lg flex items-center gap-2">
+                        <CircleAlert className="w-3.5 h-3.5 shrink-0" />
+                        {validationError}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingOrder(null)}
+                      className="flex-1 border-2 border-[#e4e6df] text-gray-700 hover:bg-gray-50 px-4 py-3 rounded-xl text-xs font-bold transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={updatingId === confirmingOrder._id}
+                      onClick={() => {
+                        const targetRef = confirmingOrder.orderConfirmationNumber || '';
+                        const fullInput = `AGR-${userInputRef.trim()}`;
+                        if (fullInput.toUpperCase() !== targetRef.toUpperCase()) {
+                          setValidationError('Incorrect Reference Number. Please verify with the consumer and try again.');
+                          return;
+                        }
+                        setValidationError(null);
+                        handleUpdateStatus(confirmingOrder._id, 'delivered');
+                      }}
+                      className="flex-1 bg-[#1e4d1e] hover:bg-[#163d16] text-white px-4 py-3 rounded-xl text-xs font-bold transition-colors disabled:opacity-50"
+                    >
+                      Verify & Complete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
     </div>
   );

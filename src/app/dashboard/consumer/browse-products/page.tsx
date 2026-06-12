@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Grid3X3,
@@ -12,110 +12,92 @@ import {
   ChevronLeft,
   ChevronRight,
   ShoppingCart,
+  Loader2,
 } from 'lucide-react';
+import { productService } from '@/services/productService';
+import { orderService } from '@/services/orderService';
 
 const categories = [
-  { name: 'All Products', icon: Grid3X3, active: true },
-  { name: 'Vegetables', icon: Carrot, active: false },
-  { name: 'Grains', icon: Wheat, active: false },
-  { name: 'Fruits', icon: Apple, active: false },
-  { name: 'Organic Seeds', icon: Sprout, active: false },
-];
-
-const products = [
-  {
-    id: 1,
-    name: 'Organic Russet Potatoes',
-    category: 'VEGETABLES',
-    desc: 'Directly harvested from the valley, known for the...',
-    price: '$1.45',
-    unit: '/ kg',
-    rating: 4.9,
-    image: 'https://images.unsplash.com/photo-1518977676601-b53f82ber2a3?w=400&h=300&fit=crop',
-    badge: null,
-  },
-  {
-    id: 2,
-    name: 'Golden Hard Wheat',
-    category: 'GRAINS',
-    desc: 'High-protein grain perfect for artisanal...',
-    price: '$3.20',
-    unit: '/ kg',
-    rating: 4.7,
-    image: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop',
-    badge: null,
-  },
-  {
-    id: 3,
-    name: 'Premium Gala Apples',
-    category: 'FRUITS',
-    desc: 'Crisp, sweet, and locally grown. Perfect for retail...',
-    price: '$2.10',
-    unit: '/ kg',
-    rating: 5.0,
-    image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=300&fit=crop',
-    badge: 'Top Seller',
-  },
-  {
-    id: 4,
-    name: 'Black Heirloom Carrots',
-    category: 'VEGETABLES',
-    desc: 'Rich in antioxidants with an earthy, sweet flavor...',
-    price: '$4.50',
-    unit: '/ kg',
-    rating: 4.8,
-    image: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400&h=300&fit=crop',
-    badge: null,
-  },
-  {
-    id: 5,
-    name: 'Vine-Ripened Tomatoes',
-    category: 'VEGETABLES',
-    desc: 'Greenhouse grown for maximum flavor and...',
-    price: '$2.85',
-    unit: '/ kg',
-    rating: 4.9,
-    image: 'https://images.unsplash.com/photo-1546470427-0d4db154ceb8?w=400&h=300&fit=crop',
-    badge: null,
-  },
-  {
-    id: 6,
-    name: 'Long-Grain Basmati Rice',
-    category: 'GRAINS',
-    desc: 'Aromatic rice with extra-long grains. Aged for 12...',
-    price: '$5.50',
-    unit: '/ kg',
-    rating: 4.6,
-    image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&h=300&fit=crop',
-    badge: null,
-  },
-  {
-    id: 7,
-    name: 'Sweet Golden Pineapples',
-    category: 'FRUITS',
-    desc: 'Sustainably sourced from tropical farms,...',
-    price: '$3.75',
-    unit: '/ unit',
-    rating: 4.8,
-    image: 'https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400&h=300&fit=crop',
-    badge: null,
-  },
-  {
-    id: 8,
-    name: 'Farm-Fresh Broccoli',
-    category: 'VEGETABLES',
-    desc: 'Crisp, densely packed florets. Cold-chain...',
-    price: '$2.50',
-    unit: '/ unit',
-    rating: 4.9,
-    image: 'https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=400&h=300&fit=crop',
-    badge: null,
-  },
+  { name: 'All Products', icon: Grid3X3, key: 'all' },
+  { name: 'Vegetables', icon: Carrot, key: 'vegetables' },
+  { name: 'Grains', icon: Wheat, key: 'grains' },
+  { name: 'Fruits', icon: Apple, key: 'fruits' },
+  { name: 'Dairy', icon: Sprout, key: 'dairy' }, // Changed Organic Seeds to Dairy or keep similar to db categories
+  { name: 'Herbs', icon: Sprout, key: 'herbs' },
 ];
 
 export default function BrowseProductsPage() {
-  const [activeCategory, setActiveCategory] = useState('All Products');
-  const [currentPage] = useState(1);
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [sortBy, setSortBy] = useState('Latest Arrivals');
+  const [pendingProductIds, setPendingProductIds] = useState<Set<string>>(new Set());
+  const limit = 12;
+
+  // Fetch consumer's pending order product IDs once on mount
+  useEffect(() => {
+    const fetchPendingOrders = async () => {
+      try {
+        const res = await orderService.getMyOrders();
+        if (res && res.success && res.data) {
+          const ids = new Set<string>();
+          res.data.forEach((order: any) => {
+            if (order.status === 'pending') {
+              (order.items || []).forEach((item: any) => {
+                const productId = item.product?._id || item.product;
+                if (productId) ids.add(productId.toString());
+              });
+            }
+          });
+          setPendingProductIds(ids);
+        }
+      } catch {
+        // If not logged in or error, just show all products
+      }
+    };
+    fetchPendingOrders();
+  }, []);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      setLoading(true);
+      try {
+        const params: Record<string, string> = {
+          page: String(currentPage),
+          limit: String(limit),
+        };
+        if (activeCategory !== 'all') {
+          params.category = activeCategory;
+        }
+        const res = await productService.getAll(params);
+        if (res && res.success) {
+          let loadedProducts = res.data || [];
+          
+          // Sort products frontend-side to respect sorting filter
+          if (sortBy === 'Price: Low to High') {
+            loadedProducts = [...loadedProducts].sort((a: any, b: any) => a.price - b.price);
+          } else if (sortBy === 'Price: High to Low') {
+            loadedProducts = [...loadedProducts].sort((a: any, b: any) => b.price - a.price);
+          } else if (sortBy === 'Top Rated') {
+            loadedProducts = [...loadedProducts].sort((a: any, b: any) => b.rating - a.rating);
+          }
+
+          setProducts(loadedProducts);
+          setTotalProducts(res.total || loadedProducts.length);
+        }
+      } catch (err) {
+        console.error('Failed to fetch products:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, [activeCategory, currentPage, sortBy]);
+
+  const totalPages = Math.ceil(totalProducts / limit) || 1;
 
   return (
     <div className="p-8 max-w-[1200px]">
@@ -130,7 +112,11 @@ export default function BrowseProductsPage() {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-sm text-gray-500">Sort:</span>
-          <select className="border border-[#e4e6df] rounded-lg px-3 py-2 text-sm font-semibold text-gray-800 bg-white focus:outline-none focus:border-[#1e4d1e] cursor-pointer">
+          <select 
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="border border-[#e4e6df] rounded-lg px-3 py-2 text-sm font-semibold text-gray-800 bg-white focus:outline-none focus:border-[#1e4d1e] cursor-pointer"
+          >
             <option>Latest Arrivals</option>
             <option>Price: Low to High</option>
             <option>Price: High to Low</option>
@@ -143,11 +129,14 @@ export default function BrowseProductsPage() {
       <div className="flex items-center gap-3 mb-8 flex-wrap">
         {categories.map((cat) => {
           const Icon = cat.icon;
-          const isActive = activeCategory === cat.name;
+          const isActive = activeCategory === cat.key;
           return (
             <button
-              key={cat.name}
-              onClick={() => setActiveCategory(cat.name)}
+              key={cat.key}
+              onClick={() => {
+                setActiveCategory(cat.key);
+                setCurrentPage(1);
+              }}
               className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all ${
                 isActive
                   ? 'bg-[#1e4d1e] text-white shadow-sm'
@@ -161,82 +150,111 @@ export default function BrowseProductsPage() {
         })}
       </div>
 
-      {/* ── Products Grid (4 columns, 2 rows) ─────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-        {products.map((product) => (
-          <div
-            key={product.id}
-            className="bg-white border border-[#e4e6df] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group"
-          >
-            {/* Image */}
-            <div className="relative h-44 overflow-hidden">
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              {/* Rating badge */}
-              <span className="absolute top-3 left-3 flex items-center gap-1 bg-white/90 backdrop-blur-sm text-xs font-bold text-gray-900 px-2 py-1 rounded-md shadow-sm">
-                <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                {product.rating}
-              </span>
-              {/* Special badge */}
-              {product.badge && (
-                <span className="absolute top-3 right-3 bg-[#1e4d1e] text-white text-[9px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider">
-                  {product.badge}
-                </span>
-              )}
-            </div>
-
-            {/* Details */}
-            <div className="p-4">
-              <span className="text-[9px] font-extrabold text-[#1e4d1e] tracking-wider uppercase">
-                {product.category}
-              </span>
-              <h3 className="text-[15px] font-extrabold text-gray-900 mt-1 leading-snug">{product.name}</h3>
-              <p className="text-[11px] text-gray-400 mt-1 leading-relaxed line-clamp-2">{product.desc}</p>
-              <div className="flex items-center justify-between mt-4">
-                <div>
-                  <span className="text-lg font-extrabold text-gray-900">{product.price}</span>
-                  <span className="text-xs text-gray-400 ml-1">{product.unit}</span>
+      {/* ── Products Grid ─────────── */}
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 text-[#1e4d1e] animate-spin" />
+          <p className="text-sm text-gray-500 mt-2">Loading products...</p>
+        </div>
+      ) : products.filter(p => !pendingProductIds.has(p._id?.toString())).length === 0 ? (
+        <div className="text-center py-20 bg-white border border-[#e4e6df] rounded-2xl">
+          <p className="text-gray-500">No products found in this category.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+          {products.filter(p => !pendingProductIds.has(p._id?.toString())).map((product) => {
+            const productImg = product.images && product.images[0] 
+              ? (product.images[0].startsWith('http') || product.images[0].startsWith('data:') ? product.images[0] : `http://localhost:5001${product.images[0]}`) 
+              : 'https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=400&h=300&fit=crop';
+            
+            return (
+              <div
+                key={product._id}
+                className="bg-white border border-[#e4e6df] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group flex flex-col h-full"
+              >
+                {/* Image */}
+                <div className="relative h-44 overflow-hidden shrink-0">
+                  <img
+                    src={productImg}
+                    alt={product.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  {/* Rating badge */}
+                  <span className="absolute top-3 left-3 flex items-center gap-1 bg-white/90 backdrop-blur-sm text-xs font-bold text-gray-900 px-2 py-1 rounded-md shadow-sm">
+                    <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                    {product.rating || 0}
+                  </span>
+                  {/* Organic badge */}
+                  {product.isOrganic && (
+                    <span className="absolute top-3 right-3 bg-[#1e4d1e] text-white text-[9px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider">
+                      Organic
+                    </span>
+                  )}
                 </div>
-                <Link
-                  href={`/dashboard/consumer/browse-products/${product.id}`}
-                  className="bg-[#1e4d1e] hover:bg-[#163d16] text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors"
-                >
-                  View Details
-                </Link>
+
+                {/* Details */}
+                <div className="p-4 flex flex-col flex-grow justify-between">
+                  <div>
+                    <span className="text-[9px] font-extrabold text-[#1e4d1e] tracking-wider uppercase">
+                      {product.category}
+                    </span>
+                    <h3 className="text-[15px] font-extrabold text-gray-900 mt-1 leading-snug line-clamp-1">{product.name}</h3>
+                    <p className="text-[11px] text-gray-400 mt-1 leading-relaxed line-clamp-2">{product.description}</p>
+                  </div>
+                  <div className="flex items-center justify-between mt-4">
+                    <div>
+                      <span className="text-lg font-extrabold text-gray-900">${product.price.toFixed(2)}</span>
+                      <span className="text-xs text-gray-400 ml-1">/ {product.unit || 'kg'}</span>
+                    </div>
+                    <Link
+                      href={`/dashboard/consumer/browse-products/${product._id}`}
+                      className="bg-[#1e4d1e] hover:bg-[#163d16] text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors"
+                    >
+                      View Details
+                    </Link>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        ))}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* ── Pagination ────────────────────────────────── */}
-      <div className="flex items-center justify-center gap-2 mb-8">
-        <button className="w-9 h-9 rounded-lg border border-[#e4e6df] flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors">
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-        {[1, 2, 3].map((page) => (
-          <button
-            key={page}
-            className={`w-9 h-9 rounded-lg text-sm font-bold transition-colors ${
-              currentPage === page
-                ? 'bg-[#1e4d1e] text-white'
-                : 'border border-[#e4e6df] text-gray-600 hover:bg-gray-50'
-            }`}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mb-8">
+          <button 
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            className="w-9 h-9 rounded-lg border border-[#e4e6df] flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {page}
+            <ChevronLeft className="w-4 h-4" />
           </button>
-        ))}
-        <span className="text-gray-400 text-sm px-1">…</span>
-        <button className="w-9 h-9 rounded-lg border border-[#e4e6df] text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">
-          12
-        </button>
-        <button className="w-9 h-9 rounded-lg border border-[#e4e6df] flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors">
-          <ChevronRight className="w-4 h-4" />
-        </button>
-      </div>
+          {Array.from({ length: totalPages }).map((_, idx) => {
+            const page = idx + 1;
+            return (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`w-9 h-9 rounded-lg text-sm font-bold transition-colors ${
+                  currentPage === page
+                    ? 'bg-[#1e4d1e] text-white'
+                    : 'border border-[#e4e6df] text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                {page}
+              </button>
+            );
+          })}
+          <button 
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            className="w-9 h-9 rounded-lg border border-[#e4e6df] flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* ── Floating Cart FAB ─────────────────────────── */}
       <Link
@@ -248,3 +266,4 @@ export default function BrowseProductsPage() {
     </div>
   );
 }
+
