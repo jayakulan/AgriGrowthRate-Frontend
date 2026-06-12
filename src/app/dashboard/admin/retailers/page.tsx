@@ -34,11 +34,11 @@ interface User {
   initialsBg?: string;
 }
 
-export default function ManageUsersPage() {
+export default function ManageRetailersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('All');
+  const [roleFilter, setRoleFilter] = useState('consumer'); // Force consumer role
   const [currentPage, setCurrentPage] = useState(1);
 
   // Invite modal states
@@ -107,9 +107,8 @@ export default function ManageUsersPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const params: any = { page: currentPage, limit: 10 };
+      const params: any = { page: currentPage, limit: 10, role: 'consumer' };
       if (searchTerm) params.search = searchTerm;
-      if (roleFilter && roleFilter !== 'All') params.role = roleFilter.toLowerCase();
 
       const response = await axios.get('http://localhost:5001/api/admin/users', {
         headers: { Authorization: `Bearer ${token}` },
@@ -140,7 +139,7 @@ export default function ManageUsersPage() {
       setInviting(false);
       toast.success(`Platform invitation sent to ${inviteForm.email}! ✉️`);
       setShowInviteModal(false);
-      setInviteForm({ name: '', email: '', role: 'farmer' });
+      setInviteForm({ name: '', email: '', role: 'consumer' });
     }, 1200);
   };
 
@@ -215,29 +214,17 @@ export default function ManageUsersPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-left">
           <div className="space-y-1">
             <h1 className="text-3xl font-extrabold text-[#1e4d1e] tracking-tight">
-              Manage Users
+              Manage Retailers
             </h1>
             <p className="text-xs text-gray-400 font-semibold">
-              Oversee and manage your growing agricultural community.
+              Oversee and manage your retailers (consumers).
             </p>
           </div>
 
           {/* Right Header Filters & Invite Trigger */}
           <div className="flex items-center gap-3">
             
-            {/* Filter Dropdown */}
-            <div className="relative select-none">
-              <select
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                className="bg-white border border-[#e4e6df] rounded-xl px-4 py-2 text-xs font-bold text-gray-700 focus:outline-none appearance-none pr-8 cursor-pointer shadow-sm min-w-[110px]"
-              >
-                <option value="All">All Roles</option>
-                <option value="Farmer">Farmer</option>
-                <option value="Consumer">Consumer</option>
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
+
 
             {/* Invite Button */}
             <button

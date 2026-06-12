@@ -18,7 +18,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<User>;
-  register: (name: string, email: string, password: string, role?: 'farmer' | 'consumer', phone?: string, otp?: string) => Promise<User>;
+  register: (name: string, email: string, password: string, role?: 'farmer' | 'consumer', phone?: string, otp?: string, farmerCardNo?: string) => Promise<User>;
   loginWithGoogle: (credential?: string, accessToken?: string) => Promise<User>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
@@ -78,8 +78,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return userObj;
   };
 
-  const register = async (name: string, email: string, password: string, role: 'farmer' | 'consumer' = 'consumer', phone?: string, otp?: string) => {
-    const response = await authService.register({ name, email, password, role, phone, otp });
+  const register = async (name: string, email: string, password: string, role: 'farmer' | 'consumer' = 'consumer', phone?: string, otp?: string, farmerCardNo?: string) => {
+    const response = await authService.register({ name, email, password, role, phone, otp, farmerCardNo });
     const userObj = response.data;
 
     setUser(userObj);

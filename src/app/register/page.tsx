@@ -77,8 +77,14 @@ export default function RegisterPage() {
     if (!form.phone) {
       return toast.error('Phone number is required for SMS verification');
     }
-    if (form.role === 'farmer' && !form.farmerCardNo) {
-      return toast.error('Farmer Card Number is required for registration');
+    if (form.role === 'farmer') {
+      if (!form.farmerCardNo) {
+        return toast.error('Farmer Card Number is required for registration');
+      }
+      const farmerCardRegex = /^FSN\d{7}$/;
+      if (!farmerCardRegex.test(form.farmerCardNo)) {
+        return toast.error('Invalid Farmer Card Number Format');
+      }
     }
     if (form.password !== form.confirm) {
       return toast.error('Passwords do not match');
@@ -118,7 +124,8 @@ export default function RegisterPage() {
         form.password,
         form.role,
         form.phone,
-        otpCode
+        otpCode,
+        form.farmerCardNo
       );
 
       toast.success('Verification complete! Account created 🌱');
@@ -306,7 +313,7 @@ export default function RegisterPage() {
                           type="text"
                           value={form.farmerCardNo}
                           onChange={handleChange}
-                          placeholder="Farmer Card Number (e.g. AGR-88203)"
+                          placeholder="Farmer Card Number (e.g. FSN0000000)"
                           className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 text-sm text-gray-800 placeholder-gray-400 font-semibold tracking-wide"
                           required={form.role === 'farmer'}
                         />
