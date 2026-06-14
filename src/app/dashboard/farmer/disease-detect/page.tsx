@@ -22,7 +22,6 @@ import {
   ArrowRight,
   UploadCloud,
   History,
-  Bot,
   RefreshCw,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -103,15 +102,8 @@ export default function DiseaseDetectionPage() {
   return (
     <div className="p-8">
             
-            {/* Title description banner */}
-            <div className="mb-8">
-              <h1 className="text-3xl font-extrabold text-[#1e4d1e] tracking-tight">
-                Crop Disease Detection
-              </h1>
-              <p className="text-gray-500 text-sm mt-1 leading-relaxed max-w-2xl">
-                Upload a clear photo of your crop&apos;s leaf to identify potential threats and receive treatment recommendations instantly.
-              </p>
-            </div>
+            
+            
 
             {/* Split layout: Upload Capture Box (Left) & Diagnosis Panel (Right) */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
@@ -225,7 +217,7 @@ export default function DiseaseDetectionPage() {
                         onClick={() => toast.success('Connecting to AI Agronomist...')}
                         className="w-full flex items-center justify-center gap-2 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl text-xs transition-colors shadow-sm cursor-pointer"
                       >
-                        <Bot className="w-4 h-4" />
+                        <img src="/logo.png" alt="Logo" className="w-4 h-4 object-contain" />
                         <span>Consult AI Assistant</span>
                       </button>
 

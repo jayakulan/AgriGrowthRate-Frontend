@@ -19,6 +19,7 @@ import {
   User
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import DashboardHeader from '@/components/DashboardHeader';
 
 export default function AdminLayout({
   children,
@@ -124,57 +125,7 @@ export default function AdminLayout({
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         
         {/* Top bar with Search and Settings */}
-        <header className="h-16 bg-white border-b border-[#e4e6df] flex items-center justify-between px-8 select-none shrink-0">
-          
-          {/* Admin Search Bar */}
-          <div className="relative w-80">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder={
-                pathname === '/dashboard/admin/ai'
-                  ? 'Search datasets, logs or settings...'
-                  : pathname === '/dashboard/admin/orders'
-                  ? 'Search orders, customers, or farmers...'
-                  : pathname === '/dashboard/admin/users'
-                  ? 'Search for users by name or email...'
-                  : pathname === '/dashboard/admin/products'
-                  ? 'Search products'
-                  : 'Search farm analytics, orders, or users...'
-              }
-              className="w-full bg-[#f4f5f0]/60 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-full py-2 pl-10 pr-4 text-xs text-gray-800 placeholder-gray-400 outline-none transition-all"
-            />
-          </div>
-
-          {/* Utility Actions */}
-          <div className="flex items-center gap-6">
-            <button className="text-gray-500 hover:text-gray-900 transition-colors p-1">
-              <Bell className="w-5 h-5" />
-            </button>
-            <button className="text-gray-500 hover:text-gray-900 transition-colors p-1">
-              <Settings className="w-5 h-5" />
-            </button>
-            <button className="text-gray-500 hover:text-gray-900 transition-colors p-1">
-              <HelpCircle className="w-5 h-5" />
-            </button>
-
-            {/* Divider */}
-            <div className="w-px h-6 bg-[#e4e6df]" />
-
-            {/* Profile Avatar */}
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <h4 className="text-sm font-bold text-gray-900 leading-tight">{adminName}</h4>
-                <span className="text-[10px] font-extrabold text-[#4A6D2F] tracking-wide uppercase">{adminRole}</span>
-              </div>
-              <img
-                src={user?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256&h=256"}
-                alt="Profile"
-                className="w-9 h-9 rounded-full object-cover border border-[#e4e6df]"
-              />
-            </div>
-          </div>
-        </header>
+        <DashboardHeader />
 
         {/* Scrollable View Area */}
         <main className="flex-1 overflow-y-auto">

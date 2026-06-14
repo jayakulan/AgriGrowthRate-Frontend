@@ -17,6 +17,7 @@ import {
   HelpCircle,
   LogOut,
 } from 'lucide-react';
+import DashboardHeader from '@/components/DashboardHeader';
 
 const menuItems = [
   { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/consumer' },
@@ -107,59 +108,11 @@ export default function ConsumerLayout({ children }: { children: React.ReactNode
           </div>
         </aside>
 
-        {/* ── Right Content Area ─────────────────────────── */}
-        <div className="flex-1 flex flex-col min-w-0">
+        {/* ── Right Dashboard Layout ─────────────────────────── */}
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
           {/* Top Navbar */}
-          <header className="h-16 border-b border-[#e4e6df] bg-white flex items-center justify-between px-8 shrink-0">
-            {/* Search Input */}
-            <div className="relative w-full max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search for organic fertilizers, seeds, or equipment..."
-                className="w-full pl-9 pr-4 py-2 bg-[#f4f5f0] border border-[#e4e6df] rounded-full text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#1e4d1e] transition-colors"
-              />
-            </div>
-
-            {/* Utility Actions */}
-            <div className="flex items-center gap-6">
-              <button className="text-gray-500 hover:text-gray-900 transition-colors p-1">
-                <Bell className="w-5 h-5" />
-              </button>
-              <button className="text-gray-500 hover:text-gray-900 transition-colors p-1">
-                <Settings className="w-5 h-5" />
-              </button>
-              <button className="text-gray-500 hover:text-gray-900 transition-colors p-1">
-                <HelpCircle className="w-5 h-5" />
-              </button>
-
-              {/* Divider */}
-              <div className="w-px h-6 bg-[#e4e6df]" />
-
-              {/* Profile Avatar & Cart */}
-              <div className="flex items-center gap-4">
-                <Link
-                  href="/dashboard/consumer/orders"
-                  className="flex items-center gap-2 bg-[#1e4d1e] hover:bg-[#163d16] text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                >
-                  <ShoppingCart className="w-3.5 h-3.5" />
-                  <span>Cart ({cartCount})</span>
-                </Link>
-                <div className="flex items-center gap-3">
-                  <div className="text-right">
-                    <h4 className="text-sm font-bold text-gray-900 leading-tight">{user?.name || 'Consumer'}</h4>
-                    <span className="text-[10px] font-extrabold text-[#4A6D2F] tracking-wide uppercase">Premium Buyer</span>
-                  </div>
-                  <img
-                    src={user?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256&h=256"}
-                    alt="Profile"
-                    className="w-9 h-9 rounded-full object-cover border border-[#e4e6df]"
-                  />
-                </div>
-              </div>
-            </div>
-          </header>
+          <DashboardHeader />
 
           {/* Page Content */}
           <main className="flex-1 overflow-y-auto">

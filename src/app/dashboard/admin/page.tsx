@@ -30,7 +30,11 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+import { useAuth } from '@/context/AuthContext';
+
 export default function AdminDashboardPage() {
+  const { user } = useAuth();
+  const userName = user?.name || 'Thomas';
   const [loading, setLoading] = useState(false);
 
   // Revenue chart mock data matching mock overview months
@@ -58,6 +62,18 @@ export default function AdminDashboardPage() {
   return (
     <>
       <div className="p-8 bg-[#f9f9f6] min-h-screen space-y-8 max-w-7xl mx-auto">
+
+        {/* ── Greeting Header ───────────────────────────────── */}
+        <div className="flex items-start justify-between mb-2">
+          <div>
+            <h1 className="text-4xl font-extrabold text-[#1e4d1e] tracking-tight leading-tight">
+              Hi, {userName}.
+            </h1>
+            <p className="text-gray-500 text-sm max-w-xl mt-1.5 leading-relaxed">
+              Here's an overview of the platform's performance and ecosystem.
+            </p>
+          </div>
+        </div>
         
         {/* ── METRICS CARD ROW ── */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -14,7 +14,7 @@ import {
 
 export default function ConsumerDashboardPage() {
   const { user } = useAuth();
-  const firstName = user?.name ? user.name.split(' ')[0] : 'Alex';
+  const userName = user?.name || 'Alex';
 
   const recommendedProducts = [
     {
@@ -50,8 +50,8 @@ export default function ConsumerDashboardPage() {
       {/* ── Greeting Header ───────────────────────────────── */}
       <div className="flex items-start justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-extrabold text-[#1e4d1e] tracking-tight">
-            Good Morning, {firstName}
+          <h1 className="text-4xl font-extrabold text-[#1e4d1e] tracking-tight leading-tight">
+            Hi, {userName}.
           </h1>
           <p className="text-gray-500 text-sm mt-1">
             Here&apos;s your agricultural ecosystem at a glance.

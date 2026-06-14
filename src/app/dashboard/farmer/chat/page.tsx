@@ -128,227 +128,225 @@ export default function FarmerChatPage() {
 
   return (
     <div className="flex h-[calc(100vh-64px)] overflow-hidden">
-            
-            {/* ── Chat Sidebar (Left List) ───────────────────── */}
-            <section className="w-80 border-r border-[#e4e6df] flex flex-col shrink-0">
-              <div className="p-6 border-b border-[#e4e6df]">
-                <h1 className="text-xl font-bold text-gray-900">Messages</h1>
-                <p className="text-xs text-gray-400 font-semibold mt-0.5">Active Buyers & Logistics</p>
+
+      {/* ── Chat Sidebar (Left List) ───────────────────── */}
+      <section className="w-80 border-r border-[#e4e6df] flex flex-col shrink-0">
+        <div className="p-6 border-b border-[#e4e6df]">
+          <h1 className="text-xl font-bold text-gray-900">Messages</h1>
+          <p className="text-xs text-gray-400 font-semibold mt-0.5">Active Buyers & Logistics</p>
+        </div>
+
+        {/* Scrollable list */}
+        <div className="flex-1 overflow-y-auto divide-y divide-[#f4f5f0]">
+          {chatsList.map((chat) => (
+            <button
+              key={chat.id}
+              className={`w-full p-4 flex items-start gap-3 transition-colors text-left relative ${chat.isActive ? 'bg-[#edf4e2]/60' : 'hover:bg-gray-50'
+                }`}
+            >
+              <div className="relative shrink-0">
+                <img
+                  src={chat.avatar}
+                  alt={chat.name}
+                  className="w-10 h-10 rounded-full object-cover border border-[#e4e6df]"
+                />
+                {chat.isActive && (
+                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full" />
+                )}
               </div>
 
-              {/* Scrollable list */}
-              <div className="flex-1 overflow-y-auto divide-y divide-[#f4f5f0]">
-                {chatsList.map((chat) => (
-                  <button
-                    key={chat.id}
-                    className={`w-full p-4 flex items-start gap-3 transition-colors text-left relative ${
-                      chat.isActive ? 'bg-[#edf4e2]/60' : 'hover:bg-gray-50'
-                    }`}
-                  >
-                    <div className="relative shrink-0">
-                      <img
-                        src={chat.avatar}
-                        alt={chat.name}
-                        className="w-10 h-10 rounded-full object-cover border border-[#e4e6df]"
-                      />
-                      {chat.isActive && (
-                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full" />
-                      )}
-                    </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-baseline mb-0.5">
+                  <h4 className="text-xs font-extrabold text-gray-900 truncate">{chat.name}</h4>
+                  <span className="text-[9px] font-bold text-gray-400 shrink-0">{chat.time}</span>
+                </div>
+                <h5 className="text-[10px] font-bold text-gray-800 truncate">{chat.title}</h5>
+                <p className="text-[10px] text-gray-400 truncate mt-0.5 font-medium">{chat.lastMsg}</p>
+              </div>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-baseline mb-0.5">
-                        <h4 className="text-xs font-extrabold text-gray-900 truncate">{chat.name}</h4>
-                        <span className="text-[9px] font-bold text-gray-400 shrink-0">{chat.time}</span>
+              {/* Unread circle dot */}
+              {chat.unread && (
+                <span className="w-2 h-2 rounded-full bg-green-600 mt-2 shrink-0" />
+              )}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Chat Messages Content Window (Right Side) ──── */}
+      <section className="flex-1 flex flex-col min-w-0 bg-[#f9f9f6]/20">
+
+        {/* Chat Window Header */}
+        <header className="h-16 px-6 border-b border-[#e4e6df] bg-white flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <img
+                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop"
+                alt="Marcus Chen Header Profile"
+                className="w-10 h-10 rounded-full object-cover border border-[#e4e6df]"
+              />
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-gray-900 leading-snug">Marcus Chen</h3>
+              <span className="text-[10px] font-semibold text-gray-400">Inquiry: Premium Hard Red Winter Wheat</span>
+            </div>
+          </div>
+
+          {/* Call & Video icons options */}
+          <div className="flex items-center gap-4 text-gray-500">
+            <button className="hover:text-gray-800 transition-colors p-1" onClick={() => toast('Call feature coming soon!')}>
+              <Phone className="w-4 h-4" />
+            </button>
+            <button className="hover:text-gray-800 transition-colors p-1" onClick={() => toast('Video chat feature coming soon!')}>
+              <Video className="w-4 h-4" />
+            </button>
+            <button className="hover:text-gray-800 transition-colors p-1">
+              <Info className="w-4 h-4" />
+            </button>
+          </div>
+        </header>
+
+        {/* Chat Thread */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+
+          {/* Date tag separator matches mock */}
+          <div className="text-center my-6">
+            <span className="text-[9px] font-extrabold tracking-wider bg-gray-100 text-gray-400 px-3 py-1 rounded-full uppercase">
+              October 24, 2023
+            </span>
+          </div>
+
+          {messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={`flex items-end gap-3 ${msg.isMe ? 'justify-end' : 'justify-start'}`}
+            >
+
+              {/* Left profile for incoming message */}
+              {!msg.isMe && (
+                <img
+                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop"
+                  alt={msg.sender}
+                  className="w-7 h-7 rounded-full object-cover shrink-0 border border-[#e4e6df]"
+                />
+              )}
+
+              {/* Chat Bubble Details */}
+              <div className="max-w-[460px] space-y-1">
+
+                {/* Document template bubble matches mock */}
+                {msg.isFile ? (
+                  <div className="bg-white border border-[#e4e6df] rounded-xl p-4 flex items-center justify-between gap-6 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center text-green-600 shrink-0">
+                        <FileText className="w-5 h-5" />
                       </div>
-                      <h5 className="text-[10px] font-bold text-gray-800 truncate">{chat.title}</h5>
-                      <p className="text-[10px] text-gray-400 truncate mt-0.5 font-medium">{chat.lastMsg}</p>
+                      <div className="text-left">
+                        <h4 className="text-xs font-bold text-gray-900">{msg.fileName}</h4>
+                        <p className="text-[10px] text-gray-400 mt-0.5">{msg.fileSize}</p>
+                      </div>
                     </div>
-
-                    {/* Unread circle dot */}
-                    {chat.unread && (
-                      <span className="w-2 h-2 rounded-full bg-green-600 mt-2 shrink-0" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            </section>
-
-            {/* ── Chat Messages Content Window (Right Side) ──── */}
-            <section className="flex-1 flex flex-col min-w-0 bg-[#f9f9f6]/20">
-              
-              {/* Chat Window Header */}
-              <header className="h-16 px-6 border-b border-[#e4e6df] bg-white flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <img
-                      src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop"
-                      alt="Marcus Chen Header Profile"
-                      className="w-10 h-10 rounded-full object-cover border border-[#e4e6df]"
-                    />
-                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full" />
+                    <button
+                      onClick={() => toast.success(`Downloading ${msg.fileName}...`)}
+                      className="p-1.5 hover:bg-[#f4f5f0] rounded-lg transition-colors text-gray-600"
+                      title="Download document"
+                    >
+                      <Download className="w-4 h-4" />
+                    </button>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-gray-900 leading-snug">Marcus Chen</h3>
-                    <span className="text-[10px] font-semibold text-gray-400">Inquiry: Premium Hard Red Winter Wheat</span>
-                  </div>
-                </div>
-
-                {/* Call & Video icons options */}
-                <div className="flex items-center gap-4 text-gray-500">
-                  <button className="hover:text-gray-800 transition-colors p-1" onClick={() => toast('Call feature coming soon!')}>
-                    <Phone className="w-4 h-4" />
-                  </button>
-                  <button className="hover:text-gray-800 transition-colors p-1" onClick={() => toast('Video chat feature coming soon!')}>
-                    <Video className="w-4 h-4" />
-                  </button>
-                  <button className="hover:text-gray-800 transition-colors p-1">
-                    <Info className="w-4 h-4" />
-                  </button>
-                </div>
-              </header>
-
-              {/* Chat Thread */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                
-                {/* Date tag separator matches mock */}
-                <div className="text-center my-6">
-                  <span className="text-[9px] font-extrabold tracking-wider bg-gray-100 text-gray-400 px-3 py-1 rounded-full uppercase">
-                    October 24, 2023
-                  </span>
-                </div>
-
-                {messages.map((msg) => (
+                ) : (
                   <div
-                    key={msg.id}
-                    className={`flex items-end gap-3 ${msg.isMe ? 'justify-end' : 'justify-start'}`}
+                    className={`p-4 text-xs leading-relaxed ${msg.isMe
+                        ? 'bg-[#1e4d1e] text-white rounded-2xl rounded-tr-none'
+                        : 'bg-[#f4f5f0] text-gray-800 rounded-2xl rounded-tl-none'
+                      }`}
                   >
-                    
-                    {/* Left profile for incoming message */}
-                    {!msg.isMe && (
-                      <img
-                        src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop"
-                        alt={msg.sender}
-                        className="w-7 h-7 rounded-full object-cover shrink-0 border border-[#e4e6df]"
-                      />
-                    )}
-
-                    {/* Chat Bubble Details */}
-                    <div className="max-w-[460px] space-y-1">
-                      
-                      {/* Document template bubble matches mock */}
-                      {msg.isFile ? (
-                        <div className="bg-white border border-[#e4e6df] rounded-xl p-4 flex items-center justify-between gap-6 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center text-green-600 shrink-0">
-                              <FileText className="w-5 h-5" />
-                            </div>
-                            <div className="text-left">
-                              <h4 className="text-xs font-bold text-gray-900">{msg.fileName}</h4>
-                              <p className="text-[10px] text-gray-400 mt-0.5">{msg.fileSize}</p>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => toast.success(`Downloading ${msg.fileName}...`)}
-                            className="p-1.5 hover:bg-[#f4f5f0] rounded-lg transition-colors text-gray-600"
-                            title="Download document"
-                          >
-                            <Download className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div
-                          className={`p-4 text-xs leading-relaxed ${
-                            msg.isMe
-                              ? 'bg-[#1e4d1e] text-white rounded-2xl rounded-tr-none'
-                              : 'bg-[#f4f5f0] text-gray-800 rounded-2xl rounded-tl-none'
-                          }`}
-                        >
-                          {msg.text}
-                        </div>
-                      )}
-
-                      {/* Small Time Details underneath bubble */}
-                      <div className={`flex items-center gap-1 text-[9px] text-gray-400 font-semibold px-1 ${msg.isMe ? 'justify-end' : 'justify-start'}`}>
-                        <span>{msg.time}</span>
-                        {msg.isMe && (
-                          <span className="text-green-600 flex items-center">
-                            <Check className="w-3 h-3" />
-                            <Check className="w-3 h-3 -ml-1.5" />
-                          </span>
-                        )}
-                      </div>
-
-                    </div>
-
-                    {/* Right profile initials for outgoing message */}
-                    {msg.isMe && (
-                      <div className="w-7 h-7 rounded-full bg-[#1e4d1e] flex items-center justify-center text-[10px] font-bold text-white shrink-0">
-                        ME
-                      </div>
-                    )}
-
+                    {msg.text}
                   </div>
-                ))}
+                )}
+
+                {/* Small Time Details underneath bubble */}
+                <div className={`flex items-center gap-1 text-[9px] text-gray-400 font-semibold px-1 ${msg.isMe ? 'justify-end' : 'justify-start'}`}>
+                  <span>{msg.time}</span>
+                  {msg.isMe && (
+                    <span className="text-green-600 flex items-center">
+                      <Check className="w-3 h-3" />
+                      <Check className="w-3 h-3 -ml-1.5" />
+                    </span>
+                  )}
+                </div>
 
               </div>
 
-              {/* Bottom typing editor layout matches mock */}
-              <form onSubmit={handleSendMessage} className="p-6 border-t border-[#e4e6df] bg-white flex items-end gap-3 shrink-0">
-                
-                {/* Accessory Attachment triggers */}
-                <div className="flex items-center gap-1 pb-1.5 text-gray-400">
-                  <button
-                    type="button"
-                    onClick={() => toast('Select action')}
-                    className="p-2 hover:bg-[#f4f5f0] hover:text-gray-700 rounded-full transition-all"
-                  >
-                    <Plus className="w-5 h-5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => toast('Select file')}
-                    className="p-2 hover:bg-[#f4f5f0] hover:text-gray-700 rounded-full transition-all"
-                  >
-                    <Paperclip className="w-5 h-5" />
-                  </button>
+              {/* Right profile initials for outgoing message */}
+              {msg.isMe && (
+                <div className="w-7 h-7 rounded-full bg-[#1e4d1e] flex items-center justify-center text-[10px] font-bold text-white shrink-0">
+                  ME
                 </div>
+              )}
 
-                {/* Input Text Box */}
-                <div className="flex-1 relative flex items-center bg-[#f4f5f0] border border-[#e4e6df] rounded-2xl px-4 py-3">
-                  <textarea
-                    rows={1}
-                    value={typedMessage}
-                    onChange={(e) => setTypedMessage(e.target.value)}
-                    placeholder="Type a message..."
-                    className="flex-grow bg-transparent border-none text-xs text-gray-800 placeholder-gray-400 focus:outline-none resize-none leading-relaxed"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendMessage(e);
-                      }
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => toast('Emojis panel coming soon!')}
-                    className="text-gray-400 hover:text-gray-600 transition-colors p-1"
-                  >
-                    <Smile className="w-5 h-5" />
-                  </button>
-                </div>
+            </div>
+          ))}
 
-                {/* Send Button */}
-                <button
-                  type="submit"
-                  className="w-11 h-11 bg-[#1e4d1e] hover:bg-[#163d16] text-white flex items-center justify-center rounded-full transition-colors shadow-sm shrink-0 cursor-pointer"
-                >
-                  <Send className="w-4 h-4" />
-                </button>
+        </div>
 
-              </form>
+        {/* Bottom typing editor layout matches mock */}
+        <form onSubmit={handleSendMessage} className="p-6 border-t border-[#e4e6df] bg-white flex items-end gap-3 shrink-0">
 
-            </section>
+          {/* Accessory Attachment triggers */}
+          <div className="flex items-center gap-1 pb-1.5 text-gray-400">
+            <button
+              type="button"
+              onClick={() => toast('Select action')}
+              className="p-2 hover:bg-[#f4f5f0] hover:text-gray-700 rounded-full transition-all"
+            >
+              <Plus className="w-5 h-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => toast('Select file')}
+              className="p-2 hover:bg-[#f4f5f0] hover:text-gray-700 rounded-full transition-all"
+            >
+              <Paperclip className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Input Text Box */}
+          <div className="flex-1 relative flex items-center bg-[#f4f5f0] border border-[#e4e6df] rounded-2xl px-4 py-3">
+            <textarea
+              rows={1}
+              value={typedMessage}
+              onChange={(e) => setTypedMessage(e.target.value)}
+              placeholder="Type a message..."
+              className="flex-grow bg-transparent border-none text-xs text-gray-800 placeholder-gray-400 focus:outline-none resize-none leading-relaxed"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage(e);
+                }
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => toast('Emojis panel coming soon!')}
+              className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+            >
+              <Smile className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Send Button */}
+          <button
+            type="submit"
+            className="w-11 h-11 bg-[#1e4d1e] hover:bg-[#163d16] text-white flex items-center justify-center rounded-full transition-colors shadow-sm shrink-0 cursor-pointer"
+          >
+            <Send className="w-4 h-4" />
+          </button>
+
+        </form>
+
+      </section>
 
     </div>
   );
