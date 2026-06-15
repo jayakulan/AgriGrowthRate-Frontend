@@ -53,9 +53,7 @@ export default function ConsumerDashboardPage() {
           <h1 className="text-4xl font-extrabold text-[#1e4d1e] tracking-tight leading-tight">
             Hi, {userName}.
           </h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Here&apos;s your agricultural ecosystem at a glance.
-          </p>
+
         </div>
         <Link
           href="/dashboard/consumer/browse-products"
@@ -84,11 +82,7 @@ export default function ConsumerDashboardPage() {
           </div>
           {/* Background image overlay */}
           <div className="absolute top-0 right-0 w-[55%] h-full">
-            <img
-              src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=500&h=400&fit=crop"
-              alt="Farm field"
-              className="w-full h-full object-cover rounded-r-2xl opacity-90"
-            />
+
             <div className="absolute inset-0 bg-gradient-to-r from-white via-white/60 to-transparent" />
           </div>
         </div>
@@ -206,15 +200,7 @@ export default function ConsumerDashboardPage() {
         </div>
       </div>
 
-      {/* ── Footer ────────────────────────────────────────── */}
-      <footer className="border-t border-[#e4e6df] pt-6 pb-4 flex items-center justify-between text-xs text-gray-400">
-        <p>© 2024 AgriGrowthRate Marketplace Hub. All rights reserved.</p>
-        <div className="flex gap-6 font-semibold">
-          <Link href="#" className="hover:text-gray-800 transition-colors">Terms of Service</Link>
-          <Link href="#" className="hover:text-gray-800 transition-colors">Privacy Policy</Link>
-          <Link href="#" className="hover:text-gray-800 transition-colors">Help Center</Link>
-        </div>
-      </footer>
+  
 
       {/* ── Floating Cart FAB ─────────────────────────────── */}
       <Link

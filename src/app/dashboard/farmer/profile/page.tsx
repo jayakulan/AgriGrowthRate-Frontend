@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
 import {
@@ -22,19 +23,28 @@ import toast from 'react-hot-toast';
 
 export default function FarmerProfilePage() {
   const { user, updateUser, logout } = useAuth();
-  
+
   // Profile state
   const [name, setName] = useState('Lavakeesan lavan');
   const [email, setEmail] = useState('lavan.k@agrigrowth.com');
   const [phone, setPhone] = useState('+94 77 123 4567');
   const [address, setAddress] = useState('No. 45 Green Lane, Nallur, Jaffna, Sri Lanka');
   const [avatar, setAvatar] = useState('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop');
-  
+
   const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(true);
 
   // Edit Modal
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Password Modal
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
+
+  const router = useRouter();
 
   // Load from auth context
   useEffect(() => {
@@ -46,6 +56,31 @@ export default function FarmerProfilePage() {
       if (user.avatar) setAvatar(user.avatar);
     }
   }, [user]);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error('New Password and Confirm Password do not match');
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      const response = await api.put('/auth/update-password', { currentPassword, newPassword }).catch((e) => e.response);
+      if (response && response.data && response.data.success) {
+        toast.success('Password updated successfully!');
+        setIsPasswordModalOpen(false);
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        toast.error(response?.data?.message || 'Failed to update password');
+      }
+    } catch (error) {
+      toast.error('An error occurred');
+    } finally {
+      setChangingPassword(false);
+    }
+  };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,7 +113,7 @@ export default function FarmerProfilePage() {
   return (
     <div className="min-h-[calc(100vh-64px)] bg-[#f9f9f6] p-8 font-sans">
       <div className="max-w-4xl mx-auto space-y-6">
-        
+
         {/* TOP HEADER CARD */}
         <div className="bg-white rounded-[24px] p-6 shadow-sm flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 relative overflow-hidden">
           {/* Background subtle gradient matching original mockup */}
@@ -90,7 +125,7 @@ export default function FarmerProfilePage() {
               <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-white shadow-sm">
                 <img src={avatar} alt={name} className="w-full h-full object-cover" />
               </div>
-              <button 
+              <button
                 onClick={handleChangeAvatar}
                 className="absolute -bottom-2 -right-2 w-8 h-8 bg-[#1e4d1e] hover:bg-[#163d16] text-white rounded-lg flex items-center justify-center border-2 border-white transition-colors shadow-sm"
               >
@@ -114,7 +149,7 @@ export default function FarmerProfilePage() {
           </div>
 
           <div className="z-10">
-            <button 
+            <button
               onClick={() => setIsEditModalOpen(true)}
               className="flex items-center gap-2 px-5 py-2 rounded-full border border-[#1e4d1e] text-[#1e4d1e] hover:bg-[#1e4d1e] hover:text-white transition-colors text-sm font-bold"
             >
@@ -125,89 +160,35 @@ export default function FarmerProfilePage() {
         </div>
 
         {/* BOTTOM SECTION */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-          
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+
           {/* LEFT COLUMN */}
-          <div className="space-y-6">
-            
+          <div className="flex flex-col">
+
             {/* Personal Information Card */}
-            <div className="bg-white rounded-[24px] p-6 shadow-sm">
-              <div className="flex items-center gap-2 mb-4 pb-4 border-b border-[#f4f6ee]">
+            <div className="bg-white rounded-[24px] p-6 shadow-sm flex-1 flex flex-col">
+              <div className="flex items-center gap-2 mb-6 pb-4 border-b border-[#f4f6ee]">
                 <UserIcon className="w-5 h-5 text-[#4a6d2f]" />
-                <h2 className="text-sm font-bold text-[#4a6d2f]">Personal Information</h2>
+                <h2 className="text-[20px] font-bold text-[#4a6d2f]">Personal Information</h2>
               </div>
-              
-              <div className="space-y-5">
+
+              <div className="space-y-15 flex-1">
                 <div>
-                  <p className="text-[11px] text-gray-500 mb-1">Full Name</p>
+                  <p className="text-[17px] text-gray-500 mb-1">Full Name</p>
                   <p className="text-sm text-gray-800 font-medium">{name}</p>
                 </div>
                 <div>
-                  <p className="text-[11px] text-gray-500 mb-1">Email Address</p>
+                  <p className="text-[17px] text-gray-500 mb-1">Email Address</p>
                   <p className="text-sm text-gray-800 font-medium">{email}</p>
                 </div>
                 <div>
-                  <p className="text-[11px] text-gray-500 mb-1">Phone</p>
+                  <p className="text-[17px] text-gray-500 mb-1">Phone</p>
                   <p className="text-sm text-gray-800 font-medium">{phone}</p>
                 </div>
                 <div>
-                  <p className="text-[11px] text-gray-500 mb-1">Mailing Address</p>
+                  <p className="text-[17px] text-gray-500 mb-1">Address</p>
                   <p className="text-sm text-gray-800 font-medium leading-relaxed max-w-[250px]">{address}</p>
                 </div>
-              </div>
-            </div>
-
-            {/* Security & Access Card */}
-            <div className="bg-white rounded-[24px] p-6 shadow-sm">
-              <div className="flex items-center gap-2 mb-4 pb-4 border-b border-[#f4f6ee]">
-                <Shield className="w-5 h-5 text-[#4a6d2f]" />
-                <h2 className="text-sm font-bold text-[#4a6d2f]">Security & Access</h2>
-              </div>
-              
-              <div className="space-y-3">
-                <button className="w-full flex items-center justify-between p-4 border border-[#e4e6df] rounded-2xl hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                      <Edit2 className="w-4 h-4 text-gray-600" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm font-bold text-gray-900">Password Change</p>
-                      <p className="text-[11px] text-gray-500 mt-0.5">Last changed 4 months ago</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
-                </button>
-
-                <div className="w-full flex items-center justify-between p-4 border border-[#e4e6df] rounded-2xl">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                      <Smartphone className="w-4 h-4 text-gray-600" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm font-bold text-gray-900">Two-Factor Authentication</p>
-                      <p className="text-[11px] text-[#4a6d2f] font-medium mt-0.5">Currently Enabled</p>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={() => setIsTwoFactorEnabled(!isTwoFactorEnabled)}
-                    className={`w-12 h-6 rounded-full transition-colors relative flex items-center px-1 ${isTwoFactorEnabled ? 'bg-[#1e4d1e]' : 'bg-gray-200'}`}
-                  >
-                    <span className={`w-4 h-4 bg-white rounded-full transition-transform ${isTwoFactorEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
-                  </button>
-                </div>
-
-                <button 
-                  onClick={() => logout()}
-                  className="w-full flex items-center gap-3 p-4 bg-red-50/50 border border-red-100 rounded-2xl hover:bg-red-50 transition-colors"
-                >
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0">
-                    <LogOut className="w-4 h-4 text-red-500" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-sm font-bold text-red-600">Sign Out</p>
-                    <p className="text-[11px] text-red-400 mt-0.5">Securely exit current session</p>
-                  </div>
-                </button>
               </div>
             </div>
 
@@ -215,16 +196,16 @@ export default function FarmerProfilePage() {
 
           {/* RIGHT COLUMN */}
           <div className="space-y-6">
-            
+
             {/* Marketplace Activity Card */}
             <div className="bg-white rounded-[24px] p-6 shadow-sm">
               <div className="flex items-center gap-2 mb-6 pb-4 border-b border-[#f4f6ee]">
                 <Store className="w-5 h-5 text-[#4a6d2f]" />
-                <h2 className="text-sm font-bold text-[#4a6d2f]">Marketplace Activity</h2>
+                <h2 className="text-[20px] font-bold text-[#4a6d2f]">Marketplace Activity</h2>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4 mb-6">
-                
+
                 {/* Active Listings */}
                 <div className="bg-[#f8fae5] border border-[#eff1da] rounded-2xl p-5">
                   <p className="text-[11px] font-bold text-gray-500 mb-4 uppercase tracking-wider">Active Listings</p>
@@ -246,9 +227,35 @@ export default function FarmerProfilePage() {
 
               </div>
 
-              <button className="w-full py-3.5 rounded-xl border border-[#e4e6df] text-[#4a6d2f] text-sm font-bold hover:bg-[#f4f6ee] transition-colors">
-                View Sales Dashboard
+              <button onClick={() => router.push('/dashboard/farmer/orders')} className="w-full py-3.5 rounded-xl border border-[#e4e6df] text-[#4a6d2f] text-sm font-bold hover:bg-[#f4f6ee] transition-colors">
+                View Orders
               </button>
+            </div>
+
+            {/* Security & Access Card */}
+            <div className="bg-white rounded-[24px] p-6 shadow-sm">
+              <div className="flex items-center gap-2 mb-4 pb-4 border-b border-[#f4f6ee]">
+                <Shield className="w-5 h-5 text-[#4a6d2f]" />
+                <h2 className="text-[20px] font-bold text-[#4a6d2f]">Security & Access</h2>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  onClick={() => setIsPasswordModalOpen(true)}
+                  className="w-full flex items-center justify-between p-4 border border-[#e4e6df] rounded-2xl hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                      <Edit2 className="w-4 h-4 text-gray-600" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-bold text-gray-900">Password Change</p>
+                      <p className="text-[11px] text-gray-500 mt-0.5">Update your account password</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </button>
+              </div>
             </div>
 
           </div>
@@ -261,28 +268,31 @@ export default function FarmerProfilePage() {
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-[24px] w-full max-w-md shadow-xl overflow-hidden relative">
             <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-gray-900">Edit Profile</h3>
+              <div className="flex items-center gap-3">
+                <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
+                <h3 className="text-lg font-bold text-gray-900">Edit Profile</h3>
+              </div>
               <button onClick={() => setIsEditModalOpen(false)} className="text-gray-400 hover:text-gray-700">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <form onSubmit={handleSaveProfile} className="p-6 space-y-4">
               <div>
                 <label className="text-xs font-bold text-gray-500 block mb-1">Full Name</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={name}
                   onChange={e => setName(e.target.value)}
                   className="w-full bg-[#f4f6ee] border border-[#e4e6df] rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#1e4d1e]"
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="text-xs font-bold text-gray-500 block mb-1">Phone Number</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
                   className="w-full bg-[#f4f6ee] border border-[#e4e6df] rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#1e4d1e]"
@@ -292,7 +302,7 @@ export default function FarmerProfilePage() {
 
               <div>
                 <label className="text-xs font-bold text-gray-500 block mb-1">Mailing Address</label>
-                <textarea 
+                <textarea
                   value={address}
                   onChange={e => setAddress(e.target.value)}
                   className="w-full bg-[#f4f6ee] border border-[#e4e6df] rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#1e4d1e] resize-none h-24"
@@ -301,20 +311,90 @@ export default function FarmerProfilePage() {
               </div>
 
               <div className="pt-4 flex gap-3">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setIsEditModalOpen(false)}
                   className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-sm transition-colors"
                 >
                   Cancel
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={saving}
                   className="flex-1 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
                 >
                   {saving && <Loader2 className="w-4 h-4 animate-spin" />}
                   Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* CHANGE PASSWORD MODAL */}
+      {isPasswordModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-[24px] w-full max-w-md shadow-xl overflow-hidden relative">
+            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
+                <h3 className="text-lg font-bold text-gray-900">Change Password</h3>
+              </div>
+              <button onClick={() => setIsPasswordModalOpen(false)} className="text-gray-400 hover:text-gray-700">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleChangePassword} className="p-6 space-y-4">
+              <div>
+                <label className="text-xs font-bold text-gray-500 block mb-1">Current Password</label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={e => setCurrentPassword(e.target.value)}
+                  className="w-full bg-[#f4f6ee] border border-[#e4e6df] rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#1e4d1e]"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-gray-500 block mb-1">New Password</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  className="w-full bg-[#f4f6ee] border border-[#e4e6df] rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#1e4d1e]"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-gray-500 block mb-1">Confirm Password</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  className="w-full bg-[#f4f6ee] border border-[#e4e6df] rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#1e4d1e]"
+                  required
+                />
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsPasswordModalOpen(false)}
+                  className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-sm transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={changingPassword}
+                  className="flex-1 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+                >
+                  {changingPassword && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Update Password
                 </button>
               </div>
             </form>

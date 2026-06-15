@@ -66,6 +66,16 @@ export default function FarmerChatbot() {
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Modal States
+  const [renameModalOpen, setRenameModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [chatToRename, setChatToRename] = useState<{ id: string, title: string } | null>(null);
+  const [chatToDelete, setChatToDelete] = useState<string | null>(null);
+  const [newChatTitle, setNewChatTitle] = useState('');
+  
+  // File Upload Reference
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Workflow State
   const [workflowState, setWorkflowState] = useState<'initial' | 'district' | 'soil' | 'land' | 'water' | 'experience' | 'crop_selection' | 'plan_generation' | 'pdf_prompt' | 'general'>('initial');
   const [farmerDetails, setFarmerDetails] = useState({ district: '', soilType: '', landSize: '', waterAvailability: '', currentSeason: '', farmingExperience: '' });
@@ -120,29 +130,57 @@ export default function FarmerChatbot() {
     }
   };
 
-  const renameChat = async (chatId: string, oldTitle: string) => {
-    const newTitle = prompt('Rename Chat:', oldTitle);
-    if (!newTitle || newTitle === oldTitle) return;
+  const openRenameModal = (chatId: string, oldTitle: string) => {
+    setChatToRename({ id: chatId, title: oldTitle });
+    setNewChatTitle(oldTitle);
+    setRenameModalOpen(true);
+  };
+
+  const handleRenameSubmit = async () => {
+    if (!chatToRename || !newChatTitle || newChatTitle === chatToRename.title) {
+      setRenameModalOpen(false);
+      return;
+    }
     try {
       const token = localStorage.getItem('token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
-      await axios.put(`${apiUrl}/chat/${chatId}/rename`, { title: newTitle }, { headers: { Authorization: `Bearer ${token}` } });
+      await axios.put(`${apiUrl}/chat/${chatToRename.id}/rename`, { title: newChatTitle }, { headers: { Authorization: `Bearer ${token}` } });
       fetchChats();
     } catch (error) {
       toast.error('Failed to rename chat');
+    } finally {
+      setRenameModalOpen(false);
+      setChatToRename(null);
     }
   };
 
-  const deleteChat = async (chatId: string) => {
-    if (!confirm('Are you sure you want to delete this chat?')) return;
+  const openDeleteModal = (chatId: string) => {
+    setChatToDelete(chatId);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteSubmit = async () => {
+    if (!chatToDelete) return;
     try {
       const token = localStorage.getItem('token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
-      await axios.delete(`${apiUrl}/chat/${chatId}`, { headers: { Authorization: `Bearer ${token}` } });
-      if (activeChatId === chatId) startNewChat();
+      await axios.delete(`${apiUrl}/chat/${chatToDelete}`, { headers: { Authorization: `Bearer ${token}` } });
+      if (activeChatId === chatToDelete) startNewChat();
       fetchChats();
     } catch (error) {
       toast.error('Failed to delete chat');
+    } finally {
+      setDeleteModalOpen(false);
+      setChatToDelete(null);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setInput((prev) => prev + (prev ? ' ' : '') + `[Attached: ${file.name}]`);
+      toast.success(`Attached ${file.name}`);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -396,8 +434,8 @@ export default function FarmerChatbot() {
                       <span className="text-sm truncate font-medium">{chat.title}</span>
                     </div>
                     <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity gap-1">
-                      <button onClick={(e) => { e.stopPropagation(); renameChat(chat._id, chat.title); }} className="p-1 hover:text-[#1e4d1e]"><Edit2 className="w-3.5 h-3.5" /></button>
-                      <button onClick={(e) => { e.stopPropagation(); deleteChat(chat._id); }} className="p-1 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <button onClick={(e) => { e.stopPropagation(); openRenameModal(chat._id, chat.title); }} className="p-1 hover:text-[#1e4d1e]"><Edit2 className="w-3.5 h-3.5" /></button>
+                      <button onClick={(e) => { e.stopPropagation(); openDeleteModal(chat._id); }} className="p-1 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
                     </div>
                   </div>
                 ))
@@ -504,9 +542,18 @@ export default function FarmerChatbot() {
 
         <div className="p-4 bg-white">
           <div className="max-w-4xl mx-auto relative flex items-center bg-white border border-gray-200 shadow-sm rounded-full px-4 py-2 transition-shadow focus-within:shadow-md focus-within:border-[#1e4d1e]">
-            <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors hidden sm:block">
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              className="p-2 text-gray-400 hover:text-gray-600 transition-colors hidden sm:block"
+            >
               <Paperclip className="w-5 h-5" />
             </button>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleFileChange} 
+              className="hidden" 
+            />
             <input
               type="text"
               value={input}
@@ -534,6 +581,61 @@ export default function FarmerChatbot() {
       </div>
 
       <SubscriptionModal isOpen={showSubscriptionModal} onClose={() => setShowSubscriptionModal(false)} />
+
+      {/* Modals */}
+      {renameModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-[24px] w-full max-w-md shadow-xl overflow-hidden relative">
+            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
+                <h3 className="text-lg font-bold text-gray-900">Rename Chat</h3>
+              </div>
+              <button onClick={() => setRenameModalOpen(false)} className="text-gray-400 hover:text-gray-700">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              <input 
+                type="text" 
+                value={newChatTitle}
+                onChange={(e) => setNewChatTitle(e.target.value)}
+                className="w-full bg-[#f4f6ee] border border-[#e4e6df] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#1e4d1e] mb-6"
+                autoFocus
+              />
+              <div className="flex gap-3">
+                <button onClick={() => setRenameModalOpen(false)} className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-sm transition-colors">Cancel</button>
+                <button onClick={handleRenameSubmit} className="flex-1 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white rounded-xl font-bold text-sm transition-colors">Save</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-[24px] w-full max-w-md shadow-xl overflow-hidden relative">
+            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
+                <h3 className="text-lg font-bold text-gray-900">Delete Chat</h3>
+              </div>
+              <button onClick={() => setDeleteModalOpen(false)} className="text-gray-400 hover:text-gray-700">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-gray-600 mb-6">Are you sure you want to delete this chat? This action cannot be undone.</p>
+              <div className="flex gap-3">
+                <button onClick={() => setDeleteModalOpen(false)} className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-sm transition-colors">Cancel</button>
+                <button onClick={handleDeleteSubmit} className="flex-1 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2">
+                  <Trash2 className="w-4 h-4" /> Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
