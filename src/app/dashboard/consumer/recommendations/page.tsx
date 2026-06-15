@@ -9,6 +9,7 @@ import {
   CloudLightning,
   Users,
 } from 'lucide-react';
+import ConsumerChatbot from '@/components/Chatbot/ConsumerChatbot';
 
 export default function ConsumerRecommendationsPage() {
   const smallRecommendations = [
@@ -170,6 +171,14 @@ export default function ConsumerRecommendationsPage() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* ── AI Chatbot ─────────────────────────────────────── */}
+      <div className="mb-12">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-[#1e4d1e]">AI Product Assistant</h2>
+        </div>
+        <ConsumerChatbot />
       </div>
 
       {/* ── Regional Trend Analysis ────────────────────────── */}

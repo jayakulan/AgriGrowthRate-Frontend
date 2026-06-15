@@ -7,7 +7,7 @@ import NavbarWrapper from '@/components/NavbarWrapper';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'AgriGrowthRate — Smart Agriculture Platform',
+  title: 'AgriGrowthRate',
   description:
     'AI-powered agricultural marketplace for farmers and consumers. Detect crop diseases, get smart recommendations, and trade farm produce.',
   keywords: 'agriculture, crop disease detection, AI farming, marketplace, organic produce',

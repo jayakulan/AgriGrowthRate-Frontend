@@ -1,0 +1,68 @@
+'use client';
+
+import React, { useState } from 'react';
+import axios from 'axios';
+import { X, CreditCard, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+export default function SubscriptionModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+  const [loading, setLoading] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleCheckout = async () => {
+    setLoading(true);
+    const token = localStorage.getItem('token');
+    
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+      const { data } = await axios.post(`${apiUrl}/subscriptions/create-checkout-session`, {
+        returnUrl: window.location.href.split('?')[0],
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (data.success && data.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.url;
+      } else {
+        toast.error('Failed to create checkout session.');
+        setLoading(false);
+      }
+    } catch (error: any) {
+      console.error(error);
+      toast.error('Payment failed to initialize. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#1e4d1e]/20 backdrop-blur-md">
+      <div className="relative w-full max-w-md bg-white rounded-3xl p-8 shadow-2xl">
+        <button onClick={onClose} className="absolute top-6 right-6 text-gray-400 hover:text-gray-600 transition-colors">
+          <X className="w-6 h-6" />
+        </button>
+
+        <div className="text-center mb-8 mt-2">
+          <h2 className="text-2xl font-extrabold text-gray-900">Unlock AI Chatbot</h2>
+          <p className="text-gray-500 mt-2 text-sm leading-relaxed">
+            Your free limit has been reached or your subscription has expired. Subscribe now to get unlimited access to our agriculture AI assistant for 1 month.
+          </p>
+        </div>
+
+        <button
+          onClick={handleCheckout}
+          disabled={loading}
+          className="w-full py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
+        >
+          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <CreditCard className="w-5 h-5" />}
+          <span>Pay $10 / Month</span>
+        </button>
+
+        <p className="text-center text-xs text-gray-400 mt-6 font-semibold">
+          Secure payment powered by Stripe
+        </p>
+      </div>
+    </div>
+  );
+}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
 import {
   Sprout,
   LayoutDashboard,
@@ -25,6 +26,8 @@ import {
 } from 'lucide-react';
 
 export default function FarmerDashboardPage() {
+  const { user } = useAuth();
+  const userName = user?.name || 'Thomas';
 
   const activities = [
     {
@@ -65,11 +68,9 @@ export default function FarmerDashboardPage() {
             <div className="flex items-start justify-between mb-8 gap-4">
               <div>
                 <h1 className="text-4xl font-extrabold text-[#1e4d1e] tracking-tight leading-tight">
-                  Good morning, Thomas.
+                  Hi, {userName}.
                 </h1>
-                <p className="text-gray-500 text-sm max-w-xl mt-1.5 leading-relaxed">
-                  Your harvest cycle is looking healthy. Soil moisture levels in Sector A are optimal for current wheat growth.
-                </p>
+                
               </div>
 
               {/* Weather Pill */}
@@ -192,7 +193,7 @@ export default function FarmerDashboardPage() {
                   <div className="space-y-3">
                     
                     {/* Add Product Banner */}
-                    <button className="w-full flex items-center justify-between p-4 bg-[#1e4d1e] hover:bg-[#163d16] text-white rounded-2xl text-left transition-colors shadow-sm group">
+                    <Link href="/dashboard/farmer/add-product" className="w-full flex items-center justify-between p-4 bg-[#1e4d1e] hover:bg-[#163d16] text-white rounded-2xl text-left transition-colors shadow-sm group">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
                           <Plus className="w-5 h-5" />
@@ -203,10 +204,10 @@ export default function FarmerDashboardPage() {
                         </div>
                       </div>
                       <Plus className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </button>
+                    </Link>
 
                     {/* Scan Crop Banner */}
-                    <button className="w-full flex items-center justify-between p-4 bg-[#4e6a4e] hover:bg-[#435e43] text-white rounded-2xl text-left transition-colors shadow-sm group">
+                    <Link href="/dashboard/farmer/disease-detect" className="w-full flex items-center justify-between p-4 bg-[#4e6a4e] hover:bg-[#435e43] text-white rounded-2xl text-left transition-colors shadow-sm group">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
                           <Scan className="w-5 h-5" />
@@ -217,7 +218,7 @@ export default function FarmerDashboardPage() {
                         </div>
                       </div>
                       <Compass className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </button>
+                    </Link>
 
                   </div>
                 </div>

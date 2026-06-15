@@ -46,7 +46,7 @@ export default function AIManagementPage() {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [datasetName, setDatasetName] = useState('');
-  const [datasetSize, setDatasetSize] = useState('');
+  const [datasetFile, setDatasetFile] = useState<File | null>(null);
   const [syncing, setSyncing] = useState(false);
 
   // Model settings states exactly matching mockup
@@ -84,17 +84,36 @@ export default function AIManagementPage() {
     toast.success('AI performance catalog exported successfully! 📄');
   };
 
-  const handleAddDataset = (e: React.FormEvent) => {
+  const handleAddDataset = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!datasetName || !datasetSize) return toast.error('Please input details');
+    if (!datasetFile) return toast.error('Please select a PDF file');
     setSyncing(true);
-    setTimeout(() => {
+    
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('pdf', datasetFile);
+      
+      const response = await axios.post('http://localhost:5001/api/ai/upload-knowledge', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      if (response.data.success) {
+        toast.success(`PDF "${datasetFile.name}" uploaded and processing! 📦`);
+        setShowAddModal(false);
+        setDatasetName('');
+        setDatasetFile(null);
+      } else {
+        toast.error(response.data.message || 'Upload failed');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error uploading file');
+    } finally {
       setSyncing(false);
-      toast.success(`Dataset "${datasetName}" synced and queued for training! 📦`);
-      setShowAddModal(false);
-      setDatasetName('');
-      setDatasetSize('');
-    }, 1200);
+    }
   };
 
   return (
@@ -646,16 +665,19 @@ export default function AIManagementPage() {
                   />
                 </div>
 
-                {/* Size description */}
+                {/* File Upload */}
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
-                    Data Volume / Size
+                    Upload PDF Document
                   </label>
                   <input
-                    type="text"
-                    value={datasetSize}
-                    onChange={(e) => setDatasetSize(e.target.value)}
-                    placeholder="e.g. 42.5 GB"
+                    type="file"
+                    accept="application/pdf"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        setDatasetFile(e.target.files[0]);
+                      }
+                    }}
                     className="w-full bg-[#f4f5f0]/50 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-xl py-3 px-4 text-xs font-bold text-gray-800 outline-none"
                     required
                   />
