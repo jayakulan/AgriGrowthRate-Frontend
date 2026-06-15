@@ -22,8 +22,6 @@ const categories = [
   { name: 'Vegetables', icon: Carrot, key: 'vegetables' },
   { name: 'Grains', icon: Wheat, key: 'grains' },
   { name: 'Fruits', icon: Apple, key: 'fruits' },
-  { name: 'Dairy', icon: Sprout, key: 'dairy' }, // Changed Organic Seeds to Dairy or keep similar to db categories
-  { name: 'Herbs', icon: Sprout, key: 'herbs' },
 ];
 
 export default function BrowseProductsPage() {
@@ -104,12 +102,6 @@ export default function BrowseProductsPage() {
 
       {/* ── Page Header ───────────────────────────────── */}
       <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">Browse Products</h1>
-          <p className="text-sm text-gray-500 mt-1 max-w-lg leading-relaxed">
-            Sourced directly from verified sustainable farms. Explore our seasonal selection of organic produce and high-yield grains.
-          </p>
-        </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-sm text-gray-500">Sort:</span>
           <select 
