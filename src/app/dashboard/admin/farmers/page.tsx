@@ -20,11 +20,15 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { AnimatePresence, motion } from 'framer-motion';
+import DailyLogisticsCard from '@/components/DailyLogisticsCard';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface User {
   _id: string;
   name: string;
   email: string;
+  contactNo?: string;
+  address?: string;
   role: string;
   isVerified: boolean;
   createdAt: string;
@@ -40,6 +44,7 @@ export default function ManageFarmersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('farmer'); // Force farmer role
   const [currentPage, setCurrentPage] = useState(1);
+  const [range, setRange] = useState<'1M' | '6M' | '1Y'>('6M');
 
   // Add Card Number modal states
   const [showCardModal, setShowCardModal] = useState(false);
@@ -103,6 +108,39 @@ export default function ManageFarmersPage() {
       avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=256&h=256'
     }
   ];
+
+  const lastMonthData = [
+    { month: 'Wk 1', value: 2200 },
+    { month: 'Wk 2', value: 2450 },
+    { month: 'Wk 3', value: 2350 },
+    { month: 'Wk 4', value: 2580 },
+  ];
+
+  const last6MonthsData = [
+    { month: 'Jan', value: 2600 },
+    { month: 'Feb', value: 2950 },
+    { month: 'Mar', value: 2750 },
+    { month: 'Apr', value: 4600 },
+    { month: 'May', value: 4300 },
+    { month: 'Jun', value: 5600 },
+  ];
+
+  const lastYearData = [
+    { month: 'Jan', value: 2500 },
+    { month: 'Feb', value: 2850 },
+    { month: 'Mar', value: 2700 },
+    { month: 'Apr', value: 4500 },
+    { month: 'May', value: 4300 },
+    { month: 'Jun', value: 5600 },
+    { month: 'Jul', value: 5800 },
+    { month: 'Aug', value: 6100 },
+    { month: 'Sep', value: 5950 },
+    { month: 'Oct', value: 6200 },
+    { month: 'Nov', value: 6400 },
+    { month: 'Dec', value: 6800 },
+  ];
+
+  const chartData = range === '1M' ? lastMonthData : range === '1Y' ? lastYearData : last6MonthsData;
 
   useEffect(() => {
     fetchUsers();
@@ -228,14 +266,7 @@ export default function ManageFarmersPage() {
         
         {/* ── PAGE HEADER ── */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-left">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-extrabold text-[#1e4d1e] tracking-tight">
-              Manage Farmers
-            </h1>
-            <p className="text-xs text-gray-400 font-semibold">
-              Oversee and manage your registered farmers.
-            </p>
-          </div>
+          <div className="flex-1" />
 
           {/* Right Header Filters & Invite Trigger */}
           <div className="flex items-center gap-3">
@@ -268,13 +299,12 @@ export default function ManageFarmersPage() {
                   <tr>
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Name</th>
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Email</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Role</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Contact No</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Address</th>
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right">Actions</th>
                   </tr>
                 </thead>
 
-                {/* Table Body */}
                 <tbody className="divide-y divide-[#f4f5f0]">
                   {users.map((user) => (
                     <tr key={user._id} className="hover:bg-[#f4f5f0]/20 transition-colors">
@@ -307,70 +337,21 @@ export default function ManageFarmersPage() {
                         {user.email}
                       </td>
 
-                      {/* Role category tag */}
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-bold capitalize border ${
-                          user.role === 'farmer'
-                            ? 'bg-[#edf4e2] text-[#1e4d1e] border-[#d2dfc2]'
-                            : 'bg-[#e3f7ed] text-[#2e7d32] border-[#c8e6c9]'
-                        }`}>
-                          {user.role}
+                      {/* Contact number */}
+                      <td className="px-6 py-4 text-xs font-semibold text-gray-500">
+                        {user.contactNo || '+94 77 123 4567'}
+                      </td>
+
+                      {/* Address */}
+                      <td className="px-6 py-4 text-xs font-semibold text-gray-500">
+                        {user.address || 'Galle, Sri Lanka'}
+                      </td>
+
+                      {/* Status with enable/disable option */}
+                      <td className="px-6 py-4 text-xs font-semibold text-gray-500">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold ${user.isVerified ? 'bg-[#d8f6dc] text-[#166c2c]' : 'bg-[#f1f2f4] text-[#6b7280]'}`}>
+                          {user.isVerified ? 'Enabled' : 'Disabled'}
                         </span>
-                      </td>
-
-                      {/* Status indicator dot row */}
-                      <td className="px-6 py-4">
-                        <button
-                          type="button"
-                          onClick={() => handleToggleStatus(user._id, user.isVerified)}
-                          className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-gray-950 transition-colors cursor-pointer"
-                        >
-                          <span className={`w-2 h-2 rounded-full shrink-0 ${user.isVerified ? 'bg-green-600' : 'bg-gray-400'}`} />
-                          <span>{user.isVerified ? 'Active' : 'Pending'}</span>
-                        </button>
-                      </td>
-
-                      {/* Action buttons exactly styled */}
-                      <td className="px-6 py-4 text-right">
-                        <div className="inline-flex items-center gap-1">
-                          
-                          {/* Details Eye icon */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setShowRoleModal(true);
-                            }}
-                            title="View / Modify Role"
-                            className="p-2 text-gray-400 hover:text-[#1e4d1e] hover:bg-gray-50 rounded-lg transition-all cursor-pointer"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-
-                          {/* Edit Pencil icon */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setShowRoleModal(true);
-                            }}
-                            title="Edit Role"
-                            className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all cursor-pointer"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-
-                          {/* Trash Delete icon */}
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteUser(user._id)}
-                            title="Delete User"
-                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all cursor-pointer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-
-                        </div>
                       </td>
 
                     </tr>
@@ -382,11 +363,7 @@ export default function ManageFarmersPage() {
           )}
 
           {/* Table pagination footer exactly matching mock image */}
-          <div className="bg-[#fcfdfa]/80 border-t border-[#e4e6df] px-6 py-4 flex items-center justify-between select-none">
-            <span className="text-[10px] font-bold text-gray-400">
-              Showing 1 to 4 of 128 users
-            </span>
-
+          <div className="bg-[#fcfdfa]/80 border-t border-[#e4e6df] px-6 py-4 flex items-center justify-end select-none">
             <div className="inline-flex items-center gap-1">
               <button className="px-3 py-1.5 bg-white border border-[#e4e6df] hover:bg-gray-50 rounded-lg text-[10px] font-bold text-gray-500 cursor-pointer transition-all">
                 Previous
@@ -407,107 +384,60 @@ export default function ManageFarmersPage() {
           </div>
         </div>
 
-        {/* ── BOTTOM INFO STACK GRID ── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-          
-          {/* Card 1: New Users This Month (Colspan-1) */}
-          <div className="bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-sm flex flex-col justify-between h-56 relative overflow-hidden select-none">
-            <div className="flex items-start justify-between">
-              <div className="space-y-1 text-left">
+        {/* ── BOTTOM INFO STACK FULL WIDTH ── */}
+        <div className="space-y-8">
+
+          <div className="bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-sm overflow-hidden select-none">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
                 <h3 className="text-sm font-extrabold text-gray-900 uppercase tracking-wider">
-                  New Users This Month
+                  Farmer Growth
                 </h3>
-                <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight leading-none mt-2">
-                  342
-                </h2>
-                <p className="text-[10px] text-gray-400 font-semibold mt-2 block">
-                  Across all regions, primarily Farmer signups.
+                <p className="text-[10px] text-gray-400 font-semibold mt-2">
+                  Monthly farmer registration distribution
                 </p>
               </div>
-
-              {/* Trending tag */}
-              <div className="flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full border border-green-100 shrink-0">
-                <TrendingUp className="w-3.5 h-3.5" />
-                <span>+24%</span>
-              </div>
+              <select
+                value={range}
+                onChange={(e) => setRange(e.target.value as '1M' | '6M' | '1Y')}
+                className="rounded-full border border-[#e4e6df] bg-[#f4f5f0] px-4 py-2 text-[10px] font-bold text-[#1e4d1e] outline-none cursor-pointer"
+              >
+                <option value="1M">Last Month</option>
+                <option value="6M">Last 6 Months</option>
+                <option value="1Y">Last Year</option>
+              </select>
             </div>
 
-            {/* Custom rising visual bars in various green shades */}
-            <div className="flex items-end justify-between gap-2.5 h-16 mt-4">
-              {[25, 45, 30, 80, 100, 50, 70].map((val, i) => (
-                <div 
-                  key={i} 
-                  className={`flex-1 rounded-t-sm ${
-                    i === 4 ? 'bg-[#1e4d1e]' : i === 3 ? 'bg-[#31572c]' : i === 6 ? 'bg-[#4f772d]' : 'bg-[#90b47a]/50'
-                  }`} 
-                  style={{ height: `${val}%` }} 
-                />
-              ))}
+            <div className="mt-8 w-full h-[380px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 20, right: 24, left: -12, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="farmerGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#1e4d1e" stopOpacity={0.22} />
+                      <stop offset="100%" stopColor="#1e4d1e" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#edf4e2" />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12, fontWeight: 700 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12, fontWeight: 700 }} />
+                  <Tooltip
+                    contentStyle={{ background: '#1e4d1e', border: 'none', borderRadius: '16px', color: '#fff', fontSize: 12, padding: '10px' }}
+                    itemStyle={{ color: '#fff' }}
+                    labelStyle={{ color: '#fff', fontWeight: 700 }}
+                    cursor={{ stroke: '#1e4d1e', strokeWidth: 2, opacity: 0.12 }}
+                  />
+                  <Area type="monotone" dataKey="value" stroke="#1e4d1e" strokeWidth={3} fill="url(#farmerGradient)" fillOpacity={1} activeDot={{ r: 6, stroke: '#ffffff', strokeWidth: 3, fill: '#1e4d1e' }} />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
-          {/* Card 2: Pending Approvals (Colspan-1) */}
-          <div className="bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-sm flex flex-col justify-between h-56 relative overflow-hidden text-left select-none">
-            
-            {/* Soft decorative shield overlay */}
-            <div className="absolute right-4 bottom-4 w-28 h-28 opacity-[0.03] pointer-events-none">
-              <FolderLock className="w-full h-full text-[#1e4d1e]" />
-            </div>
-
-            <div className="flex items-center justify-between border-b border-[#f4f5f0] pb-3">
-              <h3 className="text-sm font-extrabold text-gray-900 uppercase tracking-wider">
-                Pending Approvals
-              </h3>
-              
-              <button
-                type="button"
-                onClick={() => toast('Displaying all documentation queues...')}
-                className="text-[10px] font-extrabold text-[#1e4d1e] hover:text-[#4A6D2F] hover:underline uppercase tracking-wide transition-colors cursor-pointer"
-              >
-                View All
-              </button>
-            </div>
-
-            {/* Middle Pending details */}
-            <div className="space-y-3 my-4">
-              <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight leading-none">
-                18
-              </h2>
-
-              <div className="flex items-center gap-3">
-                {/* Overlapping initial badges */}
-                <div className="flex -space-x-2">
-                  <div className="w-6 h-6 rounded-full bg-gray-200 border border-white flex items-center justify-center text-[8px] font-bold text-gray-600">AN</div>
-                  <div className="w-6 h-6 rounded-full bg-[#edf4e2] border border-white flex items-center justify-center text-[8px] font-bold text-[#1e4d1e]">SK</div>
-                  <div className="w-6 h-6 rounded-full bg-[#1e4d1e] border border-white flex items-center justify-center text-[8px] font-bold text-white">+15</div>
-                </div>
-
-                <p className="text-[10px] text-gray-400 font-semibold">
-                  Waiting for documentation review
-                </p>
-              </div>
-            </div>
-
-            {/* Bottom action trigger CTA buttons */}
-            <div className="grid grid-cols-2 gap-3 shrink-0">
-              <button
-                type="button"
-                onClick={() => toast('Opening Review Queue...')}
-                className="py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl text-[10px] uppercase tracking-wider transition-colors cursor-pointer text-center shadow-sm"
-              >
-                Review Queue
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => toast('Pending logs generated & compiled')}
-                className="py-3 bg-white border border-[#e4e6df] hover:bg-[#f4f5f0] text-gray-600 font-bold rounded-xl text-[10px] uppercase tracking-wider transition-colors cursor-pointer text-center shadow-sm"
-              >
-                Download Report
-              </button>
-            </div>
-
-          </div>
+          <DailyLogisticsCard
+            className="w-full rounded-[24px] p-6 shadow-sm"
+            label="FARMER MANAGEMENT"
+            headline="92% of Farmers Checked In"
+            description="Out of today's scheduled cohort, 312 farmers have successfully signed in and confirmed their inventory readiness."
+          />
 
         </div>
 
