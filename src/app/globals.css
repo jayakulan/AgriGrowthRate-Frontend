@@ -10,6 +10,11 @@
   --text-primary:  #0b1f14; /* Deep forest green */
   --text-secondary:#2b4737;
   --text-muted:    #7ca18b;
+  --brand-dark:    #1E4D1E;
+  --sidebar-bg:    #edf4e2;
+  --chart-fill:     #d6ead2; /* slightly darker than sidebar for chart bars */
+  --panel-bg:      #f9f9f6;
+  --white-acc:     #ffffff;
 }
 
 /* ── Base resets ──────────────────────────────────────────── */
@@ -155,6 +160,16 @@ body {
     color: var(--text-primary);
     letter-spacing: -0.02em;
   }
+  
+  /* Theme helpers (used by JSX) */
+  .text-brand-dark { color: var(--brand-dark); }
+  .bg-sidebar { background-color: var(--sidebar-bg); }
+  .bg-panel { background-color: var(--panel-bg); }
+  .border-global { border-color: var(--border); }
+  .bg-white-acc { background-color: var(--white-acc); }
+  .text-primary { color: var(--text-primary); }
+  .text-secondary { color: var(--text-secondary); }
+  .text-muted { color: var(--text-muted); }
   .section-sub {
     color: var(--text-secondary);
     font-size: 0.92rem;
@@ -205,6 +220,47 @@ body {
     background-color: var(--green-primary);
     display: inline-block;
     animation: pulse-green 2s infinite;
+  }
+
+  /* Subtle shining border for chart bars */
+  @keyframes barShine {
+    0% {
+      stroke-opacity: 0.35;
+      filter: drop-shadow(0 0 0 rgba(30,77,30,0));
+    }
+    50% {
+      stroke-opacity: 0.95;
+      filter: drop-shadow(0 0 10px rgba(30,77,30,0.18));
+    }
+    100% {
+      stroke-opacity: 0.35;
+      filter: drop-shadow(0 0 0 rgba(30,77,30,0));
+    }
+  }
+
+  .bar-shine {
+    stroke: var(--brand-dark);
+    stroke-width: 2;
+    stroke-opacity: 0.35;
+    transition: fill 220ms ease, stroke-opacity 420ms ease;
+    animation: barShine 3s ease-in-out infinite;
+  }
+
+  /* Top-edge shining line for bars */
+  @keyframes topShine {
+    0% { opacity: 0.12; transform: translateY(0); }
+    50% { opacity: 0.9; transform: translateY(-1px); }
+    100% { opacity: 0.12; transform: translateY(0); }
+  }
+
+  .bar-shine-top {
+    fill: rgba(255,255,255,0.06);
+    animation: topShine 2.4s ease-in-out infinite;
+    transition: opacity 220ms ease, transform 220ms ease;
+  }
+
+  .bar-shine-top.hovered {
+    fill: rgba(255,255,255,0.12);
   }
 
   /* Custom subtle pulse for hand-drawn SVGs */

@@ -65,7 +65,7 @@ export default function DashboardHeader() {
   const role = user?.role || 'USER'; 
   
   return (
-    <header className="h-[84px] bg-[#edf4e2] flex items-center justify-between px-8 select-none shrink-0 relative z-50">
+    <header className="h-[84px] bg-white flex items-center justify-between px-8 select-none shrink-0 relative z-50 border-b border-gray-100">
       {/* Left side: Title, Greeting, and Subtitle */}
       <div>
         <h1 className="text-2xl font-extrabold text-[#1e4d1e] leading-tight mb-0.5">{title}</h1>
@@ -110,14 +110,14 @@ export default function DashboardHeader() {
         </div>
 
 
-        {/* Profile Avatar and Name */}
+        {/* Profile Avatar and label */}
         <div className="flex items-center gap-3.5">
           <div className="w-11 h-11 rounded-full bg-[#edf4e2] flex items-center justify-center shrink-0 border border-[#d2dfc2]">
-             <UserIcon className="w-[22px] h-[22px] text-[#2c6e2c]" />
+            <UserIcon className="w-[22px] h-[22px] text-[#2c6e2c]" />
           </div>
           <div className="flex flex-col justify-center text-left">
-            <h4 className="text-[14px] font-bold text-[#111827] leading-none mb-1.5">{userName}</h4>
-            <span className="text-[11px] font-extrabold text-[#2c6e2c] uppercase tracking-wider leading-none">{role}</span>
+            <h4 className="text-[14px] font-bold text-brand-dark leading-none mb-0.5">AGRI ADMIN</h4>
+            <span className="text-[11px] font-extrabold text-[#2c6e2c] leading-none">Nuha Nazardeen</span>
           </div>
         </div>
 
