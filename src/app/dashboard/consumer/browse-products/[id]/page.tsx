@@ -21,11 +21,12 @@ import {
 } from 'lucide-react';
 import { productService } from '@/services/productService';
 import { orderService } from '@/services/orderService';
+import api from '@/lib/axios';
 import toast from 'react-hot-toast';
 
 export default function ProductDetailsPage() {
   const { id } = useParams() as { id: string };
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(10);
   const [activeImage, setActiveImage] = useState(0);
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -33,6 +34,20 @@ export default function ProductDetailsPage() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [orderResult, setOrderResult] = useState<any>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
+  
+  const toggleFavorite = async () => {
+    if (!product?.farmer?._id) return;
+    try {
+      const res = await api.post(`/auth/favorite-farmer/${product.farmer._id}`);
+      if (res.data.success) {
+        setIsFavorite(!isFavorite);
+        toast.success(res.data.message);
+      }
+    } catch (err) {
+      toast.error('Failed to update favorite status');
+    }
+  };
 
   useEffect(() => {
     const fetchProductDetails = async () => {
@@ -93,18 +108,6 @@ export default function ProductDetailsPage() {
   return (
     <div className="p-8 max-w-[1200px] mx-auto font-sans">
       
-      {/* ── Breadcrumbs ────────────────────────────────────── */}
-      <div className="flex items-center gap-2 text-xs font-bold text-gray-500 mb-8">
-        <Link href="/dashboard/consumer/browse-products" className="hover:text-gray-900 transition-colors">
-          Browse Products
-        </Link>
-        <ChevronRight className="w-3.5 h-3.5" />
-        <span className="hover:text-gray-900 transition-colors cursor-pointer capitalize">
-          {product.category}
-        </span>
-        <ChevronRight className="w-3.5 h-3.5" />
-        <span className="text-gray-900">{product.name}</span>
-      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
         
@@ -138,35 +141,19 @@ export default function ProductDetailsPage() {
         <div className="flex flex-col gap-6">
           <div className="bg-white border border-[#e4e6df] rounded-3xl p-8 shadow-sm">
             
-            <div className="flex items-start justify-between mb-4">
-              <span className="bg-[#c6efc6] text-[#1e4d1e] text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-widest">
-                {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
-              </span>
-              <button className="text-gray-400 hover:text-red-500 transition-colors">
-                <Heart className="w-6 h-6" />
-              </button>
-            </div>
-
-            <h1 className="text-4xl font-extrabold text-[#1e4d1e] leading-tight mb-3">
+            <h1 className="text-4xl font-extrabold text-[#1e4d1e] leading-tight mb-3 mt-4">
               {product.name}
             </h1>
-
-            <div className="flex items-center gap-2 mb-6">
-              <div className="flex text-yellow-400">
-                <Star className="w-4 h-4 fill-current" />
-                <span className="text-xs font-bold text-gray-500 ml-1">
-                  {product.rating || 'No ratings'}
-                </span>
-              </div>
-            </div>
-
             <div className="mb-8">
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-extrabold text-gray-900">${product.price.toFixed(2)}</span>
                 <span className="text-sm font-bold text-gray-500">/ {product.unit || 'kg'}</span>
               </div>
               {product.stock > 0 && (
-                <p className="text-xs text-gray-400 font-medium mt-1">({product.stock} {product.unit || 'kg'} available)</p>
+                <div className="mt-4 inline-flex items-center gap-3">
+                  <span className="text-[12px] font-bold text-gray-800 uppercase tracking-wider">Stock Available:</span>
+                  <span className="font-black text-[#1e4d1e] text-[22px] leading-none">{product.stock} {product.unit || 'Kg'}</span>
+                </div>
               )}
             </div>
 
@@ -176,9 +163,9 @@ export default function ProductDetailsPage() {
                   <MapPin className="w-5 h-5 text-[#1e4d1e]" />
                 </div>
                 <div>
-                  <p className="text-xs font-extrabold text-gray-900 mb-0.5">Origin</p>
+                  <p className="text-xs font-extrabold text-gray-900 mb-0.5">Farmer Address</p>
                   <p className="text-xs text-gray-600 leading-relaxed">
-                    {product.location || product.farmer?.location || 'Local Farm'}
+                    {product.farmer?.address || product.location || 'Address not available'}
                   </p>
                 </div>
               </div>
@@ -198,22 +185,32 @@ export default function ProductDetailsPage() {
               )}
             </div>
 
-            <p className="text-[13px] text-gray-600 leading-relaxed mb-8">
-              {product.description}
-            </p>
 
             <div className="flex items-center gap-6 mb-8">
               <span className="text-xs font-extrabold text-gray-900">Quantity</span>
               <div className="flex items-center bg-[#f4f5f0] border border-[#e4e6df] rounded-xl overflow-hidden">
                 <button 
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-10 h-10 flex items-center justify-center text-gray-500 hover:bg-[#e4e6df] transition-colors"
+                  onClick={() => setQuantity(Math.max(10, quantity - 1))}
+                  disabled={quantity <= 10}
+                  className="w-10 h-10 flex items-center justify-center text-gray-500 hover:bg-[#e4e6df] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <Minus className="w-4 h-4" />
                 </button>
-                <div className="w-12 h-10 flex items-center justify-center text-sm font-bold text-gray-900 bg-white border-x border-[#e4e6df]">
-                  {quantity}
-                </div>
+                <input
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    if (!isNaN(val)) {
+                      setQuantity(val);
+                    }
+                  }}
+                  onBlur={() => {
+                    if (quantity < 10) setQuantity(10);
+                    if (product.stock && quantity > product.stock) setQuantity(product.stock);
+                  }}
+                  className="w-16 h-10 text-center text-sm font-bold text-gray-900 bg-white border-x border-[#e4e6df] focus:outline-none"
+                />
                 <button 
                   onClick={() => setQuantity(prev => (product.stock ? Math.min(product.stock, prev + 1) : prev + 1))}
                   className="w-10 h-10 flex items-center justify-center text-gray-500 hover:bg-[#e4e6df] transition-colors"
@@ -224,12 +221,16 @@ export default function ProductDetailsPage() {
             </div>
 
             <div className="flex gap-4">
-              <button className="flex-1 bg-[#f4f5f0] border-2 border-[#e4e6df] hover:border-gray-400 hover:bg-gray-50 text-gray-900 px-6 py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors">
-                <ShoppingCart className="w-5 h-5" />
-                Add to Cart
-              </button>
+
               <button 
-                onClick={() => setShowConfirmModal(true)}
+                onClick={() => {
+                  if (quantity < 10) {
+                    toast.error('Minimum purchase quantity is 10');
+                    setQuantity(10);
+                    return;
+                  }
+                  setShowConfirmModal(true);
+                }}
                 disabled={product.stock <= 0}
                 className="flex-1 bg-[#1e4d1e] hover:bg-[#163d16] disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white px-6 py-4 rounded-xl text-sm font-bold transition-colors shadow-sm"
               >
@@ -250,22 +251,27 @@ export default function ProductDetailsPage() {
               {/* Card body */}
               <div className="p-5">
                 {/* Avatar + Name row */}
-                <div className="flex items-center gap-4 mb-4">
-                  <img 
-                    src={
-                      product.farmer.avatar 
-                        ? (product.farmer.avatar.startsWith('http') || product.farmer.avatar.startsWith('data:') 
-                            ? product.farmer.avatar 
-                            : `http://localhost:5001${product.farmer.avatar}`)
-                        : 'https://images.unsplash.com/photo-1595858688461-8f5bc289569e?w=80&h=80&fit=crop'
-                    } 
-                    alt={product.farmer.name} 
-                    className="w-14 h-14 rounded-full border-2 border-[#c6efc6] object-cover shadow-sm"
-                  />
-                  <div>
-                    <p className="text-base font-extrabold text-gray-900 leading-tight">{product.farmer.name}</p>
-                    <span className="inline-block text-[10px] font-bold text-[#1e4d1e] bg-[#e2fbe9] px-2 py-0.5 rounded-full mt-1 uppercase tracking-wider">Trusted Seller</span>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-4">
+                    <img 
+                      src={
+                        product.farmer.avatar 
+                          ? (product.farmer.avatar.startsWith('http') || product.farmer.avatar.startsWith('data:') 
+                              ? product.farmer.avatar 
+                              : `http://localhost:5001${product.farmer.avatar}`)
+                          : 'https://images.unsplash.com/photo-1595858688461-8f5bc289569e?w=80&h=80&fit=crop'
+                      } 
+                      alt={product.farmer.name} 
+                      className="w-14 h-14 rounded-full border-2 border-[#c6efc6] object-cover shadow-sm"
+                    />
+                    <div>
+                      <p className="text-base font-extrabold text-gray-900 leading-tight">{product.farmer.name}</p>
+                      <span className="inline-block text-[10px] font-bold text-[#1e4d1e] bg-[#e2fbe9] px-2 py-0.5 rounded-full mt-1 uppercase tracking-wider">Trusted Seller</span>
+                    </div>
                   </div>
+                  <button onClick={toggleFavorite} className="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">
+                    <Heart className={`w-6 h-6 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
+                  </button>
                 </div>
 
                 {/* Divider */}

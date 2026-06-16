@@ -9,6 +9,8 @@ import {
   Paperclip,
   Image as ImageIcon,
   Send,
+  Check,
+  Smile,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -91,43 +93,44 @@ export default function ConsumerChatPage() {
   };
 
   return (
-    <div className="flex flex-1 h-[calc(100vh-64px)] bg-[#f9f9f6] min-w-0 font-sans p-6">
+    <div className="flex flex-1 h-[calc(100vh-64px)] min-w-0 overflow-hidden font-sans">
       
-      <div className="flex flex-1 bg-white border border-[#e4e6df] rounded-2xl overflow-hidden shadow-sm">
-        
         {/* ── Left Sidebar (Messages List) ───────────────────── */}
-        <section className="w-80 border-r border-[#e4e6df] flex flex-col shrink-0 bg-white">
-          <div className="p-6 border-b border-[#e4e6df] flex items-center justify-between">
-            <h1 className="text-lg font-bold text-gray-900">Messages</h1>
-            <span className="bg-[#1e4d1e] text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full">4 NEW</span>
+        <section className="w-80 border-r border-[#e4e6df] flex flex-col shrink-0 bg-[#f9f9f6]">
+          <div className="p-4">
+            <div className="flex items-center bg-white border border-[#e4e6df] shadow-[0_2px_4px_rgba(0,0,0,0.02)] rounded-full px-4 py-3">
+              <Search className="w-5 h-5 text-gray-400 mr-3" />
+              <input type="text" placeholder="Filter messages..." className="w-full bg-transparent text-[13px] text-gray-800 focus:outline-none placeholder-gray-400 font-medium" />
+            </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto px-2 space-y-1">
             {chatsList.map((chat) => (
               <button
                 key={chat.id}
-                className={`w-full p-4 flex items-center gap-3 transition-colors text-left border-l-[3px] ${
-                  chat.isActive ? 'bg-[#f4f5f0]/80 border-[#1e4d1e]' : 'border-transparent hover:bg-gray-50'
+                className={`w-full p-3.5 flex items-start gap-3 transition-colors text-left relative rounded-2xl ${
+                  chat.isActive ? 'bg-[#edf4e2] border border-[#d2dfc2]/50' : 'hover:bg-gray-100/50 border border-transparent'
                 }`}
               >
                 <div className="relative shrink-0">
                   <img
                     src={chat.avatar}
                     alt={chat.name}
-                    className="w-10 h-10 rounded-full object-cover border border-[#e4e6df]"
+                    className="w-11 h-11 rounded-full object-cover border border-white shadow-sm"
                   />
-                  {chat.unread && (
-                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full" />
+                  {chat.isActive && (
+                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-600 border-2 border-white rounded-full" />
+                  )}
+                  {!chat.isActive && chat.unread && (
+                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-600 border-2 border-white rounded-full" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-center mb-1">
-                    <h4 className="text-sm font-bold text-gray-900 truncate">{chat.name}</h4>
-                    <span className="text-[10px] font-semibold text-gray-400 shrink-0">{chat.time}</span>
+                  <div className="flex justify-between items-center mb-0.5">
+                    <h4 className="text-[13px] font-bold text-gray-900 truncate">{chat.name}</h4>
+                    <span className="text-[10px] font-bold text-gray-500 shrink-0">{chat.time}</span>
                   </div>
-                  <p className={`text-xs truncate ${chat.unread ? 'text-gray-800 font-bold' : 'text-gray-500 font-medium'}`}>
-                    {chat.lastMsg}
-                  </p>
+                  <p className="text-[11px] text-gray-500 truncate mt-0.5 font-medium">{chat.lastMsg}</p>
                 </div>
               </button>
             ))}
@@ -138,31 +141,20 @@ export default function ConsumerChatPage() {
         <section className="flex-1 flex flex-col min-w-0 bg-white">
           
           {/* Header */}
-          <header className="h-[72px] px-6 border-b border-[#e4e6df] bg-white flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-3">
+          <header className="h-20 px-8 border-b border-[#e4e6df] bg-white flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-4">
               <img
                 src="https://images.unsplash.com/photo-1595858688461-8f5bc289569e?w=80&h=80&fit=crop"
                 alt="Green Valley Organics"
-                className="w-10 h-10 rounded-full object-cover border border-[#e4e6df]"
+                className="w-12 h-12 rounded-full object-cover shadow-sm"
               />
               <div>
-                <h3 className="text-sm font-bold text-gray-900 leading-snug">Green Valley Organics</h3>
+                <h3 className="text-sm font-extrabold text-gray-900 leading-snug">Green Valley Organics</h3>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                  <span className="text-[10px] font-semibold text-gray-400">Online</span>
+                  <span className="w-2 h-2 bg-green-600 rounded-full" />
+                  <span className="text-[11px] font-bold text-green-700">Active Now</span>
                 </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors border border-[#e4e6df]">
-                <Phone className="w-4 h-4" />
-              </button>
-              <button className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors border border-[#e4e6df]">
-                <Video className="w-4 h-4" />
-              </button>
-              <button className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors border border-[#e4e6df]">
-                <Info className="w-4 h-4" />
-              </button>
             </div>
           </header>
 
@@ -175,71 +167,77 @@ export default function ConsumerChatPage() {
                   <img
                     src="https://images.unsplash.com/photo-1595858688461-8f5bc289569e?w=80&h=80&fit=crop"
                     alt={msg.sender}
-                    className="w-8 h-8 rounded-full object-cover shrink-0 border border-[#e4e6df]"
+                    className="w-8 h-8 rounded-full object-cover shrink-0 shadow-sm"
                   />
                 )}
 
                 <div className="max-w-[500px]">
                   {msg.isImage ? (
-                    <div className="bg-[#f4f5f0] border border-[#e4e6df] rounded-2xl rounded-tl-none p-2 mb-1 shadow-sm">
+                    <div className="bg-[#f4f5f0] border border-[#e4e6df] rounded-2xl rounded-bl-sm p-2 mb-1 shadow-sm">
                       <img src={msg.imageSrc} alt="Document" className="w-full h-auto rounded-xl object-cover" />
                     </div>
                   ) : (
                     <div
                       className={`p-4 text-[13px] leading-relaxed shadow-sm ${
                         msg.isMe
-                          ? 'bg-[#1e4d1e] text-white rounded-2xl rounded-tr-none'
-                          : 'bg-white border border-[#e4e6df] text-gray-800 rounded-2xl rounded-tl-none'
+                          ? 'bg-[#1e4d1e] text-white rounded-2xl rounded-br-sm'
+                          : 'bg-white border border-[#e4e6df] text-gray-800 rounded-2xl rounded-bl-sm'
                       }`}
                     >
                       {msg.text}
                     </div>
                   )}
-                  <div className={`text-[10px] text-gray-400 font-medium mt-1.5 px-1 ${msg.isMe ? 'text-right' : 'text-left'}`}>
-                    {msg.time}
+                  <div className={`flex items-center gap-1 text-[10px] text-gray-400 font-bold px-1 mt-1.5 ${msg.isMe ? 'justify-end' : 'justify-start'}`}>
+                    <span>{msg.time}</span>
+                    {msg.isMe && (
+                      <span className="text-green-600 flex items-center ml-0.5">
+                        <Check className="w-3 h-3" />
+                        <Check className="w-3 h-3 -ml-1.5" />
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                {msg.isMe && (
-                  <div className="w-8 h-8 rounded-full bg-blue-100 object-cover shrink-0 border border-[#e4e6df] overflow-hidden">
-                     <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop" alt="Me" className="w-full h-full object-cover" />
-                  </div>
-                )}
               </div>
             ))}
           </div>
 
           {/* Input Area */}
-          <div className="p-4 bg-white border-t border-[#e4e6df] shrink-0">
-            <form onSubmit={handleSendMessage} className="flex items-center gap-3">
-              <button type="button" className="p-2 text-gray-400 hover:text-gray-700 transition-colors">
+          <div className="p-6 bg-white shrink-0 border-t border-[#e4e6df]/50">
+            <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto flex items-center bg-[#f4f5f0] rounded-full px-4 py-2 gap-3 shadow-inner">
+              <button
+                type="button"
+                onClick={() => toast('Select file')}
+                className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-200/50 rounded-full transition-all"
+              >
                 <Paperclip className="w-5 h-5" />
               </button>
-              <button type="button" className="p-2 text-gray-400 hover:text-gray-700 transition-colors">
-                <ImageIcon className="w-5 h-5" />
+              <button
+                type="button"
+                onClick={() => toast('Emojis panel coming soon!')}
+                className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-200/50 rounded-full transition-all"
+              >
+                <Smile className="w-5 h-5" />
               </button>
               
-              <div className="flex-1 relative">
-                <input
-                  type="text"
-                  value={typedMessage}
-                  onChange={(e) => setTypedMessage(e.target.value)}
-                  placeholder="Type your message here..."
-                  className="w-full bg-[#f4f5f0] border border-[#e4e6df] rounded-xl pl-4 pr-12 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#1e4d1e]"
-                />
-              </div>
+              <input
+                type="text"
+                value={typedMessage}
+                onChange={(e) => setTypedMessage(e.target.value)}
+                placeholder="Write your message..."
+                className="flex-1 bg-transparent text-[13px] font-medium text-gray-800 placeholder-gray-500 focus:outline-none py-2"
+              />
               
               <button
                 type="submit"
-                className="w-12 h-12 bg-[#1e4d1e] hover:bg-[#163d16] text-white rounded-xl flex items-center justify-center transition-colors shadow-sm shrink-0"
+                className="w-10 h-10 bg-[#1e4d1e] hover:bg-[#163d16] text-white rounded-full flex items-center justify-center transition-colors shadow-md shrink-0 cursor-pointer"
               >
-                <Send className="w-5 h-5 ml-1" />
+                <Send className="w-4 h-4 ml-0.5" />
               </button>
             </form>
           </div>
 
         </section>
-      </div>
     </div>
   );
 }

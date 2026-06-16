@@ -13,6 +13,7 @@ import {
   ChevronRight,
   ShoppingCart,
   Loader2,
+  MapPin,
 } from 'lucide-react';
 import { productService } from '@/services/productService';
 import { orderService } from '@/services/orderService';
@@ -31,33 +32,8 @@ export default function BrowseProductsPage() {
   const [loading, setLoading] = useState(true);
   const [totalProducts, setTotalProducts] = useState(0);
   const [sortBy, setSortBy] = useState('Latest Arrivals');
-  const [pendingProductIds, setPendingProductIds] = useState<Set<string>>(new Set());
   const limit = 12;
-
-  // Fetch consumer's pending order product IDs once on mount
-  useEffect(() => {
-    const fetchPendingOrders = async () => {
-      try {
-        const res = await orderService.getMyOrders();
-        if (res && res.success && res.data) {
-          const ids = new Set<string>();
-          res.data.forEach((order: any) => {
-            if (order.status === 'pending') {
-              (order.items || []).forEach((item: any) => {
-                const productId = item.product?._id || item.product;
-                if (productId) ids.add(productId.toString());
-              });
-            }
-          });
-          setPendingProductIds(ids);
-        }
-      } catch {
-        // If not logged in or error, just show all products
-      }
-    };
-    fetchPendingOrders();
-  }, []);
-
+  // Removed fetchPendingOrders to display all products
   useEffect(() => {
     const loadProducts = async () => {
       setLoading(true);
@@ -72,7 +48,7 @@ export default function BrowseProductsPage() {
         const res = await productService.getAll(params);
         if (res && res.success) {
           let loadedProducts = res.data || [];
-          
+
           // Sort products frontend-side to respect sorting filter
           if (sortBy === 'Price: Low to High') {
             loadedProducts = [...loadedProducts].sort((a: any, b: any) => a.price - b.price);
@@ -100,11 +76,37 @@ export default function BrowseProductsPage() {
   return (
     <div className="p-8 max-w-[1200px]">
 
-      {/* ── Page Header ───────────────────────────────── */}
-      <div className="flex items-start justify-between mb-6">
+      {/* ── Header & Filters ──────────────────────────── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+
+        {/* Category Filter Bar */}
+        <div className="flex items-center gap-3 flex-wrap">
+          {categories.map((cat) => {
+            const Icon = cat.icon;
+            const isActive = activeCategory === cat.key;
+            return (
+              <button
+                key={cat.key}
+                onClick={() => {
+                  setActiveCategory(cat.key);
+                  setCurrentPage(1);
+                }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all ${isActive
+                  ? 'bg-[#1e4d1e] text-white shadow-sm'
+                  : 'bg-white border border-[#e4e6df] text-gray-600 hover:border-[#1e4d1e] hover:text-[#1e4d1e]'
+                  }`}
+              >
+                <Icon className="w-4 h-4" />
+                {cat.name}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Sort */}
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-sm text-gray-500">Sort:</span>
-          <select 
+          <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             className="border border-[#e4e6df] rounded-lg px-3 py-2 text-sm font-semibold text-gray-800 bg-white focus:outline-none focus:border-[#1e4d1e] cursor-pointer"
@@ -112,34 +114,9 @@ export default function BrowseProductsPage() {
             <option>Latest Arrivals</option>
             <option>Price: Low to High</option>
             <option>Price: High to Low</option>
-            <option>Top Rated</option>
+
           </select>
         </div>
-      </div>
-
-      {/* ── Category Filter Bar ───────────────────────── */}
-      <div className="flex items-center gap-3 mb-8 flex-wrap">
-        {categories.map((cat) => {
-          const Icon = cat.icon;
-          const isActive = activeCategory === cat.key;
-          return (
-            <button
-              key={cat.key}
-              onClick={() => {
-                setActiveCategory(cat.key);
-                setCurrentPage(1);
-              }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all ${
-                isActive
-                  ? 'bg-[#1e4d1e] text-white shadow-sm'
-                  : 'bg-white border border-[#e4e6df] text-gray-600 hover:border-[#1e4d1e] hover:text-[#1e4d1e]'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {cat.name}
-            </button>
-          );
-        })}
       </div>
 
       {/* ── Products Grid ─────────── */}
@@ -148,63 +125,66 @@ export default function BrowseProductsPage() {
           <Loader2 className="w-8 h-8 text-[#1e4d1e] animate-spin" />
           <p className="text-sm text-gray-500 mt-2">Loading products...</p>
         </div>
-      ) : products.filter(p => !pendingProductIds.has(p._id?.toString())).length === 0 ? (
+      ) : products.length === 0 ? (
         <div className="text-center py-20 bg-white border border-[#e4e6df] rounded-2xl">
           <p className="text-gray-500">No products found in this category.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-          {products.filter(p => !pendingProductIds.has(p._id?.toString())).map((product) => {
-            const productImg = product.images && product.images[0] 
-              ? (product.images[0].startsWith('http') || product.images[0].startsWith('data:') ? product.images[0] : `http://localhost:5001${product.images[0]}`) 
+          {products.map((product) => {
+            const productImg = product.images && product.images[0]
+              ? (product.images[0].startsWith('http') || product.images[0].startsWith('data:') ? product.images[0] : `http://localhost:5001${product.images[0]}`)
               : 'https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=400&h=300&fit=crop';
-            
+
             return (
               <div
                 key={product._id}
-                className="bg-white border border-[#e4e6df] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group flex flex-col h-full"
+                className="bg-white border border-[#e4e6df] rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group flex flex-col h-full"
               >
                 {/* Image */}
-                <div className="relative h-44 overflow-hidden shrink-0">
-                  <img
-                    src={productImg}
-                    alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  {/* Rating badge */}
-                  <span className="absolute top-3 left-3 flex items-center gap-1 bg-white/90 backdrop-blur-sm text-xs font-bold text-gray-900 px-2 py-1 rounded-md shadow-sm">
-                    <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                    {product.rating || 0}
-                  </span>
-                  {/* Organic badge */}
-                  {product.isOrganic && (
-                    <span className="absolute top-3 right-3 bg-[#1e4d1e] text-white text-[9px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider">
-                      Organic
+                <div className="relative h-48 overflow-hidden shrink-0 p-3 pb-0">
+                  <div className="relative w-full h-full rounded-2xl overflow-hidden">
+                    <img
+                      src={productImg}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    {/* Category badge */}
+                    <span className="absolute top-3 left-3 bg-white/95 text-gray-800 text-[10px] font-extrabold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm backdrop-blur-sm">
+                      {product.category}
                     </span>
-                  )}
+                  </div>
                 </div>
 
                 {/* Details */}
-                <div className="p-4 flex flex-col flex-grow justify-between">
-                  <div>
-                    <span className="text-[9px] font-extrabold text-[#1e4d1e] tracking-wider uppercase">
-                      {product.category}
-                    </span>
-                    <h3 className="text-[15px] font-extrabold text-gray-900 mt-1 leading-snug line-clamp-1">{product.name}</h3>
-                    <p className="text-[11px] text-gray-400 mt-1 leading-relaxed line-clamp-2">{product.description}</p>
-                  </div>
-                  <div className="flex items-center justify-between mt-4">
-                    <div>
-                      <span className="text-lg font-extrabold text-gray-900">${product.price.toFixed(2)}</span>
-                      <span className="text-xs text-gray-400 ml-1">/ {product.unit || 'kg'}</span>
+                <div className="p-4 flex flex-col flex-grow">
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="text-[15px] font-bold text-[#0f172a] leading-snug line-clamp-1">{product.name}</h3>
+                    <div className="text-right shrink-0 ml-2">
+                      <span className="text-[14px] font-bold text-[#0f172a]">${product.price.toFixed(2)}</span>
+                      <span className="text-[12px] font-bold text-[#0f172a]">/{product.unit || 'kg'}</span>
                     </div>
-                    <Link
-                      href={`/dashboard/consumer/browse-products/${product._id}`}
-                      className="bg-[#1e4d1e] hover:bg-[#163d16] text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors"
-                    >
-                      View Details
-                    </Link>
                   </div>
+
+                  <div className="flex flex-col gap-1 mb-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Available Stock</span>
+                      <span className="font-black text-[#1e4d1e] text-[20px] leading-none">{product.stock} <span className="text-[13px] font-bold">{product.unit || 'kg'}</span></span>
+                    </div>
+                  </div>
+
+                  <p className="text-[12px] text-gray-600 mb-4 flex items-start gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-[#1e4d1e] shrink-0 mt-0.5" />
+                    <span className="line-clamp-2">{product.farmer?.address || product.location || 'Address not available'}</span>
+                  </p>
+
+                  <Link
+                    href={`/dashboard/consumer/browse-products/${product._id}`}
+                    className="mt-auto w-full bg-[#17451e] hover:bg-[#113316] text-white text-sm font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    Buy
+                  </Link>
                 </div>
               </div>
             );
@@ -215,7 +195,7 @@ export default function BrowseProductsPage() {
       {/* ── Pagination ────────────────────────────────── */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 mb-8">
-          <button 
+          <button
             disabled={currentPage === 1}
             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
             className="w-9 h-9 rounded-lg border border-[#e4e6df] flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -228,17 +208,16 @@ export default function BrowseProductsPage() {
               <button
                 key={page}
                 onClick={() => setCurrentPage(page)}
-                className={`w-9 h-9 rounded-lg text-sm font-bold transition-colors ${
-                  currentPage === page
-                    ? 'bg-[#1e4d1e] text-white'
-                    : 'border border-[#e4e6df] text-gray-600 hover:bg-gray-50'
-                }`}
+                className={`w-9 h-9 rounded-lg text-sm font-bold transition-colors ${currentPage === page
+                  ? 'bg-[#1e4d1e] text-white'
+                  : 'border border-[#e4e6df] text-gray-600 hover:bg-gray-50'
+                  }`}
               >
                 {page}
               </button>
             );
           })}
-          <button 
+          <button
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
             className="w-9 h-9 rounded-lg border border-[#e4e6df] flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
