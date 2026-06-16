@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -8,11 +8,10 @@ import { useAuth } from '@/context/AuthContext';
 import { Loader2, Sprout } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading, isAuthenticated } = useAuth();
-  const router = useRouter();
-  const pathname = usePathname();
+function PaymentStatusHandler() {
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     const paymentStatus = searchParams.get('payment');
@@ -42,6 +41,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
     }
   }, [searchParams, pathname, router]);
+
+  return null;
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { user, loading, isAuthenticated } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (loading) return;
@@ -106,5 +113,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return null;
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <Suspense fallback={null}>
+        <PaymentStatusHandler />
+      </Suspense>
+      {children}
+    </>
+  );
 }
