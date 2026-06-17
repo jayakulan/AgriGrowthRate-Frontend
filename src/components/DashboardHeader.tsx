@@ -61,15 +61,15 @@ export default function DashboardHeader() {
   };
 
   const { title, description } = getPageInfo();
-  const userName = user?.name || 'Tharshika Pathmanathan';
-  const role = user?.role || 'USER'; 
+  const userName = user?.name || 'Guest User';
+  const role = user?.role || 'user';
   
   return (
-    <header className="h-[84px] bg-white flex items-center justify-between px-8 select-none shrink-0 relative z-50 border-b border-gray-100">
+    <header className="h-[84px] bg-[#edf4e2] flex items-center justify-between px-8 select-none shrink-0 relative z-50 border-b border-[#d2dfc2]">
       {/* Left side: Title, Greeting, and Subtitle */}
       <div>
         <h1 className="text-2xl font-extrabold text-[#1e4d1e] leading-tight mb-0.5">{title}</h1>
-        <p className="text-xs text-gray-600 font-medium">{description}</p>
+        <p className="text-xs text-gray-700 font-semibold">{description}</p>
       </div>
 
       {/* Right side: Notifications, Divider, Avatar, Name, Role */}
@@ -79,10 +79,10 @@ export default function DashboardHeader() {
         <div className="relative" ref={dropdownRef}>
           <button 
             onClick={() => setShowNotifications(!showNotifications)}
-            className="text-gray-500 hover:text-gray-900 transition-colors p-2 rounded-full hover:bg-gray-100 relative focus:outline-none"
+            className="text-[#1e4d1e] hover:text-[#163d16] transition-colors p-2 rounded-full hover:bg-white/40 relative focus:outline-none cursor-pointer"
           >
             <Bell className="w-[22px] h-[22px]" />
-            <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+            <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#edf4e2]"></span>
           </button>
           
           {showNotifications && (
@@ -112,12 +112,24 @@ export default function DashboardHeader() {
 
         {/* Profile Avatar and label */}
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-full bg-[#edf4e2] flex items-center justify-center shrink-0 border border-[#d2dfc2]">
-            <UserIcon className="w-[22px] h-[22px] text-[#2c6e2c]" />
-          </div>
+          {user?.avatar ? (
+            <img
+              src={user.avatar}
+              alt={`${userName} Avatar`}
+              className="w-11 h-11 rounded-full object-cover border border-[#d2dfc2]"
+            />
+          ) : (
+            <div className="w-11 h-11 rounded-full bg-white flex items-center justify-center shrink-0 border border-[#d2dfc2]">
+              <UserIcon className="w-[22px] h-[22px] text-[#2c6e2c]" />
+            </div>
+          )}
           <div className="flex flex-col justify-center text-left">
-            <h4 className="text-[14px] font-bold text-brand-dark leading-none mb-0.5">AGRI ADMIN</h4>
-            <span className="text-[11px] font-extrabold text-[#2c6e2c] leading-none">Nuha Nazardeen</span>
+            <h4 className="text-[14px] font-bold text-[#1e4d1e] leading-none mb-1">
+              {userName}
+            </h4>
+            <span className="text-[11px] font-extrabold text-[#2c6e2c] leading-none uppercase">
+              {role}
+            </span>
           </div>
         </div>
 
