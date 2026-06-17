@@ -37,7 +37,7 @@ export default function DashboardHeader() {
       return { title: 'Products', description: 'Browse, manage, and discover agricultural products and equipment.' };
     }
     if (pathname.includes('/orders')) {
-      return { title: 'Orders', description: 'Track and manage your recent purchases and sales.' };
+      return { title: 'Ordered Monitoring', description: 'Track and manage your recent purchases and sales.' };
     }
     if (pathname.includes('/chat')) {
       return { title: 'Chat', description: 'Connect and communicate with your community and customers.' };
@@ -57,12 +57,19 @@ export default function DashboardHeader() {
     if (pathname.includes('/retailers')) {
       return { title: 'Manage Retailers', description: 'View and manage registered retailers and consumers.' };
     }
+    if (pathname.includes('/reports')) {
+      return { title: 'Reports & Analytics', description: 'In-depth analysis of platform performance, user metrics, and agricultural marketplace yield.' };
+    }
     return { title: 'Dashboard', description: 'Your central hub for overview and analytics.' };
   };
 
   const { title, description } = getPageInfo();
   const userName = user?.name || 'Tharshika Pathmanathan';
   const role = user?.role || 'USER'; 
+  
+  const isAdminHeader = pathname.includes('/dashboard/admin');
+  const displayRole = isAdminHeader ? 'AGRI ADMIN' : role;
+  const displayName = isAdminHeader ? 'Nuha Nazardeen' : userName;
   
   return (
     <header className="h-[84px] bg-white flex items-center justify-between px-8 select-none shrink-0 relative z-50 border-b border-gray-100">
@@ -116,8 +123,8 @@ export default function DashboardHeader() {
             <UserIcon className="w-[22px] h-[22px] text-[#2c6e2c]" />
           </div>
           <div className="flex flex-col justify-center text-left">
-            <h4 className="text-[14px] font-bold text-brand-dark leading-none mb-0.5">AGRI ADMIN</h4>
-            <span className="text-[11px] font-extrabold text-[#2c6e2c] leading-none">Nuha Nazardeen</span>
+            <h4 className="text-[14px] font-bold text-brand-dark leading-none mb-0.5 uppercase">{displayRole}</h4>
+            <span className="text-[11px] font-extrabold text-[#2c6e2c] leading-none">{displayName}</span>
           </div>
         </div>
 

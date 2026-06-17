@@ -8,14 +8,11 @@ import {
   Shield, 
   Eye, 
   EyeOff, 
-  Clock, 
   ChevronRight, 
   ShieldCheck, 
   Activity, 
   Download, 
   User as UserIcon,
-  Laptop,
-  Smartphone,
   CheckCircle2,
   AlertTriangle,
   Loader2,
@@ -43,22 +40,51 @@ export default function AdminProfilePage() {
 
   // Form states
   const [formData, setFormData] = useState({
-    name: user?.name || 'Alex Rivera',
-    email: user?.email || 'alex.rivera@agrigrowth.com',
-    phone: user?.phone || '+1 (555) 342-9012',
-    department: 'IT Systems Operations',
-    bio: "Managing digital stewardship and infrastructural integrity for AgriGrowthRate's enterprise ecosystem. Focused on sustainable AgTech scalability and secure user governance.",
+    name: user?.name || 'Agri Admin',
+    email: user?.email || 'admin@gmail.com',
+    phone: user?.phone || '94777123458',
+    location: user?.location || 'San Jose, CA',
+    bio: user?.bio || "Managing digital stewardship and infrastructural integrity for AgriGrowthRate's enterprise ecosystem. Focused on sustainable AgTech scalability and secure user governance.",
   });
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [tempFormData, setTempFormData] = useState({
+    name: user?.name || 'Agri Admin',
+    email: user?.email || 'admin@gmail.com',
+    phone: user?.phone || '94777123458',
+    location: user?.location || 'San Jose, CA',
+    bio: user?.bio || "Managing digital stewardship and infrastructural integrity for AgriGrowthRate's enterprise ecosystem. Focused on sustainable AgTech scalability and secure user governance.",
+  });
+
+  const [avatarUrl, setAvatarUrl] = useState(
+    'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=256&h=256'
+  );
+  const avatarInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const localUrl = URL.createObjectURL(file);
+      setAvatarUrl(localUrl);
+      toast.success('Avatar preview updated locally! Save changes to finalize. 📸');
+    }
+  };
 
   // Sync user context when user loaded
   useEffect(() => {
     if (user) {
-      setFormData(prev => ({
-        ...prev,
-        name: user.name || prev.name,
-        email: user.email || prev.email,
-        phone: user.phone || prev.phone,
-      }));
+      const updated = {
+        name: user.name || 'Agri Admin',
+        email: user.email || 'admin@gmail.com',
+        phone: user.phone || '94777123458',
+        location: user.location || 'San Jose, CA',
+        bio: user.bio || "Managing digital stewardship and infrastructural integrity for AgriGrowthRate's enterprise ecosystem. Focused on sustainable AgTech scalability and secure user governance.",
+      };
+      setFormData(prev => ({ ...prev, ...updated }));
+      setTempFormData(prev => ({ ...prev, ...updated }));
+      if (user.avatar) {
+        setAvatarUrl(user.avatar);
+      }
     }
   }, [user]);
 
@@ -102,13 +128,18 @@ export default function AdminProfilePage() {
       if (response && response.data && response.data.data) {
         const data = response.data.data;
         setProfile(data);
-        setFormData({
-          name: data.name || 'Alex Rivera',
-          email: data.email || 'alex.rivera@agrigrowth.com',
-          phone: data.phone || '+1 (555) 342-9012',
-          department: data.department || 'IT Systems Operations',
+        if (data.avatar) {
+          setAvatarUrl(data.avatar);
+        }
+        const updated = {
+          name: data.name || 'Agri Admin',
+          email: data.email || 'admin@gmail.com',
+          phone: data.phone || '94777123458',
+          location: data.location || data.department || 'San Jose, CA',
           bio: data.bio || "Managing digital stewardship and infrastructural integrity for AgriGrowthRate's enterprise ecosystem. Focused on sustainable AgTech scalability and secure user governance.",
-        });
+        };
+        setFormData(updated);
+        setTempFormData(updated);
       }
     } catch (error) {
       console.warn('Could not reach backend profile API, using state mocks:', error);
@@ -117,18 +148,31 @@ export default function AdminProfilePage() {
     }
   };
 
-  const handleUpdateProfile = async () => {
+  const handleConfirmEdit = async () => {
     setSaving(true);
     try {
-      const response = await api.put('/admin/profile', formData).catch(() => null);
+      const payload = {
+        ...tempFormData,
+        avatar: avatarUrl
+      };
+      const response = await api.put('/admin/profile', payload).catch(() => null);
 
       if (response && response.data && response.data.success) {
         updateUser(response.data.data);
         toast.success('Admin changes saved to remote server! 🌳');
       } else {
-        updateUser({ name: formData.name, phone: formData.phone });
+        updateUser({ 
+          name: tempFormData.name, 
+          email: tempFormData.email,
+          phone: tempFormData.phone, 
+          avatar: avatarUrl, 
+          location: tempFormData.location,
+          bio: tempFormData.bio
+        });
         toast.success('Profile preferences simulated successfully! 🌱');
       }
+      setFormData(tempFormData);
+      setShowEditModal(false);
     } catch (error) {
       console.error(error);
       toast.error('Failed to update admin profile');
@@ -229,27 +273,34 @@ export default function AdminProfilePage() {
             {/* Avatar Circle with edit button overlay */}
             <div className="relative group shrink-0">
               <img
-                src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=256&h=256"
-                alt="Alex Rivera Profile"
+                src={avatarUrl}
+                alt={`${formData.name} Profile`}
                 className="w-24 h-24 rounded-[20px] object-cover border-2 border-white/20 shadow-md"
               />
               <button 
                 type="button" 
-                onClick={() => toast('Avatar upload coming soon!')}
+                onClick={() => avatarInputRef.current?.click()}
                 className="absolute bottom-1 right-1 bg-[#1e4d1e] hover:bg-[#163d16] text-white p-2 rounded-lg transition-all border border-white/30 shadow-sm cursor-pointer"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
               </button>
+              <input
+                type="file"
+                ref={avatarInputRef}
+                onChange={handleAvatarChange}
+                accept="image/*"
+                style={{ display: 'none' }}
+              />
             </div>
 
             {/* Profile Credentials */}
             <div className="text-center md:text-left space-y-2">
-              <h2 className="text-2xl font-extrabold tracking-tight">{formData.name}</h2>
+              <h2 className="text-2xl font-extrabold tracking-tight">AGRI ADMIN</h2>
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5">
                 <span className="text-[10px] font-bold bg-white/10 border border-white/15 px-3 py-1 rounded-full uppercase tracking-wider">
-                  System Administrator
+                  SYSTEM ADMINISTRATOR
                 </span>
                 <span className="text-[10px] font-bold text-[#bcfcbb] flex items-center gap-1">
                   <ShieldCheck className="w-3.5 h-3.5 text-[#bcfcbb]" /> Full Access Level
@@ -261,17 +312,13 @@ export default function AdminProfilePage() {
           {/* Quick Actions inside Hero */}
           <div className="flex items-center gap-3 relative z-10 shrink-0">
             <button
-              onClick={() => toast('Displaying full system logs...')}
-              className="px-5 py-2.5 text-xs font-bold bg-white/10 hover:bg-white/15 border border-white/20 text-white rounded-xl transition-all cursor-pointer select-none"
+              onClick={() => {
+                setTempFormData({ ...formData });
+                setShowEditModal(true);
+              }}
+              className="px-6 py-2.5 text-xs font-bold bg-[#bcfcbb] hover:bg-[#a1eba0] text-[#1e4d1e] rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer select-none"
             >
-              View Logs
-            </button>
-            <button
-              onClick={handleUpdateProfile}
-              disabled={saving}
-              className="px-6 py-2.5 text-xs font-bold bg-[#bcfcbb] hover:bg-[#a1eba0] text-[#1e4d1e] rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60 select-none"
-            >
-              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Save Changes'}
+              <span>Update Profile</span>
             </button>
           </div>
         </div>
@@ -280,7 +327,7 @@ export default function AdminProfilePage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* General Information Card */}
-          <div className="lg:col-span-8 bg-white border border-[#e4e6df] rounded-[24px] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-6">
+          <div className="lg:col-span-8 bg-white rounded-[24px] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-6 shiny-card">
             <div className="flex items-center gap-3 border-b border-[#f4f5f0] pb-4">
               <div className="p-2 rounded-lg bg-[#edf4e2]">
                 <UserIcon className="w-4.5 h-4.5 text-[#1e4d1e]" />
@@ -292,77 +339,54 @@ export default function AdminProfilePage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {/* Full Name */}
-              <div className="space-y-1.5 text-left">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+              <div className="space-y-1 text-left">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
                   Full Name
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Enter full name"
-                  className="w-full bg-[#f4f5f0]/50 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-xl py-3 px-4 text-xs font-bold text-gray-800 outline-none transition-all placeholder-gray-400"
-                />
+                </span>
+                <p className="text-xs font-bold text-gray-800 bg-[#f4f5f0]/30 border border-[#e4e6df]/50 rounded-xl py-3 px-4 min-h-[42px] flex items-center">
+                  {formData.name}
+                </p>
               </div>
 
               {/* Email Address */}
-              <div className="space-y-1.5 text-left">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+              <div className="space-y-1 text-left">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
                   Email Address
-                </label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="Enter email address"
-                  className="w-full bg-[#f4f5f0]/50 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-xl py-3 px-4 text-xs font-bold text-gray-800 outline-none transition-all placeholder-gray-400"
-                />
+                </span>
+                <p className="text-xs font-bold text-gray-800 bg-[#f4f5f0]/30 border border-[#e4e6df]/50 rounded-xl py-3 px-4 min-h-[42px] flex items-center">
+                  {formData.email}
+                </p>
               </div>
 
               {/* Contact Number */}
-              <div className="space-y-1.5 text-left">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+              <div className="space-y-1 text-left">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
                   Contact Number
-                </label>
-                <input
-                  type="text"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="Enter contact number"
-                  className="w-full bg-[#f4f5f0]/50 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-xl py-3 px-4 text-xs font-bold text-gray-800 outline-none transition-all placeholder-gray-400"
-                />
+                </span>
+                <p className="text-xs font-bold text-gray-800 bg-[#f4f5f0]/30 border border-[#e4e6df]/50 rounded-xl py-3 px-4 min-h-[42px] flex items-center">
+                  {formData.phone || 'Not Provided'}
+                </p>
               </div>
 
-              {/* Department Dropdown Selector */}
-              <div className="space-y-1.5 text-left">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
-                  Department
-                </label>
-                <select
-                  value={formData.department}
-                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  className="w-full bg-[#f4f5f0]/50 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-xl py-3 px-4 text-xs font-bold text-gray-800 outline-none transition-all cursor-pointer"
-                >
-                  <option value="IT Systems Operations">IT Systems Operations</option>
-                  <option value="AgTech Research & Support">AgTech Research & Support</option>
-                  <option value="Marketplace Compliance">Marketplace Compliance</option>
-                  <option value="Infrastructure Logistics">Infrastructure Logistics</option>
-                </select>
+              {/* Location */}
+              <div className="space-y-1 text-left">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+                  Location
+                </span>
+                <p className="text-xs font-bold text-gray-800 bg-[#f4f5f0]/30 border border-[#e4e6df]/50 rounded-xl py-3 px-4 min-h-[42px] flex items-center">
+                  {formData.location || 'Not Provided'}
+                </p>
               </div>
             </div>
 
             {/* Professional Bio */}
-            <div className="space-y-1.5 text-left">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+            <div className="space-y-1 text-left">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
                 Professional Bio
-              </label>
-              <textarea
-                rows={4}
-                value={formData.bio}
-                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                placeholder="Enter admin bio details"
-                className="w-full bg-[#f4f5f0]/50 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-2xl py-3.5 px-4 text-xs font-semibold text-gray-800 outline-none transition-all placeholder-gray-400 resize-none leading-relaxed"
-              />
+              </span>
+              <p className="text-xs font-semibold text-gray-700 bg-[#f4f5f0]/30 border border-[#e4e6df]/50 rounded-2xl py-4 px-5 leading-relaxed min-h-[100px]">
+                {formData.bio || 'No biography written yet.'}
+              </p>
             </div>
           </div>
 
@@ -370,7 +394,7 @@ export default function AdminProfilePage() {
           <div className="lg:col-span-4 space-y-8 w-full">
             
             {/* Security Controls */}
-            <div className="bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-6">
+            <div className="bg-white rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-6 shiny-card">
               <div className="flex items-center gap-3 border-b border-[#f4f5f0] pb-4">
                 <div className="p-2 rounded-lg bg-[#edf4e2]">
                   <Shield className="w-4.5 h-4.5 text-[#1e4d1e]" />
@@ -424,61 +448,12 @@ export default function AdminProfilePage() {
               </div>
             </div>
 
-            {/* Active Sessions */}
-            <div className="bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-5">
-              <div className="flex items-center gap-3 border-b border-[#f4f5f0] pb-4">
-                <div className="p-2 rounded-lg bg-[#edf4e2]">
-                  <Clock className="w-4.5 h-4.5 text-[#1e4d1e]" />
-                </div>
-                <h3 className="text-sm font-extrabold text-gray-900 uppercase tracking-wider">
-                  Active Sessions
-                </h3>
-              </div>
-
-              <div className="space-y-3.5">
-                {sessions.map((sess) => (
-                  <div 
-                    key={sess.id} 
-                    className="flex items-center justify-between p-3.5 bg-[#f4f5f0]/30 border border-[#e4e6df]/80 rounded-xl"
-                  >
-                    <div className="flex gap-3 min-w-0">
-                      {sess.current ? (
-                        <Laptop className="w-4.5 h-4.5 text-[#1e4d1e] shrink-0 mt-0.5" />
-                      ) : (
-                        <Smartphone className="w-4.5 h-4.5 text-gray-400 shrink-0 mt-0.5" />
-                      )}
-                      
-                      <div className="min-w-0 space-y-0.5 text-left">
-                        <p className="text-xs font-bold text-gray-800 truncate">
-                          {sess.device}
-                        </p>
-                        <p className="text-[10px] text-gray-400 font-semibold flex items-center gap-1.5">
-                          {sess.details}
-                          {sess.current && <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />}
-                        </p>
-                      </div>
-                    </div>
-
-                    {!sess.current && (
-                      <button
-                        type="button"
-                        onClick={() => handleTerminateSession(sess.id)}
-                        className="text-[10px] font-extrabold text-red-500 hover:text-red-700 tracking-wider hover:underline transition-colors shrink-0 uppercase cursor-pointer"
-                      >
-                        Logout
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
           </div>
 
         </div>
 
         {/* ── RECENT ACTIVITY LIST ── */}
-        <div className="bg-white border border-[#e4e6df] rounded-[24px] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-6">
+        <div className="bg-white rounded-[24px] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-6 shiny-card">
           <div className="flex items-center justify-between border-b border-[#f4f5f0] pb-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-[#edf4e2]">
@@ -488,14 +463,6 @@ export default function AdminProfilePage() {
                 Recent Administrative Activity
               </h3>
             </div>
-
-            <button
-              onClick={handleDownloadReport}
-              className="inline-flex items-center gap-1.5 text-[#1e4d1e] hover:text-[#4A6D2F] text-xs font-extrabold uppercase tracking-wide transition-colors cursor-pointer"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Download Report</span>
-            </button>
           </div>
 
           {/* Activity Table */}
@@ -506,7 +473,6 @@ export default function AdminProfilePage() {
                   <th className="py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Action Taken</th>
                   <th className="py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Entity Type</th>
                   <th className="py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Timestamp</th>
-                  <th className="py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f4f5f0]/80">
@@ -530,13 +496,6 @@ export default function AdminProfilePage() {
                     {/* Timestamp */}
                     <td className="py-4 text-xs font-semibold text-gray-400">
                       {log.time}
-                    </td>
-
-                    {/* Status Badge */}
-                    <td className="py-4 text-right">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-bold border ${log.statusColor}`}>
-                        {log.status}
-                      </span>
                     </td>
                   </tr>
                 ))}
@@ -648,12 +607,160 @@ export default function AdminProfilePage() {
                     type="submit"
                     className="py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl text-xs transition-colors cursor-pointer text-center"
                   >
-                    Rotate Keys
+                    Confirm Password
                   </button>
                 </div>
               </form>
             </motion.div>
 
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── EDIT PROFILE OVERLAY MODAL ── */}
+      <AnimatePresence>
+        {showEditModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowEditModal(false)}
+              className="absolute inset-0 bg-[#1e4d1e]/20 backdrop-blur-md cursor-pointer"
+            />
+
+            {/* Modal Card */}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: 'spring', duration: 0.4 }}
+              className="relative z-10 w-full max-w-lg bg-white border border-[#e4e6df] rounded-[24px] p-8 shadow-2xl flex flex-col max-h-[90vh] text-left overflow-y-auto"
+            >
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="text-center mb-6">
+                {/* Big profile pic with pen icon click to upload */}
+                <div className="relative w-28 h-28 mx-auto mb-3 group">
+                  <img
+                    src={avatarUrl}
+                    alt="Big Profile Preview"
+                    className="w-full h-full rounded-[24px] object-cover border-4 border-[#edf4e2] shadow-md"
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="absolute bottom-1 right-1 bg-[#1e4d1e] hover:bg-[#163d16] text-white p-2 rounded-lg transition-all border-2 border-white shadow-sm cursor-pointer"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
+                </div>
+                <h4 className="text-lg font-extrabold text-gray-900">Update Profile Details</h4>
+                <p className="text-gray-500 text-[11px] leading-relaxed">
+                  Modify your administrative details and save preferences.
+                </p>
+              </div>
+
+              <div className="space-y-4 flex-1">
+                {/* Full Name */}
+                <div className="space-y-1.5 text-left">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    value={tempFormData.name}
+                    onChange={(e) => setTempFormData({ ...tempFormData, name: e.target.value })}
+                    placeholder="Enter full name"
+                    className="w-full bg-[#f4f5f0]/50 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-xl py-3 px-4 text-xs font-bold text-gray-800 outline-none transition-all placeholder:text-gray-400 placeholder:font-semibold"
+                  />
+                </div>
+
+                {/* Email Address */}
+                <div className="space-y-1.5 text-left">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={tempFormData.email}
+                    onChange={(e) => setTempFormData({ ...tempFormData, email: e.target.value })}
+                    placeholder="Enter email address"
+                    className="w-full bg-[#f4f5f0]/50 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-xl py-3 px-4 text-xs font-bold text-gray-800 outline-none transition-all placeholder:text-gray-400 placeholder:font-semibold"
+                  />
+                </div>
+
+                {/* Contact Number & Location */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5 text-left">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+                      Contact Number
+                    </label>
+                    <input
+                      type="text"
+                      value={tempFormData.phone}
+                      onChange={(e) => setTempFormData({ ...tempFormData, phone: e.target.value })}
+                      placeholder="Contact number"
+                      className="w-full bg-[#f4f5f0]/50 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-xl py-3 px-4 text-xs font-bold text-gray-800 outline-none transition-all placeholder:text-gray-400 placeholder:font-semibold"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5 text-left">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+                      Location
+                    </label>
+                    <input
+                      type="text"
+                      value={tempFormData.location}
+                      onChange={(e) => setTempFormData({ ...tempFormData, location: e.target.value })}
+                      placeholder="Location"
+                      className="w-full bg-[#f4f5f0]/50 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-xl py-3 px-4 text-xs font-bold text-gray-800 outline-none transition-all placeholder:text-gray-400 placeholder:font-semibold"
+                    />
+                  </div>
+                </div>
+
+                {/* Bio */}
+                <div className="space-y-1.5 text-left">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+                    Professional Bio
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={tempFormData.bio}
+                    onChange={(e) => setTempFormData({ ...tempFormData, bio: e.target.value })}
+                    placeholder="Describe your role and focus"
+                    className="w-full bg-[#f4f5f0]/50 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-2xl py-3 px-4 text-xs font-semibold text-gray-800 outline-none transition-all placeholder:text-gray-400 placeholder:font-semibold resize-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-6 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="py-3 bg-gray-50 hover:bg-gray-100 border border-[#e4e6df] text-gray-600 font-bold rounded-xl text-xs transition-colors cursor-pointer text-center"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmEdit}
+                  disabled={saving}
+                  className="py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl text-xs transition-colors cursor-pointer text-center flex items-center justify-center gap-1.5 disabled:opacity-60"
+                >
+                  {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Save Changes'}
+                </button>
+              </div>
+            </motion.div>
           </div>
         )}
       </AnimatePresence>
