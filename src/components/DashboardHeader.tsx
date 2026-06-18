@@ -42,11 +42,17 @@ export default function DashboardHeader() {
     if (pathname.includes('/chat')) {
       return { title: 'Chat', description: 'Connect and communicate with your community and customers.' };
     }
+    if (pathname.includes('/admin/ai')) {
+      return { title: 'AI Management', description: 'Manage AI knowledge base, model settings, and monitor platform intelligence.' };
+    }
     if (pathname.includes('/ai') || pathname.includes('/recommendations')) {
       return { title: 'AI Assistant', description: 'Powered by Retrieval-Augmented Generation (RAG). Get smart recommendations and advice.' };
     }
     if (pathname.includes('/disease-detect')) {
       return { title: 'Disease Detection', description: 'Upload crop images to identify diseases and receive treatment suggestions.' };
+    }
+    if (pathname.includes('/reports')) {
+      return { title: 'Report and Analytics', description: 'Monitor and review platform performance, transactions, and user activities.' };
     }
     if (pathname.includes('/profile')) {
       return { title: 'Profile', description: 'Manage your personal information and account settings.' };

@@ -2,16 +2,16 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { 
-  ShoppingBag, 
-  CreditCard, 
-  Truck, 
-  AlertTriangle, 
-  SlidersHorizontal, 
-  MoreVertical, 
-  ChevronLeft, 
-  ChevronRight, 
-  Calendar, 
+import {
+  ShoppingBag,
+  CreditCard,
+  Truck,
+  AlertTriangle,
+  SlidersHorizontal,
+  MoreVertical,
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
   Download,
   Plus,
   X,
@@ -196,49 +196,13 @@ export default function OrdersMonitoringPage() {
   return (
     <>
       <div className="p-8 bg-[#f9f9f6] min-h-screen space-y-8 max-w-7xl mx-auto relative select-none">
-        
-        {/* ── BREADCRUMB TRAIL ── */}
-        <div className="text-left">
-          <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-            Admin <span className="text-gray-300">/</span> Orders Monitoring
-          </span>
-        </div>
 
-        {/* ── PAGE HEADER ── */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-left">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-extrabold text-[#1e4d1e] tracking-tight">
-              Live Orders Monitoring
-            </h1>
-            <p className="text-xs text-gray-400 font-semibold max-w-2xl">
-              Real-time oversight of all agricultural transactions across the platform. High-density data for precise stewardship.
-            </p>
-          </div>
 
-          <div className="flex items-center gap-3">
-            
-            {/* Custom Date Range selector pill */}
-            <div className="bg-white border border-[#e4e6df] rounded-xl px-4 py-3 text-xs font-bold text-gray-700 inline-flex items-center gap-2 shadow-sm cursor-pointer hover:bg-gray-50 transition-all select-none">
-              <Calendar className="w-4 h-4 text-gray-400" />
-              <span>Oct 24, 2023 - Oct 31, 2023</span>
-              <ChevronDown className="w-3.5 h-3.5 text-gray-400 ml-1.5" />
-            </div>
 
-            {/* Export CSV Button */}
-            <button
-              onClick={handleExportCSV}
-              className="inline-flex items-center justify-center gap-2 bg-[#1e4d1e] hover:bg-[#163d16] text-white px-5 py-3 text-xs font-bold rounded-xl transition-all shadow-md cursor-pointer select-none shrink-0"
-            >
-              <Download className="w-4 h-4 text-white" />
-              <span>Export CSV</span>
-            </button>
-
-          </div>
-        </div>
 
         {/* ── KPI METRICS CARDS ROW ── */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          
+
           {/* Card 1: Total Orders Today */}
           <div className="bg-white border border-[#e4e6df] rounded-[20px] p-5 shadow-sm flex flex-col justify-between h-32 text-left">
             <div className="flex items-start justify-between">
@@ -323,7 +287,7 @@ export default function OrdersMonitoringPage() {
 
         {/* ── TRANSACTION LIST TABLE CONTAINER ── */}
         <div className="bg-white border border-[#e4e6df] rounded-[24px] overflow-hidden shadow-sm">
-          
+
           {/* Table Header Filter bar */}
           <div className="px-6 py-4 border-b border-[#e4e6df] flex flex-col sm:flex-row items-center justify-between gap-4 select-none">
             <div className="flex items-center gap-4">
@@ -337,11 +301,10 @@ export default function OrdersMonitoringPage() {
                   <button
                     key={tab}
                     onClick={() => { setStatusFilter(tab as any); setCurrentPage(1); }}
-                    className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
-                      statusFilter === tab
-                        ? 'bg-[#1e4d1e] text-white shadow-sm'
-                        : 'text-gray-500 hover:text-gray-900'
-                    }`}
+                    className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${statusFilter === tab
+                      ? 'bg-[#1e4d1e] text-white shadow-sm'
+                      : 'text-gray-500 hover:text-gray-900'
+                      }`}
                   >
                     {tab}
                   </button>
@@ -350,7 +313,7 @@ export default function OrdersMonitoringPage() {
             </div>
 
             {/* Filter slider cogs */}
-            <button 
+            <button
               onClick={() => toast('Triggering advanced filters slider...')}
               className="p-2 bg-[#f4f5f0] hover:bg-[#edf4e2]/60 hover:text-[#1e4d1e] text-gray-600 rounded-xl transition-all cursor-pointer"
             >
@@ -367,7 +330,7 @@ export default function OrdersMonitoringPage() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[800px]">
-                
+
                 <thead className="bg-[#fcfdfa]/80 border-b border-[#e4e6df]">
                   <tr>
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Order ID</th>
@@ -383,7 +346,7 @@ export default function OrdersMonitoringPage() {
                 <tbody className="divide-y divide-[#f4f5f0]">
                   {orders.map((ord) => (
                     <tr key={ord._id} className="hover:bg-[#f4f5f0]/20 transition-colors">
-                      
+
                       {/* Bold Green Order ID */}
                       <td className="px-6 py-4 text-xs font-extrabold text-[#1e4d1e] tracking-tight">
                         {ord.orderNumber}
@@ -416,15 +379,14 @@ export default function OrdersMonitoringPage() {
 
                       {/* Status badge pill */}
                       <td className="px-6 py-4">
-                        <span className={`inline-flex px-3 py-1 rounded-full text-[9px] font-bold border capitalize ${
-                          ord.status === 'Delivered'
-                            ? 'bg-[#e3f7ed] text-[#2e7d32] border-[#c8e6c9]'
-                            : ord.status === 'Shipping'
+                        <span className={`inline-flex px-3 py-1 rounded-full text-[9px] font-bold border capitalize ${ord.status === 'Delivered'
+                          ? 'bg-[#e3f7ed] text-[#2e7d32] border-[#c8e6c9]'
+                          : ord.status === 'Shipping'
                             ? 'bg-[#edf4e2] text-[#1e4d1e] border-[#d2dfc2]'
                             : ord.status === 'Cancelled'
-                            ? 'bg-red-50 text-red-700 border-red-100'
-                            : 'bg-gray-50 text-gray-600 border-gray-200'
-                        }`}>
+                              ? 'bg-red-50 text-red-700 border-red-100'
+                              : 'bg-gray-50 text-gray-600 border-gray-200'
+                          }`}>
                           {ord.status}
                         </span>
                       </td>
@@ -488,16 +450,7 @@ export default function OrdersMonitoringPage() {
 
         </div>
 
-        {/* ── FLOATING ACTION BUTTON (FAB): CREATE REPORT ── */}
-        <div className="fixed bottom-8 right-8 z-30">
-          <button
-            onClick={() => setShowReportModal(true)}
-            className="inline-flex items-center gap-2 bg-[#1e4d1e] hover:bg-[#163d16] text-white px-5 py-4 rounded-full font-bold text-xs uppercase tracking-wider shadow-2xl transition-all hover:scale-105 cursor-pointer"
-          >
-            <Plus className="w-4 h-4 text-white" />
-            <span>Create Order Report</span>
-          </button>
-        </div>
+
 
         {/* ── bottom legal copyright ── */}
         <div className="pt-6 text-center">
@@ -512,7 +465,7 @@ export default function OrdersMonitoringPage() {
       <AnimatePresence>
         {showStatusModal && selectedOrder && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            
+
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -552,11 +505,10 @@ export default function OrdersMonitoringPage() {
                   <button
                     key={status}
                     onClick={() => handleUpdateStatus(selectedOrder._id, status as any)}
-                    className={`w-full py-3 rounded-xl transition text-xs font-bold uppercase tracking-wider cursor-pointer ${
-                      selectedOrder.status === status
-                        ? 'bg-[#1e4d1e] text-white shadow-md'
-                        : 'bg-[#f4f5f0] text-gray-600 hover:bg-[#edf4e2]/60 hover:text-[#1e4d1e]'
-                    }`}
+                    className={`w-full py-3 rounded-xl transition text-xs font-bold uppercase tracking-wider cursor-pointer ${selectedOrder.status === status
+                      ? 'bg-[#1e4d1e] text-white shadow-md'
+                      : 'bg-[#f4f5f0] text-gray-600 hover:bg-[#edf4e2]/60 hover:text-[#1e4d1e]'
+                      }`}
                   >
                     {status}
                   </button>
@@ -580,7 +532,7 @@ export default function OrdersMonitoringPage() {
       <AnimatePresence>
         {showReportModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            
+
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}

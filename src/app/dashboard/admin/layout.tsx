@@ -110,17 +110,6 @@ export default function AdminLayout({
 
         {/* Bottom stack */}
         <div className="space-y-3 mt-8 px-4">
-          {/* Profile (bottom-left) */}
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-sidebar flex items-center justify-center border border-[#d2dfc2]">
-              <User className="w-5 h-5 text-brand-dark" />
-            </div>
-            <div className="text-left">
-              <div className="text-sm font-bold text-brand-dark">Admin User</div>
-              <div className="text-xs text-muted">Active Session</div>
-            </div>
-          </div>
-
           {/* Logout Button */}
           <button
             onClick={handleLogout}
@@ -131,9 +120,6 @@ export default function AdminLayout({
           </button>
         </div>
       </aside>
-
-      {/* ── DIVIDER LINE WITH SHIMMER ── */}
-      <div className="w-1 h-screen bg-gradient-to-b from-sidebar via-[#d2dfc2] to-sidebar opacity-60 relative overflow-hidden shimmer"></div>
 
       {/* ── MAIN CONTENT PANEL ── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
