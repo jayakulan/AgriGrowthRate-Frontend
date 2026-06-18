@@ -24,7 +24,7 @@ const menuItems = [
   { name: 'Browse Products', icon: ShoppingBag, href: '/dashboard/consumer/browse-products' },
   { name: 'Orders', icon: ShoppingCart, href: '/dashboard/consumer/orders' },
   { name: 'Chat', icon: MessageSquare, href: '/dashboard/consumer/chat' },
-  { name: 'Recommendations', icon: Sparkles, href: '/dashboard/consumer/recommendations' },
+  { name: 'AI Recommendations', icon: Sparkles, href: '/dashboard/consumer/recommendations' },
   { name: 'Profile', icon: UserIcon, href: '/dashboard/consumer/profile' },
 ];
 
