@@ -172,7 +172,7 @@ export default function FarmerProfilePage() {
                 <h2 className="text-[20px] font-bold text-[#4a6d2f]">Personal Information</h2>
               </div>
 
-              <div className="space-y-15 flex-1">
+              <div className="space-y-5 flex-1">
                 <div>
                   <p className="text-[17px] text-gray-500 mb-1">Full Name</p>
                   <p className="text-sm text-gray-800 font-medium">{name}</p>

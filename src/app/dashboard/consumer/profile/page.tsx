@@ -210,7 +210,7 @@ export default function ConsumerProfilePage() {
                 <h2 className="text-[20px] font-bold text-[#4a6d2f]">Personal Information</h2>
               </div>
 
-              <div className="space-y-15 flex-1">
+              <div className="space-y-5 flex-1">
                 <div>
                   <p className="text-[17px] text-gray-500 mb-1">Full Name</p>
                   <p className="text-sm text-gray-800 font-medium">{name}</p>
@@ -250,9 +250,8 @@ export default function ConsumerProfilePage() {
                   </div>
                   <div
                     onClick={() => handleTogglePref('priceAlerts')}
-                    className={`w-12 h-6 rounded-full p-1 cursor-pointer flex transition-all duration-200 ${
-                      priceAlerts ? 'bg-[#1e4d1e] justify-end' : 'bg-gray-200 justify-start'
-                    }`}
+                    className={`w-12 h-6 rounded-full p-1 cursor-pointer flex transition-all duration-200 ${priceAlerts ? 'bg-[#1e4d1e] justify-end' : 'bg-gray-200 justify-start'
+                      }`}
                   >
                     <div className="w-4 h-4 bg-white rounded-full shadow-sm" />
                   </div>
@@ -265,9 +264,8 @@ export default function ConsumerProfilePage() {
                   </div>
                   <div
                     onClick={() => handleTogglePref('orderMessages')}
-                    className={`w-12 h-6 rounded-full p-1 cursor-pointer flex transition-all duration-200 ${
-                      orderMessages ? 'bg-[#1e4d1e] justify-end' : 'bg-gray-200 justify-start'
-                    }`}
+                    className={`w-12 h-6 rounded-full p-1 cursor-pointer flex transition-all duration-200 ${orderMessages ? 'bg-[#1e4d1e] justify-end' : 'bg-gray-200 justify-start'
+                      }`}
                   >
                     <div className="w-4 h-4 bg-white rounded-full shadow-sm" />
                   </div>
@@ -280,9 +278,8 @@ export default function ConsumerProfilePage() {
                   </div>
                   <div
                     onClick={() => handleTogglePref('newsletter')}
-                    className={`w-12 h-6 rounded-full p-1 cursor-pointer flex transition-all duration-200 ${
-                      newsletter ? 'bg-[#1e4d1e] justify-end' : 'bg-gray-200 justify-start'
-                    }`}
+                    className={`w-12 h-6 rounded-full p-1 cursor-pointer flex transition-all duration-200 ${newsletter ? 'bg-[#1e4d1e] justify-end' : 'bg-gray-200 justify-start'
+                      }`}
                   >
                     <div className="w-4 h-4 bg-white rounded-full shadow-sm" />
                   </div>
