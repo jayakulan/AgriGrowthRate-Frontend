@@ -1,31 +1,31 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { 
-  AreaChart, 
-  Area, 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer, 
-  PieChart, 
-  Pie, 
-  Cell 
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
 } from 'recharts';
 import axios from 'axios';
-import { 
-  Download, 
-  SlidersHorizontal, 
-  TrendingUp, 
-  CreditCard, 
-  Users, 
-  Activity, 
-  Calendar, 
-  ChevronDown, 
-  Plus, 
+import {
+  Download,
+  SlidersHorizontal,
+  TrendingUp,
+  CreditCard,
+  Users,
+  Activity,
+  Calendar,
+  ChevronDown,
+  Plus,
   X,
   FileText,
   Loader2,
@@ -124,57 +124,40 @@ export default function ReportsAnalyticsPage() {
   return (
     <>
       <div className="p-8 bg-[#f9f9f6] min-h-screen space-y-8 max-w-7xl mx-auto relative select-none">
-        
-        {/* ── BREADCRUMB TRAIL ── */}
-        <div className="text-left">
-          <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-            Admin <span className="text-gray-300">/</span> Reports & Analytics
-          </span>
-        </div>
+
 
         {/* ── PAGE HEADER ── */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-left">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-extrabold text-[#1e4d1e] tracking-tight">
-              Reports & Analytics
-            </h1>
-            <p className="text-xs text-gray-400 font-semibold max-w-2xl">
-              In-depth analysis of platform performance, user metrics, and agricultural marketplace yield.
-            </p>
-          </div>
+        <div className="flex justify-end items-center gap-3">
 
-          <div className="flex items-center gap-3">
-            
-            {/* Filter Dropdown */}
-            <div className="bg-white border border-[#e4e6df] rounded-xl px-4 py-3 text-xs font-bold text-gray-700 inline-flex items-center gap-2 shadow-sm cursor-pointer hover:bg-gray-50 transition-all select-none">
-              <Calendar className="w-4 h-4 text-gray-400" />
-              <select
-                value={timeFilter}
-                onChange={(e) => setTimeFilter(e.target.value)}
-                className="bg-transparent text-xs font-bold text-gray-700 focus:outline-none cursor-pointer appearance-none pr-5 relative"
-              >
-                <option>Last 30 Days</option>
-                <option>Last Quarter</option>
-                <option>Last Year</option>
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 text-gray-400 -ml-2.5 pointer-events-none" />
-            </div>
-
-            {/* Export Action */}
-            <button
-              onClick={handleExportReport}
-              className="inline-flex items-center justify-center gap-2 bg-[#1e4d1e] hover:bg-[#163d16] text-white px-5 py-3 text-xs font-bold rounded-xl transition-all shadow-md cursor-pointer select-none shrink-0"
+          {/* Filter Dropdown */}
+          <div className="bg-white border border-[#e4e6df] rounded-xl px-4 py-3 text-xs font-bold text-gray-700 inline-flex items-center gap-2 shadow-sm cursor-pointer hover:bg-gray-50 transition-all select-none">
+            <Calendar className="w-4 h-4 text-gray-400" />
+            <select
+              value={timeFilter}
+              onChange={(e) => setTimeFilter(e.target.value)}
+              className="bg-transparent text-xs font-bold text-gray-700 focus:outline-none cursor-pointer appearance-none pr-5 relative"
             >
-              <Download className="w-4 h-4 text-white" />
-              <span>Export Report</span>
-            </button>
-
+              <option>Last 30 Days</option>
+              <option>Last Quarter</option>
+              <option>Last Year</option>
+            </select>
+            <ChevronDown className="w-3.5 h-3.5 text-gray-400 -ml-2.5 pointer-events-none" />
           </div>
+
+          {/* Export Action */}
+          <button
+            onClick={handleExportReport}
+            className="inline-flex items-center justify-center gap-2 bg-[#1e4d1e] hover:bg-[#163d16] text-white px-5 py-3 text-xs font-bold rounded-xl transition-all shadow-md cursor-pointer select-none shrink-0"
+          >
+            <Download className="w-4 h-4 text-white" />
+            <span>Export Report</span>
+          </button>
+
         </div>
 
         {/* ── METRICS ROW (4 Cards) ── */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          
+
           {/* Card 1: Avg Order Value */}
           <div className="bg-white border border-[#e4e6df] rounded-[20px] p-5 shadow-sm flex flex-col justify-between h-32 text-left">
             <div className="flex items-start justify-between">
@@ -259,7 +242,7 @@ export default function ReportsAnalyticsPage() {
 
         {/* ── CHARTS ROW (User Growth & Revenue Trend) ── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          
+
           {/* User Growth Over Time (Area Chart) */}
           <div className="bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-sm space-y-6 flex flex-col justify-between">
             <div className="border-b border-[#f4f5f0] pb-4 text-left">
@@ -273,33 +256,33 @@ export default function ReportsAnalyticsPage() {
                 <AreaChart data={mockUserGrowth} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#1e4d1e" stopOpacity={0.2}/>
-                      <stop offset="95%" stopColor="#1e4d1e" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#1e4d1e" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#1e4d1e" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                  <XAxis 
-                    dataKey="month" 
-                    tickLine={false} 
-                    axisLine={false} 
+                  <XAxis
+                    dataKey="month"
+                    tickLine={false}
+                    axisLine={false}
                     tick={{ fill: '#9ca3af', fontSize: 10, fontWeight: 700 }}
                   />
-                  <YAxis 
-                    tickLine={false} 
-                    axisLine={false} 
+                  <YAxis
+                    tickLine={false}
+                    axisLine={false}
                     tick={{ fill: '#9ca3af', fontSize: 10, fontWeight: 700 }}
                   />
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{ background: '#1e4d1e', border: 'none', borderRadius: '12px', color: '#fff', fontSize: '11px' }}
                     labelStyle={{ fontWeight: 'bold', color: '#bcfcbb' }}
                   />
-                  <Area 
-                    type="monotone" 
-                    dataKey="value" 
-                    stroke="#1e4d1e" 
+                  <Area
+                    type="monotone"
+                    dataKey="value"
+                    stroke="#1e4d1e"
                     strokeWidth={2.5}
-                    fillOpacity={1} 
-                    fill="url(#colorUsers)" 
+                    fillOpacity={1}
+                    fill="url(#colorUsers)"
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -318,18 +301,18 @@ export default function ReportsAnalyticsPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={mockRevenueTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                  <XAxis 
-                    dataKey="month" 
-                    tickLine={false} 
-                    axisLine={false} 
+                  <XAxis
+                    dataKey="month"
+                    tickLine={false}
+                    axisLine={false}
                     tick={{ fill: '#9ca3af', fontSize: 10, fontWeight: 700 }}
                   />
-                  <YAxis 
-                    tickLine={false} 
-                    axisLine={false} 
+                  <YAxis
+                    tickLine={false}
+                    axisLine={false}
                     tick={{ fill: '#9ca3af', fontSize: 10, fontWeight: 700 }}
                   />
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{ background: '#1e4d1e', border: 'none', borderRadius: '12px', color: '#fff', fontSize: '11px' }}
                     labelStyle={{ fontWeight: 'bold', color: '#bcfcbb' }}
                   />
@@ -343,7 +326,7 @@ export default function ReportsAnalyticsPage() {
 
         {/* ── BREAKDOWNS (Category Breakdown & Top Performing Products) ── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          
+
           {/* Sales by Category (Doughnut) */}
           <div className="bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-sm space-y-5 h-[340px] flex flex-col justify-between">
             <div className="border-b border-[#f4f5f0] pb-3 text-left">
@@ -371,7 +354,7 @@ export default function ReportsAnalyticsPage() {
                     </Pie>
                   </PieChart>
                 </ResponsiveContainer>
-                
+
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-base font-extrabold text-gray-800 leading-none">Sales</span>
                   <span className="text-[8px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Share</span>
@@ -419,95 +402,7 @@ export default function ReportsAnalyticsPage() {
           </div>
 
         </div>
-
-        {/* ── FLOATING ACTION BUTTON (FAB) ── */}
-        <div className="fixed bottom-8 right-8 z-30">
-          <button
-            onClick={() => setShowGenerateModal(true)}
-            className="inline-flex items-center gap-2 bg-[#1e4d1e] hover:bg-[#163d16] text-white px-5 py-4 rounded-full font-bold text-xs uppercase tracking-wider shadow-2xl transition-all hover:scale-105 cursor-pointer"
-          >
-            <Plus className="w-4 h-4 text-white" />
-            <span>Generate New Audit</span>
-          </button>
-        </div>
-
       </div>
-
-      {/* ── GENERATE AUDIT MODAL ── */}
-      <AnimatePresence>
-        {showGenerateModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowGenerateModal(false)}
-              className="absolute inset-0 bg-[#1e4d1e]/20 backdrop-blur-md cursor-pointer"
-            />
-
-            {/* Modal Card */}
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="relative z-10 w-full max-w-md bg-white border border-[#e4e6df] rounded-[24px] p-8 shadow-2xl"
-            >
-              <button
-                onClick={() => setShowGenerateModal(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="text-center space-y-3 mb-6">
-                <div className="w-12 h-12 rounded-full bg-[#edf4e2] flex items-center justify-center mx-auto border border-[#d2dfc2]">
-                  <FileText className="w-6 h-6 text-[#1e4d1e]" />
-                </div>
-                <h4 className="text-lg font-extrabold text-gray-900">Generate New Audit</h4>
-                <p className="text-gray-500 text-[11px] leading-relaxed">
-                  Compile granular platform performance, category distributions, and top listings metrics.
-                </p>
-              </div>
-
-              <form onSubmit={handleGenerateAudit} className="space-y-4 text-left">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
-                    Audit Description
-                  </label>
-                  <input
-                    type="text"
-                    value={auditTitle}
-                    onChange={(e) => setAuditTitle(e.target.value)}
-                    placeholder="e.g. Q4 Yield and Merchandise Volatility"
-                    className="w-full bg-[#f4f5f0]/50 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-xl py-3 px-4 text-xs font-bold text-gray-800 outline-none"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowGenerateModal(false)}
-                    className="py-3 bg-gray-50 hover:bg-gray-100 border border-[#e4e6df] text-gray-600 font-bold rounded-xl text-xs transition-colors cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={generating}
-                    className="py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
-                  >
-                    {generating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Compile Audit'}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-
-          </div>
-        )}
-      </AnimatePresence>
 
     </>
   );

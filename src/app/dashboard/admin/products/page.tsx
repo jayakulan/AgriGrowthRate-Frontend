@@ -2,9 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { 
+import {
   Search,
-  Download, 
+  Download,
   ChevronLeft,
   ChevronRight,
   Trash2,
@@ -189,7 +189,7 @@ export default function ManageProductsPage() {
 
   const filteredProducts = products.filter(prod => {
     const matchesSearch = prod.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         prod.farmerName.toLowerCase().includes(searchTerm.toLowerCase());
+      prod.farmerName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === 'All Categories' || prod.category === categoryFilter;
     const matchesStatus = statusFilter === 'All' || prod.status === statusFilter;
     const matchesTab = activeTab === 'All' || (
@@ -223,12 +223,7 @@ export default function ManageProductsPage() {
   return (
     <div className="p-8 bg-[#f9f9f6] min-h-screen space-y-8">
       <div className="max-w-7xl mx-auto space-y-8">
-        
-        <div>
-          <p className="text-sm text-gray-500 mt-1 font-medium">
-            Review, approve, reject, and manage farmer product listings with a clean green dashboard feel.
-          </p>
-        </div>
+
 
         {/* Compact statistic chips */}
         <div className="flex gap-4">
@@ -297,14 +292,7 @@ export default function ManageProductsPage() {
               </select>
             </div>
 
-            {/* Export Button */}
-            <button
-              onClick={handleExportReport}
-              className="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-[#1e4d1e] hover:bg-[#163d16] text-white px-6 py-2.5 text-sm font-bold rounded-xl transition-all shadow-sm cursor-pointer"
-            >
-              <Download className="w-4 h-4" />
-              Export
-            </button>
+
           </div>
         </div>
 
@@ -314,11 +302,10 @@ export default function ManageProductsPage() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`pb-4 whitespace-nowrap text-sm font-bold transition-colors relative ${
-                activeTab === tab
-                  ? 'text-[#1e4d1e]'
-                  : 'text-gray-400 hover:text-gray-600'
-              }`}
+              className={`pb-4 whitespace-nowrap text-sm font-bold transition-colors relative ${activeTab === tab
+                ? 'text-[#1e4d1e]'
+                : 'text-gray-400 hover:text-gray-600'
+                }`}
             >
               {tab}
               {activeTab === tab && (
@@ -341,137 +328,118 @@ export default function ManageProductsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredProducts.map((product, idx) => (
               <React.Fragment key={product._id}>
-              <motion.div
-                key={product._id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white border border-[#e4e6df] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all"
-              >
-                {/* Product Image */}
-                <div className="relative h-48 bg-gray-100 overflow-hidden">
-                  <img
-                    src={product.image || 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&q=80&w=600&h=400'}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-3 right-3 flex gap-2">
-                    <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(product.status)}`}>
-                      {product.status}
-                    </span>
-                    <span className="bg-white/95 px-3 py-1 rounded-full text-xs font-bold text-gray-600 border border-gray-100">
-                      {product.category}
-                    </span>
+                <motion.div
+                  key={product._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white border border-[#e4e6df] rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group flex flex-col h-full"
+                >
+                  {/* Product Image */}
+                  <div className="relative h-48 overflow-hidden shrink-0 p-3 pb-0">
+                    <div className="relative w-full h-full rounded-2xl overflow-hidden bg-gray-100">
+                      <img
+                        src={product.image || 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&q=80&w=600&h=400'}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute top-3 left-3 flex gap-2">
+                        <span className={`inline-flex px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider shadow-sm backdrop-blur-sm border ${getStatusColor(product.status)}`}>
+                          {product.status}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
 
-                {/* Product Details */}
-                  <div className="p-6 space-y-4">
-                  {/* Title & Price */}
-                  <div>
-                    <div className="flex items-center justify-between gap-3">
-                      <h3 className="text-lg font-extrabold text-gray-900 line-clamp-2 flex items-center gap-2">
+                  {/* Product Details */}
+                  <div className="p-4 flex flex-col flex-grow">
+                    {/* Title & Price */}
+                    <div className="flex justify-between items-start mb-1">
+                      <h3 className="text-[15px] font-bold text-[#0f172a] leading-snug line-clamp-1">
                         {product.name}
                       </h3>
-                      {/* Show farmer name inline near title */}
-                      <div className="text-xs text-gray-500 flex items-center gap-2">
-                        <span>👨‍🌾</span>
-                        <span className="font-bold text-gray-700">{product.farmerName}</span>
+                      <div className="text-right shrink-0 ml-2">
+                        <span className="text-[14px] font-bold text-[#0f172a]">
+                          ₹{product.price.toLocaleString()}
+                        </span>
+                        <span className="text-[12px] font-bold text-[#0f172a]">/unit</span>
                       </div>
                     </div>
-                    <div className="flex items-baseline gap-2 mt-2">
-                      <span className="text-2xl font-extrabold text-[#1e4d1e]">
-                        ₹{product.price.toLocaleString()}
-                      </span>
-                      <span className="text-xs text-gray-400 font-bold">/unit</span>
-                    </div>
-                  </div>
 
-                  {/* Quantity */}
-                  {product.quantity && (
-                    <div className="text-xs font-bold text-gray-500">
-                      Available: <span className="text-gray-700">{product.quantity} units</span>
-                    </div>
-                  )}
-
-                  {/* Farmer Info */}
-                  <div className="space-y-2 py-3 border-t border-b border-[#f4f5f0]">
-                    <p className="text-xs font-bold text-gray-600">
-                      👨‍🌾 <span className="text-gray-900">{product.farmerName}</span>
-                    </p>
-                    {product.farmerPhone && (
-                      <p className="flex items-center gap-2 text-xs font-bold text-gray-500">
-                        <Phone className="w-3 h-3" />
-                        {product.farmerPhone}
-                      </p>
-                    )}
-                    {product.location && (
-                      <p className="flex items-center gap-2 text-xs font-bold text-gray-500">
-                        <MapPin className="w-3 h-3" />
-                        {product.location}
-                      </p>
-                    )}
-                    {product.dateAdded && (
-                      <p className="flex items-center gap-2 text-xs font-bold text-gray-500">
-                        <Calendar className="w-3 h-3" />
-                        {new Date(product.dateAdded).toLocaleDateString()}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Description */}
-                  {product.description && (
-                    <p className="text-xs text-gray-600 line-clamp-2">
-                      {product.description}
-                    </p>
-                  )}
-
-                  {/* Action Buttons */}
-                  <div className="grid grid-cols-3 gap-2 pt-2">
-                    <button
-                      onClick={() => handleApprove(product._id)}
-                      className="py-2 px-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white text-xs font-bold rounded-lg transition-all cursor-pointer"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleReject(product._id)}
-                      className="py-2 px-3 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-lg transition-all cursor-pointer border border-red-100"
-                    >
-                      Reject
-                    </button>
-                    <button
-                      onClick={() => showDetails(product)}
-                      className="py-2 px-3 bg-gray-50 hover:bg-gray-100 text-gray-600 text-xs font-bold rounded-lg transition-all cursor-pointer border border-gray-100 flex items-center justify-center gap-1"
-                    >
-                      <Eye className="w-3 h-3" />
-                    </button>
-                  </div>
-
-                  {/* Delete Button */}
-                  <button
-                    onClick={() => handleDelete(product._id)}
-                    className="w-full py-2 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-lg transition-all cursor-pointer border border-red-100 flex items-center justify-center gap-2"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                    Delete Product
-                  </button>
-                </div>
-              </motion.div>
-              {product._id === 'p-2' && (
-                <motion.div key={`${product._id}-extra`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white border border-[#e4e6df] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all p-4 flex flex-col items-start justify-center">
-                  <div className="w-full flex items-center gap-3">
-                    <img src="https://images.unsplash.com/photo-1547514701-3c5a1c22c7b9?auto=format&fit=crop&q=80&w=200&h=120" className="w-20 h-20 object-cover rounded-lg" />
-                    <div className="flex-1">
-                      <h4 className="text-sm font-extrabold text-gray-900">Featured: Fruit Apple</h4>
-                      <p className="text-xs text-gray-500 mt-1">Seasonal highlight — top-rated fruit from local orchards.</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <button onClick={() => toast('Featured viewed')} className="text-xs bg-[#1e4d1e] text-white px-3 py-1 rounded-md">Explore</button>
-                        <button onClick={() => toast('Featured quick view')} className="text-xs bg-gray-50 border border-gray-100 px-3 py-1 rounded-md">Quick View</button>
+                    {/* Quantity / Stock */}
+                    <div className="flex flex-col gap-1 mb-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Available Stock</span>
+                        <span className="font-black text-[#1e4d1e] text-[20px] leading-none">
+                          {product.quantity || 0} <span className="text-[13px] font-bold">units</span>
+                        </span>
                       </div>
+                    </div>
+
+                    {/* Farmer Details */}
+                    <div className="space-y-1.5 py-2.5 border-t border-b border-[#f4f5f0] mb-3">
+                      <p className="text-[11px] font-bold text-gray-600 flex items-center gap-1.5">
+                        <span className="text-gray-900">{product.farmerName}</span>
+                      </p>
+                      {product.farmerPhone && (
+                        <p className="flex items-center gap-1.5 text-[11px] font-bold text-gray-500">
+                          <Phone className="w-3.5 h-3.5 text-[#1e4d1e]" />
+                          {product.farmerPhone}
+                        </p>
+                      )}
+                      {product.location && (
+                        <p className="flex items-center gap-1.5 text-[11px] font-bold text-gray-500">
+                          <MapPin className="w-3.5 h-3.5 text-[#1e4d1e]" />
+                          <span className="line-clamp-1">{product.location}</span>
+                        </p>
+                      )}
+                      {product.dateAdded && (
+                        <p className="flex items-center gap-1.5 text-[11px] font-bold text-gray-500">
+                          <Calendar className="w-3.5 h-3.5 text-[#1e4d1e]" />
+                          {new Date(product.dateAdded).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Description */}
+                    {product.description && (
+                      <p className="text-[12px] text-gray-600 mb-4 line-clamp-2">
+                        {product.description}
+                      </p>
+                    )}
+
+                    {/* Action Buttons at Bottom */}
+                    <div className="mt-auto space-y-2">
+                      <div className="grid grid-cols-3 gap-2">
+                        <button
+                          onClick={() => handleApprove(product._id)}
+                          className="py-2 px-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white text-xs font-bold rounded-xl transition-all cursor-pointer text-center"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleReject(product._id)}
+                          className="py-2 px-3 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-xl transition-all cursor-pointer border border-red-100 text-center"
+                        >
+                          Reject
+                        </button>
+                        <button
+                          onClick={() => showDetails(product)}
+                          className="py-2 px-3 bg-gray-50 hover:bg-gray-100 text-gray-600 text-xs font-bold rounded-xl transition-all cursor-pointer border border-gray-100 flex items-center justify-center gap-1"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={() => handleDelete(product._id)}
+                        className="w-full py-2.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-xl transition-all cursor-pointer border border-red-100 flex items-center justify-center gap-2"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Delete Product
+                      </button>
                     </div>
                   </div>
                 </motion.div>
-              )}
               </React.Fragment>
             ))}
             {/* Detail popup render */}
@@ -523,5 +491,5 @@ function DetailPopup({ product, open, onClose }: { product: Product | null; open
 }
 
 
-{/* Detail popup component placed after main export to keep file tidy */}
+{/* Detail popup component placed after main export to keep file tidy */ }
 

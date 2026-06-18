@@ -2,15 +2,15 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { 
-  Zap, 
-  Smile, 
-  Settings, 
-  Download, 
-  Clock, 
-  ShieldCheck, 
-  Plus, 
-  Sliders, 
+import {
+  Zap,
+  Smile,
+  Settings,
+  Download,
+  Clock,
+  ShieldCheck,
+  Plus,
+  Sliders,
   Database,
   X,
   Loader2,
@@ -48,6 +48,7 @@ export default function AIManagementPage() {
   const [datasetName, setDatasetName] = useState('');
   const [datasetFile, setDatasetFile] = useState<File | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [pdfCount, setPdfCount] = useState(0);
 
   // Model settings states exactly matching mockup
   const [priority, setPriority] = useState<'Precision' | 'Performance'>('Precision');
@@ -88,21 +89,22 @@ export default function AIManagementPage() {
     e.preventDefault();
     if (!datasetFile) return toast.error('Please select a PDF file');
     setSyncing(true);
-    
+
     try {
       const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('pdf', datasetFile);
-      
+
       const response = await axios.post('http://localhost:5001/api/ai/upload-knowledge', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`
         }
       });
-      
+
       if (response.data.success) {
         toast.success(`PDF "${datasetFile.name}" uploaded and processing! 📦`);
+        setPdfCount(prev => prev + 1);
         setShowAddModal(false);
         setDatasetName('');
         setDatasetFile(null);
@@ -119,44 +121,14 @@ export default function AIManagementPage() {
   return (
     <>
       <div className="p-8 bg-[#f9f9f6] min-h-screen space-y-8 max-w-7xl mx-auto relative select-none">
-        
-        {/* ── PAGE HEADER ── */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-left">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-extrabold text-[#1e4d1e] tracking-tight">
-              AI Management
-            </h1>
-            <p className="text-xs text-gray-400 font-semibold max-w-2xl">
-              Refine the cognitive core of your agricultural enterprise. Control datasets, monitor real-time sentiment, and balance operational precision.
-            </p>
-          </div>
 
-          <div className="flex items-center gap-3">
-            
-            {/* Export CSV button exactly styled */}
-            <button
-              onClick={handleExportAIReport}
-              className="inline-flex items-center gap-2 px-5 py-3 bg-[#e4e6df]/50 hover:bg-[#e4e6df] text-gray-700 text-xs font-bold rounded-xl transition-all shadow-sm cursor-pointer select-none"
-            >
-              <Download className="w-4 h-4 text-gray-600" />
-              <span>Export Report</span>
-            </button>
-
-            {/* Retrain Action exactly styled */}
-            <button
-              onClick={handleForceRetrain}
-              className="inline-flex items-center justify-center gap-2 bg-[#1e4d1e] hover:bg-[#163d16] text-white px-5 py-3 text-xs font-bold rounded-xl transition-all shadow-md cursor-pointer select-none shrink-0"
-            >
-              <Zap className="w-4 h-4 text-white fill-white" />
-              <span>Force Retrain</span>
-            </button>
-
-          </div>
+        {/* ── TOP ACTIONS ── */}
+        <div className="flex justify-end">
         </div>
 
         {/* ── MIDDLE GRID (KNOWLEDGE BASE & MODEL SETTINGS) ── */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
+
           {/* Knowledge Base Management (col-span-7) */}
           <div className="lg:col-span-8 bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-sm flex flex-col justify-between min-h-[420px] text-left">
             <div className="flex items-center justify-between border-b border-[#f4f5f0] pb-3 mb-4">
@@ -176,7 +148,7 @@ export default function AIManagementPage() {
 
             <div className="overflow-x-auto flex-1">
               <table className="w-full text-left border-collapse min-w-[500px]">
-                
+
                 <thead className="bg-[#fcfdfa]/80 border-b border-[#e4e6df]">
                   <tr>
                     <th className="px-4 py-2 text-[9px] font-bold text-gray-400 uppercase tracking-wider">Dataset Name</th>
@@ -286,27 +258,25 @@ export default function AIManagementPage() {
             {/* Optimization Priority card */}
             <div className="p-4 bg-[#fcfdfa] border border-[#e4e6df] rounded-[18px] space-y-3">
               <span className="text-[9px] font-extrabold text-gray-400 uppercase tracking-wider block">Optimization Priority</span>
-              
+
               <div className="flex bg-[#f4f5f0]/80 p-0.5 rounded-lg select-none">
                 <button
                   type="button"
                   onClick={() => setPriority('Precision')}
-                  className={`flex-1 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all ${
-                    priority === 'Precision'
+                  className={`flex-1 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all ${priority === 'Precision'
                       ? 'bg-[#1e4d1e] text-white shadow-sm'
                       : 'text-gray-500 hover:text-gray-900'
-                  }`}
+                    }`}
                 >
                   Precision
                 </button>
                 <button
                   type="button"
                   onClick={() => setPriority('Performance')}
-                  className={`flex-1 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all ${
-                    priority === 'Performance'
+                  className={`flex-1 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all ${priority === 'Performance'
                       ? 'bg-[#1e4d1e] text-white shadow-sm'
                       : 'text-gray-500 hover:text-gray-900'
-                  }`}
+                    }`}
                 >
                   Performance
                 </button>
@@ -317,46 +287,18 @@ export default function AIManagementPage() {
               </p>
             </div>
 
-            {/* Context Window Slider */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs font-bold text-gray-800">
-                <span className="text-[10px] text-gray-400 uppercase tracking-wider">Context Window</span>
-                <span className="text-[#1e4d1e]">128k Tokens</span>
+            {/* PDF Documents Count */}
+            <div className="p-4 bg-[#fcfdfa] border border-[#e4e6df] rounded-[18px] flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-[#edf4e2] flex items-center justify-center shrink-0">
+                  <FileText className="w-4 h-4 text-[#1e4d1e]" />
+                </div>
+                <div>
+                  <p className="text-[9px] font-extrabold text-gray-400 uppercase tracking-wider">PDFs Uploaded</p>
+                  <p className="text-[10px] text-gray-500 font-semibold mt-0.5">Knowledge base documents</p>
+                </div>
               </div>
-              
-              <div className="relative w-full h-1 bg-gray-150 rounded-full">
-                <div className="absolute left-0 top-0 bottom-0 bg-[#1e4d1e] rounded-full" style={{ width: `${contextVal}%` }} />
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={contextVal}
-                  onChange={(e) => setContextVal(Number(e.target.value))}
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                />
-                <div className="absolute w-3 h-3 bg-[#1e4d1e] border-2 border-white rounded-full -top-1 shadow-md transition-all pointer-events-none" style={{ left: `calc(${contextVal}% - 6px)` }} />
-              </div>
-            </div>
-
-            {/* Creativity Temperature Slider */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs font-bold text-gray-800">
-                <span className="text-[10px] text-gray-400 uppercase tracking-wider">Creativity (Temperature)</span>
-                <span className="text-[#1e4d1e]">0.4</span>
-              </div>
-              
-              <div className="relative w-full h-1 bg-gray-150 rounded-full">
-                <div className="absolute left-0 top-0 bottom-0 bg-[#1e4d1e] rounded-full" style={{ width: `${creativityVal}%` }} />
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={creativityVal}
-                  onChange={(e) => setCreativityVal(Number(e.target.value))}
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                />
-                <div className="absolute w-3 h-3 bg-[#1e4d1e] border-2 border-white rounded-full -top-1 shadow-md transition-all pointer-events-none" style={{ left: `calc(${creativityVal}% - 6px)` }} />
-              </div>
+              <span className="text-3xl font-black text-[#1e4d1e]">{pdfCount}</span>
             </div>
 
             {/* Info notice box at the bottom */}
@@ -370,164 +312,7 @@ export default function AIManagementPage() {
 
         </div>
 
-        {/* ── AI ACTIVITY LOGS & SENTIMENT ── */}
-        <div className="bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-sm space-y-6 text-left">
-          
-          <div className="flex items-center justify-between border-b border-[#f4f5f0] pb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-[#edf4e2] flex items-center justify-center text-[#1e4d1e] shrink-0">
-                <Activity className="w-4 h-4" />
-              </div>
-              <h3 className="text-sm font-extrabold text-gray-900 uppercase tracking-wider">
-                AI Activity Logs & Sentiment
-              </h3>
-            </div>
-            
-            <span className="px-3 py-1 bg-gray-50 border border-gray-100 rounded-full text-[10px] font-bold text-gray-400">
-              Last 24 Hours
-            </span>
-          </div>
 
-          {/* KPI metrics row exactly styled matching mockup */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            
-            {/* KPI 1 */}
-            <div className="border border-[#e4e6df] rounded-xl p-4 bg-[#fcfdfa]/50 text-left">
-              <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Total Queries</p>
-              <div className="flex items-center gap-2 mt-1">
-                <h4 className="text-lg font-extrabold text-gray-900">14,282</h4>
-                <div className="flex items-center text-[9px] font-bold text-green-600">
-                  <TrendingUp className="w-3 h-3 mr-0.5" />
-                  <span>23%</span>
-                </div>
-              </div>
-            </div>
-
-            {/* KPI 2 */}
-            <div className="border border-[#e4e6df] rounded-xl p-4 bg-[#fcfdfa]/50 text-left">
-              <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Avg Sentiment</p>
-              <div className="flex items-center gap-2 mt-1">
-                <h4 className="text-lg font-extrabold text-gray-900">88% Positive</h4>
-                <div className="flex items-center text-[9px] font-bold text-green-700 bg-green-50 px-1.5 py-0.5 rounded-full border border-green-100">
-                  <span>😊 Good</span>
-                </div>
-              </div>
-            </div>
-
-            {/* KPI 3 */}
-            <div className="border border-[#e4e6df] rounded-xl p-4 bg-[#fcfdfa]/50 text-left">
-              <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Processing Latency</p>
-              <div className="flex items-center gap-2 mt-1">
-                <h4 className="text-lg font-extrabold text-gray-900">420ms</h4>
-                <span className="text-[9px] font-bold text-green-600">Optimal</span>
-              </div>
-            </div>
-
-            {/* KPI 4 */}
-            <div className="border border-[#e4e6df] rounded-xl p-4 bg-[#fcfdfa]/50 text-left">
-              <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Hallucination Rate</p>
-              <div className="flex items-center gap-2 mt-1">
-                <h4 className="text-lg font-extrabold text-gray-900">0.02%</h4>
-                <span className="text-[9px] font-bold text-green-600">Safe</span>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Activity items list styled precisely like screenshot boxes */}
-          <div className="space-y-4 pt-2">
-            
-            {/* Row 1 */}
-            <div className="bg-[#f8f9f6]/80 border border-[#e4e6df] rounded-[18px] p-5 text-left relative">
-              <span className="absolute top-4 right-4 text-[9px] font-bold text-gray-400">4m ago</span>
-              
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-[#edf4e2] border border-[#d2dfc2] flex items-center justify-center text-[#1e4d1e] shrink-0 mt-0.5">
-                  <UserIcon />
-                </div>
-                
-                <div className="space-y-2 flex-1 min-w-0 pr-8">
-                  <p className="text-xs font-bold text-gray-800 uppercase tracking-wide">Query from Farmer: #8291</p>
-                  <p className="text-xs font-semibold text-gray-600 italic leading-relaxed">
-                    "Why are my nitrogen levels dropping in Section D despite regular fertilization?"
-                  </p>
-                  
-                  <div className="flex flex-wrap items-center gap-4 pt-1 text-[10px] text-gray-400 font-bold">
-                    <span className="flex items-center gap-1">
-                      <TargetIcon className="w-3.5 h-3.5 text-[#1e4d1e]" /> Response Accuracy: 98%
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Brain className="w-3.5 h-3.5 text-[#1e4d1e]" /> Sentiment: Curiously Urgent
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Row 2 */}
-            <div className="bg-[#f8f9f6]/80 border border-[#e4e6df] rounded-[18px] p-5 text-left relative">
-              <span className="absolute top-4 right-4 text-[9px] font-bold text-gray-400">18m ago</span>
-              
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-[#edf4e2] border border-[#d2dfc2] flex items-center justify-center text-[#1e4d1e] shrink-0 mt-0.5">
-                  <CalendarIcon />
-                </div>
-                
-                <div className="space-y-2 flex-1 min-w-0 pr-8">
-                  <p className="text-xs font-bold text-gray-800 uppercase tracking-wide">Automated Harvest Schedule Generation</p>
-                  <p className="text-xs font-semibold text-gray-600 italic leading-relaxed">
-                    "Scheduling Section F for harvest tomorrow at 05:00 based on dew point and humidity trends."
-                  </p>
-                  
-                  <div className="flex flex-wrap items-center gap-4 pt-1 text-[10px] text-gray-400 font-bold">
-                    <span className="flex items-center gap-1">
-                      <CheckCircleIcon className="w-3.5 h-3.5 text-[#1e4d1e]" /> Confidence: 99.4%
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Activity className="w-3.5 h-3.5 text-[#1e4d1e]" /> Reasoning: Multi-Spectral Analysis
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Row 3 */}
-            <div className="bg-[#f8f9f6]/80 border border-[#e4e6df] rounded-[18px] p-5 text-left relative border-l-4 border-l-red-500">
-              <span className="absolute top-4 right-4 text-[9px] font-bold text-gray-400">1h ago</span>
-              
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-red-50 border border-red-100 flex items-center justify-center text-red-600 shrink-0 mt-0.5">
-                  <AlertTriangle className="w-4 h-4" />
-                </div>
-                
-                <div className="space-y-2 flex-1 min-w-0 pr-8">
-                  <p className="text-xs font-bold text-gray-800 uppercase tracking-wide">Anomaly Detection Alert</p>
-                  <p className="text-xs font-semibold text-gray-600 italic leading-relaxed">
-                    "Potential pest infestation detected via thermal satellite drift in Western Ridge."
-                  </p>
-                  
-                  <div className="flex flex-wrap items-center gap-4 pt-1 text-[10px] text-gray-400 font-bold">
-                    <span className="flex items-center gap-1 text-red-500">
-                      <AlertTriangle className="w-3.5 h-3.5" /> Negative Sentiment: High Concern
-                    </span>
-                    <span className="flex items-center gap-1 text-[#1e4d1e]">
-                      <MessageSquare className="w-3.5 h-3.5" /> AI Advice: Dispatching Drones
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Centered link */}
-          <div className="text-center pt-2">
-            <button className="text-xs font-extrabold text-[#1e4d1e] hover:underline cursor-pointer">
-              View All Logs (24,000+ entries)
-            </button>
-          </div>
-
-        </div>
 
         {/* ── MODEL HEALTH ARCHITECTURE ── */}
         <div className="bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-sm space-y-6 text-left relative overflow-hidden">
@@ -541,17 +326,17 @@ export default function AIManagementPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center pt-2">
-            
+
             {/* Left large circular model icon */}
             <div className="md:col-span-4 flex justify-center py-4 select-none relative">
-              
+
               <div className="w-32 h-32 rounded-full border border-gray-150 flex items-center justify-center relative">
-                
+
                 {/* Glowing Green Central dot */}
                 <div className="w-16 h-16 rounded-full bg-[#1e4d1e] shadow-2xl flex items-center justify-center text-white">
                   <Brain className="w-7 h-7 fill-white" />
                 </div>
-                
+
                 {/* Outer tracking ring */}
                 <div className="absolute inset-0 rounded-full border border-dashed border-gray-250 animate-[spin_40s_linear_infinite]" />
               </div>
@@ -560,14 +345,14 @@ export default function AIManagementPage() {
 
             {/* Right progress monitoring lines exactly matching mockup */}
             <div className="md:col-span-8 space-y-5 text-left pr-4">
-              
+
               {/* Progress 1 */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs font-bold text-gray-800">
                   <span className="text-[10px] text-gray-400 uppercase tracking-wider">Inference Engine v4.2</span>
                   <span className="text-[#1e4d1e]">78% CPU</span>
                 </div>
-                
+
                 <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
                   <div className="h-full bg-[#1e4d1e] rounded-full" style={{ width: '78%' }} />
                 </div>
@@ -579,7 +364,7 @@ export default function AIManagementPage() {
                   <span className="text-[10px] text-gray-400 uppercase tracking-wider">Vector DB Connectivity</span>
                   <span className="text-[#1e4d1e]">90% Stability</span>
                 </div>
-                
+
                 <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
                   <div className="h-full bg-[#1e4d1e] rounded-full" style={{ width: '90%' }} />
                 </div>
@@ -591,7 +376,7 @@ export default function AIManagementPage() {
                   <span className="text-[10px] text-gray-400 uppercase tracking-wider">Request Queue</span>
                   <span className="text-gray-400 font-bold text-[10px]">Idle</span>
                 </div>
-                
+
                 <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
                   <div className="h-full bg-[#1e4d1e] rounded-full" style={{ width: '5%' }} />
                 </div>
@@ -615,7 +400,7 @@ export default function AIManagementPage() {
       <AnimatePresence>
         {showAddModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            
+
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
