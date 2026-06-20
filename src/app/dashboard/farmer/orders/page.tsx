@@ -246,7 +246,7 @@ export default function OrdersManagementPage() {
 
                         {/* Total Price */}
                         <td className="py-4 px-6 font-extrabold text-gray-900">
-                          ${ord.totalAmount.toFixed(2)}
+                          SLR {ord.totalAmount.toFixed(2)}
                         </td>
 
                         {/* Status Badge */}
@@ -327,7 +327,7 @@ export default function OrdersManagementPage() {
             <span className="text-[10px] font-extrabold text-gray-400 tracking-wider uppercase">Revenue Growth</span>
 
             <div className="mt-2">
-              <h3 className="text-xl font-extrabold text-gray-900">$12,840.00</h3>
+              <h3 className="text-xl font-extrabold text-gray-900">Rs 12,840.00</h3>
               <span className="text-[9px] font-extrabold text-green-600 bg-green-50 px-1.5 py-0.5 rounded-md mt-1.5 inline-block">
                 +12.4% vs last week
               </span>
@@ -382,7 +382,7 @@ export default function OrdersManagementPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Amount:</span>
-                <span className="font-bold text-[#1e4d1e]">${confirmingOrder.totalAmount.toFixed(2)}</span>
+                <span className="font-bold text-[#1e4d1e]">Rs {confirmingOrder.totalAmount.toFixed(2)}</span>
               </div>
             </div>
 

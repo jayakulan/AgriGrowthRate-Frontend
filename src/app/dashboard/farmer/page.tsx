@@ -128,7 +128,7 @@ export default function FarmerDashboardPage() {
                   <Link href="#" className="text-xs font-bold text-[#1e4d1e] hover:underline">View report</Link>
                 </div>
                 <div className="mt-4">
-                  <span className="text-4xl font-extrabold text-gray-900">$4,250.00</span>
+                  <span className="text-4xl font-extrabold text-gray-900">Rs 4,250.00</span>
                   <p className="text-xs font-semibold text-gray-400 mt-1">Total Earnings</p>
                 </div>
                 {/* Subtle graphic background node */}

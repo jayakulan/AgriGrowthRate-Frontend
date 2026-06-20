@@ -73,6 +73,10 @@ export default function AddProductPage() {
       return toast.error('Please fill in all required fields');
     }
 
+    if (Number(stock) < 50) {
+      return toast.error('Initial stock must be 50kg or above to publish this product.');
+    }
+
     setLoading(true);
     try {
       const productData = {
@@ -170,9 +174,9 @@ export default function AddProductPage() {
             {/* Price & Unit Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1.5">Unit Price ($)</label>
+                <label className="text-xs font-bold text-gray-700 block mb-1.5">Unit Price (Rs)</label>
                 <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 select-none">Rs</span>
                   <input
                     type="number"
                     step="0.01"
@@ -193,10 +197,6 @@ export default function AddProductPage() {
                   className="w-full px-4 py-2.5 bg-[#f4f5f0] border border-[#e4e6df] rounded-lg text-sm text-gray-800 focus:outline-none focus:border-[#1e4d1e]"
                 >
                   <option value="kg">Per Kilogram (kg)</option>
-                  <option value="bundle">Per Bundle</option>
-                  <option value="bag">Per Bag</option>
-                  <option value="ear">Per Ear</option>
-                  <option value="box">Per Box</option>
                 </select>
               </div>
             </div>
