@@ -33,6 +33,7 @@ import {
 import toast from 'react-hot-toast';
 import { orderService } from '@/services/orderService';
 import { feedbackService } from '@/services/feedbackService';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function OrdersManagementPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -52,6 +53,9 @@ export default function OrdersManagementPage() {
   const [feedbackComment, setFeedbackComment] = useState<string>('');
   const [submittingFeedback, setSubmittingFeedback] = useState<boolean>(false);
 
+  const langCtx = useLanguage();
+  const t = langCtx ? langCtx.t : (k: string) => k;
+
   const fetchOrders = async () => {
     try {
       setLoading(true);
@@ -59,11 +63,11 @@ export default function OrdersManagementPage() {
       if (res && res.success) {
         setOrders(res.data || []);
       } else {
-        toast.error(res.message || 'Failed to fetch orders');
+        toast.error(res.message || t('msg.errorFetch'));
       }
     } catch (err: any) {
       console.error(err);
-      toast.error('Could not fetch orders from server.');
+      toast.error(t('msg.errorFetch'));
     } finally {
       setLoading(false);
     }
@@ -78,7 +82,7 @@ export default function OrdersManagementPage() {
       setUpdatingId(orderId);
       const res = await orderService.updateStatus(orderId, status);
       if (res && res.success) {
-        toast.success(`Order successfully completed`);
+        toast.success(t('msg.successCompleted'));
         // Save to orderToRate so the rating modal shows up immediately
         const completedOrder = orders.find(o => o._id === orderId);
         if (completedOrder) {
@@ -89,11 +93,11 @@ export default function OrdersManagementPage() {
         setValidationError(null);
         fetchOrders();
       } else {
-        toast.error(res.message || 'Failed to update order');
+        toast.error(res.message || t('msg.errorCompleted'));
       }
     } catch (err) {
       console.error(err);
-      toast.error('Failed to change order status');
+      toast.error(t('msg.errorCompleted'));
     } finally {
       setUpdatingId(null);
     }
@@ -102,7 +106,7 @@ export default function OrdersManagementPage() {
   const handleFeedbackSubmit = async () => {
     if (!orderToRate) return;
     if (!feedbackComment.trim()) {
-      toast.error('Please write some feedback comment');
+      toast.error(t('msg.commentRequired'));
       return;
     }
     try {
@@ -113,17 +117,17 @@ export default function OrdersManagementPage() {
         comment: feedbackComment,
       });
       if (res && res.success) {
-        toast.success('Thank you! Feedback submitted successfully.');
+        toast.success(t('msg.successFeedback'));
         setOrderToRate(null);
         setFeedbackComment('');
         setRating(5);
         fetchOrders();
       } else {
-        toast.error(res.message || 'Failed to submit feedback');
+        toast.error(res.message || t('msg.errorFeedback'));
       }
     } catch (err: any) {
       console.error(err);
-      toast.error(err.response?.data?.message || 'Failed to submit feedback');
+      toast.error(err.response?.data?.message || t('msg.errorFeedback'));
     } finally {
       setSubmittingFeedback(false);
     }
@@ -175,7 +179,7 @@ export default function OrdersManagementPage() {
               <Clock className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-[11px] font-semibold text-gray-400">Pending</span>
+              <span className="text-[11px] font-semibold text-gray-400">{t('dashboard.pendingOrders')}</span>
               <h4 className="text-xl font-extrabold text-gray-900 mt-0">{totalPending}</h4>
             </div>
           </div>
@@ -186,7 +190,7 @@ export default function OrdersManagementPage() {
               <CheckCircle className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-[11px] font-semibold text-gray-400">Completed</span>
+              <span className="text-[11px] font-semibold text-gray-400">{t('dashboard.completedOrders')}</span>
               <h4 className="text-xl font-extrabold text-gray-900 mt-0">{totalCompleted}</h4>
             </div>
           </div>
@@ -203,21 +207,21 @@ export default function OrdersManagementPage() {
         ) : orders.length === 0 ? (
           <div className="text-center py-20">
             <Package className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-            <p className="text-gray-500 text-sm">No orders received yet.</p>
+            <p className="text-gray-500 text-sm">{t('dashboard.table.noOrders')}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[#f4f5f0]/50 border-b border-[#e4e6df] text-xs font-bold text-gray-500">
-                  <th className="py-4 px-6">Order ID</th>
-                  <th className="py-4 px-6">Customer Name</th>
-                  <th className="py-4 px-6">Product</th>
-                  <th className="py-4 px-6">Quantity</th>
-                  <th className="py-4 px-6">Total Price</th>
-                  <th className="py-4 px-6">Status</th>
-                  <th className="py-4 px-6">Date</th>
-                  <th className="py-4 px-6">Actions</th>
+                  <th className="py-4 px-6">{t('dashboard.table.orderId')}</th>
+                  <th className="py-4 px-6">{t('dashboard.table.customer')}</th>
+                  <th className="py-4 px-6">{t('dashboard.table.product')}</th>
+                  <th className="py-4 px-6">{t('dashboard.table.quantity')}</th>
+                  <th className="py-4 px-6">{t('dashboard.table.price')}</th>
+                  <th className="py-4 px-6">{t('dashboard.table.status')}</th>
+                  <th className="py-4 px-6">{t('dashboard.table.date')}</th>
+                  <th className="py-4 px-6">{t('dashboard.table.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f4f5f0]">
@@ -309,7 +313,7 @@ export default function OrdersManagementPage() {
                         {/* Action Button */}
                         <td className="py-4 px-6">
                           {ord.status === 'delivered' ? (
-                            <span className="text-[#1e4d1e] font-extrabold text-xs">Completed</span>
+                            <span className="text-[#1e4d1e] font-extrabold text-xs">{t('dashboard.table.completed')}</span>
                           ) : (
                             <button
                               disabled={updatingId === ord._id}
@@ -320,7 +324,7 @@ export default function OrdersManagementPage() {
                               }}
                               className="bg-[#1e4d1e] hover:bg-[#163d16] text-white text-[11px] font-extrabold px-3.5 py-1.5 rounded-lg transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
                             >
-                              Complete
+                              {t('dashboard.table.complete')}
                             </button>
                           )}
                         </td>
@@ -408,23 +412,23 @@ export default function OrdersManagementPage() {
       {confirmingOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
           <div className="bg-white border border-[#e4e6df] rounded-2xl max-w-md w-full p-6 shadow-xl relative animate-scale-up">
-            <h3 className="text-lg font-extrabold text-[#1e4d1e] mb-2">Confirm Order Completion</h3>
+            <h3 className="text-lg font-extrabold text-[#1e4d1e] mb-2">{t('dashboard.verifyModal.title')}</h3>
             <p className="text-xs text-gray-500 mb-4 leading-relaxed">
-              Please ask the consumer for the <b>Order Reference Number</b> sent to their phone to verify delivery. Enter it below to complete fulfillment.
+              {t('dashboard.verifyModal.desc')}
             </p>
 
             {/* Info details */}
             <div className="bg-[#f4f5f0] border border-[#e4e6df] rounded-xl p-4 mb-4 text-xs font-semibold text-gray-700 space-y-2">
               <div className="flex justify-between">
-                <span className="text-gray-400">Customer:</span>
-                <span>{confirmingOrder.consumer?.name || 'Anonymous'}</span>
+                <span className="text-gray-400">{t('dashboard.verifyModal.customer')}</span>
+                <span>{confirmingOrder.consumer?.name || t('dashboard.table.anonymous')}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Product:</span>
+                <span className="text-gray-400">{t('dashboard.verifyModal.product')}</span>
                 <span>{confirmingOrder.items?.[0]?.product?.name || 'N/A'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Amount:</span>
+                <span className="text-gray-400">{t('dashboard.verifyModal.amount')}</span>
                 <span className="font-bold text-[#1e4d1e]">Rs {confirmingOrder.totalAmount.toFixed(2)}</span>
               </div>
             </div>
@@ -432,7 +436,7 @@ export default function OrdersManagementPage() {
             {/* Input field */}
             <div className="mb-6">
               <label className="block text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mb-2">
-                Order Reference Number
+                {t('dashboard.verifyModal.inputLabel')}
               </label>
               <div className={`flex items-center bg-[#f4f5f0] border-2 ${validationError ? 'border-red-400' : 'border-[#e4e6df]'} focus-within:border-[#1e4d1e] rounded-xl overflow-hidden`}>
                 <span className="pl-4 pr-1 py-3 text-sm font-extrabold text-[#1e4d1e] select-none tracking-widest">AGR-</span>
@@ -462,7 +466,7 @@ export default function OrdersManagementPage() {
                 onClick={() => setConfirmingOrder(null)}
                 className="flex-1 border-2 border-[#e4e6df] text-gray-700 hover:bg-gray-50 px-4 py-3 rounded-xl text-xs font-bold transition-colors"
               >
-                Cancel
+                {t('dashboard.verifyModal.cancelBtn')}
               </button>
               <button
                 type="button"
@@ -471,7 +475,7 @@ export default function OrdersManagementPage() {
                   const targetRef = confirmingOrder.orderConfirmationNumber || '';
                   const fullInput = `AGR-${userInputRef.trim()}`;
                   if (fullInput.toUpperCase() !== targetRef.toUpperCase()) {
-                    setValidationError('Incorrect Reference Number. Please verify with the consumer and try again.');
+                    setValidationError(t('dashboard.verifyModal.errorInvalid'));
                     return;
                   }
                   setValidationError(null);
@@ -479,7 +483,7 @@ export default function OrdersManagementPage() {
                 }}
                 className="flex-1 bg-[#1e4d1e] hover:bg-[#163d16] text-white px-4 py-3 rounded-xl text-xs font-bold transition-colors disabled:opacity-50"
               >
-                Verify & Complete
+                {t('dashboard.verifyModal.verifyBtn')}
               </button>
             </div>
           </div>
@@ -489,9 +493,9 @@ export default function OrdersManagementPage() {
       {orderToRate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
           <div className="bg-white border border-[#e4e6df] rounded-2xl max-w-md w-full p-6 shadow-xl relative animate-scale-up">
-            <h3 className="text-lg font-extrabold text-[#1e4d1e] mb-2">Rate & Review Consumer</h3>
+            <h3 className="text-lg font-extrabold text-[#1e4d1e] mb-2">{t('dashboard.rateModal.title')}</h3>
             <p className="text-xs text-gray-500 mb-4 leading-relaxed">
-              How was your experience with <b>{orderToRate.consumer?.name || 'Anonymous'}</b>? Leave a rating and brief feedback.
+              {t('dashboard.rateModal.desc').replace('{name}', orderToRate.consumer?.name || t('dashboard.table.anonymous'))}
             </p>
 
             {/* Stars selection */}
@@ -515,11 +519,11 @@ export default function OrdersManagementPage() {
             {/* Comments input */}
             <div className="mb-6">
               <label className="block text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mb-2">
-                Feedback Comments
+                {t('dashboard.rateModal.commentLabel')}
               </label>
               <textarea
                 rows={3}
-                placeholder="Write your feedback here..."
+                placeholder={t('dashboard.rateModal.commentPlaceholder')}
                 value={feedbackComment}
                 onChange={(e) => setFeedbackComment(e.target.value)}
                 className="w-full p-3 bg-[#f4f5f0] border border-[#e4e6df] focus:border-[#1e4d1e] rounded-xl text-xs font-semibold text-gray-800 placeholder-gray-400 focus:outline-none resize-none"
@@ -533,7 +537,7 @@ export default function OrdersManagementPage() {
                 onClick={() => setOrderToRate(null)}
                 className="flex-1 border-2 border-[#e4e6df] text-gray-700 hover:bg-gray-50 px-4 py-3 rounded-xl text-xs font-bold transition-colors"
               >
-                Skip
+                {t('dashboard.rateModal.skip')}
               </button>
               <button
                 type="button"
@@ -541,7 +545,7 @@ export default function OrdersManagementPage() {
                 onClick={handleFeedbackSubmit}
                 className="flex-1 bg-[#1e4d1e] hover:bg-[#163d16] text-white px-4 py-3 rounded-xl text-xs font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {submittingFeedback ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Submit Feedback'}
+                {submittingFeedback ? <Loader2 className="w-4 h-4 animate-spin" /> : t('dashboard.rateModal.submit')}
               </button>
             </div>
           </div>
