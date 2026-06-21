@@ -11,8 +11,11 @@ import {
   Loader2,
   AlertCircle,
   HelpCircle,
+  Star,
 } from 'lucide-react';
 import { orderService } from '@/services/orderService';
+import { feedbackService } from '@/services/feedbackService';
+import toast from 'react-hot-toast';
 import Link from 'next/link';
 
 export default function ConsumerOrdersPage() {
@@ -20,27 +23,63 @@ export default function ConsumerOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const res = await orderService.getMyOrders();
-        if (res && res.success) {
-          setOrders(res.data || []);
-        } else {
-          setError(res.message || 'Failed to load orders');
-        }
-      } catch (err: any) {
-        console.error('Failed to load orders:', err);
-        setError(err.response?.data?.message || 'Could not fetch orders. Please check your connection.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Rating & Feedback states
+  const [orderToRate, setOrderToRate] = useState<any | null>(null);
+  const [rating, setRating] = useState<number>(5);
+  const [feedbackComment, setFeedbackComment] = useState<string>('');
+  const [submittingFeedback, setSubmittingFeedback] = useState<boolean>(false);
 
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await orderService.getMyOrders();
+      if (res && res.success) {
+        setOrders(res.data || []);
+      } else {
+        setError(res.message || 'Failed to load orders');
+      }
+    } catch (err: any) {
+      console.error('Failed to load orders:', err);
+      setError(err.response?.data?.message || 'Could not fetch orders. Please check your connection.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchOrders();
   }, []);
+
+  const handleFeedbackSubmit = async () => {
+    if (!orderToRate) return;
+    if (!feedbackComment.trim()) {
+      toast.error('Please write some feedback comment');
+      return;
+    }
+    try {
+      setSubmittingFeedback(true);
+      const res = await feedbackService.submitFeedback({
+        orderId: orderToRate._id,
+        rating,
+        comment: feedbackComment,
+      });
+      if (res && res.success) {
+        toast.success('Thank you! Feedback submitted successfully.');
+        setOrderToRate(null);
+        setFeedbackComment('');
+        setRating(5);
+        fetchOrders();
+      } else {
+        toast.error(res.message || 'Failed to submit feedback');
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to submit feedback');
+    } finally {
+      setSubmittingFeedback(false);
+    }
+  };
 
   const totalInTransit = orders.filter(o => o.status === 'processing' || o.status === 'shipped').length;
   const totalPending = orders.filter(o => o.status === 'pending').length;
@@ -159,6 +198,28 @@ export default function ConsumerOrdersPage() {
                       <p className="text-xl font-extrabold text-[#1e4d1e]">Rs {order.totalAmount.toFixed(2)}</p>
                     </div>
                   </div>
+
+                  {/* Rate & Review Button */}
+                  {order.status === 'delivered' && (
+                    <div className="shrink-0">
+                      {order.isReviewedByConsumer ? (
+                        <span className="text-[11px] font-bold text-gray-400 bg-[#f4f5f0] border border-[#e4e6df] px-3 py-1.5 rounded-lg">
+                          Reviewed
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setOrderToRate(order);
+                            setRating(5);
+                            setFeedbackComment('');
+                          }}
+                          className="bg-[#1e4d1e] hover:bg-[#163d16] text-white text-xs font-extrabold px-4 py-2.5 rounded-xl transition-colors shadow-sm cursor-pointer"
+                        >
+                          Rate & Review
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {order.status === 'shipped' && (
@@ -172,8 +233,68 @@ export default function ConsumerOrdersPage() {
           })}
         </div>
       )}
+      {/* ── Product/Farmer Rating & Feedback Popup ──────────────────── */}
+      {orderToRate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
+          <div className="bg-white border border-[#e4e6df] rounded-2xl max-w-md w-full p-6 shadow-xl relative animate-scale-up">
+            <h3 className="text-lg font-extrabold text-[#1e4d1e] mb-2">Rate & Review Product</h3>
+            <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+              How was the quality of <b>{orderToRate.items?.[0]?.product?.name || 'the produce'}</b>? Leave a rating and write your feedback.
+            </p>
 
+            {/* Stars selection */}
+            <div className="flex justify-center gap-2 mb-6">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRating(star)}
+                  className="cursor-pointer transition-transform active:scale-95"
+                >
+                  <Star
+                    className={`w-8 h-8 ${
+                      star <= rating ? 'text-amber-400 fill-amber-400' : 'text-gray-300'
+                    }`}
+                  />
+                </button>
+              ))}
+            </div>
 
+            {/* Comments input */}
+            <div className="mb-6">
+              <label className="block text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mb-2">
+                Feedback Comments
+              </label>
+              <textarea
+                rows={3}
+                placeholder="Write your feedback here..."
+                value={feedbackComment}
+                onChange={(e) => setFeedbackComment(e.target.value)}
+                className="w-full p-3 bg-[#f4f5f0] border border-[#e4e6df] focus:border-[#1e4d1e] rounded-xl text-xs font-semibold text-gray-800 placeholder-gray-400 focus:outline-none resize-none"
+              />
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setOrderToRate(null)}
+                className="flex-1 border-2 border-[#e4e6df] text-gray-700 hover:bg-gray-50 px-4 py-3 rounded-xl text-xs font-bold transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={submittingFeedback}
+                onClick={handleFeedbackSubmit}
+                className="flex-1 bg-[#1e4d1e] hover:bg-[#163d16] text-white px-4 py-3 rounded-xl text-xs font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {submittingFeedback ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Submit Feedback'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

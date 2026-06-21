@@ -28,9 +28,11 @@ import {
   Sparkles,
   Loader2,
   CircleAlert,
+  Star,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { orderService } from '@/services/orderService';
+import { feedbackService } from '@/services/feedbackService';
 
 export default function OrdersManagementPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -43,6 +45,12 @@ export default function OrdersManagementPage() {
   const [confirmingOrder, setConfirmingOrder] = useState<any | null>(null);
   const [userInputRef, setUserInputRef] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  // Rating & Feedback states
+  const [orderToRate, setOrderToRate] = useState<any | null>(null);
+  const [rating, setRating] = useState<number>(5);
+  const [feedbackComment, setFeedbackComment] = useState<string>('');
+  const [submittingFeedback, setSubmittingFeedback] = useState<boolean>(false);
 
   const fetchOrders = async () => {
     try {
@@ -71,6 +79,11 @@ export default function OrdersManagementPage() {
       const res = await orderService.updateStatus(orderId, status);
       if (res && res.success) {
         toast.success(`Order successfully completed`);
+        // Save to orderToRate so the rating modal shows up immediately
+        const completedOrder = orders.find(o => o._id === orderId);
+        if (completedOrder) {
+          setOrderToRate(completedOrder);
+        }
         setConfirmingOrder(null);
         setUserInputRef('');
         setValidationError(null);
@@ -83,6 +96,36 @@ export default function OrdersManagementPage() {
       toast.error('Failed to change order status');
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const handleFeedbackSubmit = async () => {
+    if (!orderToRate) return;
+    if (!feedbackComment.trim()) {
+      toast.error('Please write some feedback comment');
+      return;
+    }
+    try {
+      setSubmittingFeedback(true);
+      const res = await feedbackService.submitFeedback({
+        orderId: orderToRate._id,
+        rating,
+        comment: feedbackComment,
+      });
+      if (res && res.success) {
+        toast.success('Thank you! Feedback submitted successfully.');
+        setOrderToRate(null);
+        setFeedbackComment('');
+        setRating(5);
+        fetchOrders();
+      } else {
+        toast.error(res.message || 'Failed to submit feedback');
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to submit feedback');
+    } finally {
+      setSubmittingFeedback(false);
     }
   };
 
@@ -437,6 +480,68 @@ export default function OrdersManagementPage() {
                 className="flex-1 bg-[#1e4d1e] hover:bg-[#163d16] text-white px-4 py-3 rounded-xl text-xs font-bold transition-colors disabled:opacity-50"
               >
                 Verify & Complete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ── Consumer Rating & Feedback Popup ──────────────────── */}
+      {orderToRate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
+          <div className="bg-white border border-[#e4e6df] rounded-2xl max-w-md w-full p-6 shadow-xl relative animate-scale-up">
+            <h3 className="text-lg font-extrabold text-[#1e4d1e] mb-2">Rate & Review Consumer</h3>
+            <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+              How was your experience with <b>{orderToRate.consumer?.name || 'Anonymous'}</b>? Leave a rating and brief feedback.
+            </p>
+
+            {/* Stars selection */}
+            <div className="flex justify-center gap-2 mb-6">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRating(star)}
+                  className="cursor-pointer transition-transform active:scale-95"
+                >
+                  <Star
+                    className={`w-8 h-8 ${
+                      star <= rating ? 'text-amber-400 fill-amber-400' : 'text-gray-300'
+                    }`}
+                  />
+                </button>
+              ))}
+            </div>
+
+            {/* Comments input */}
+            <div className="mb-6">
+              <label className="block text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mb-2">
+                Feedback Comments
+              </label>
+              <textarea
+                rows={3}
+                placeholder="Write your feedback here..."
+                value={feedbackComment}
+                onChange={(e) => setFeedbackComment(e.target.value)}
+                className="w-full p-3 bg-[#f4f5f0] border border-[#e4e6df] focus:border-[#1e4d1e] rounded-xl text-xs font-semibold text-gray-800 placeholder-gray-400 focus:outline-none resize-none"
+              />
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setOrderToRate(null)}
+                className="flex-1 border-2 border-[#e4e6df] text-gray-700 hover:bg-gray-50 px-4 py-3 rounded-xl text-xs font-bold transition-colors"
+              >
+                Skip
+              </button>
+              <button
+                type="button"
+                disabled={submittingFeedback}
+                onClick={handleFeedbackSubmit}
+                className="flex-1 bg-[#1e4d1e] hover:bg-[#163d16] text-white px-4 py-3 rounded-xl text-xs font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {submittingFeedback ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Submit Feedback'}
               </button>
             </div>
           </div>

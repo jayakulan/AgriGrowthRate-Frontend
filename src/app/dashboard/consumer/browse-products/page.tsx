@@ -166,6 +166,19 @@ export default function BrowseProductsPage() {
                     </div>
                   </div>
 
+                  {/* Farmer Info & Rating */}
+                  <div className="flex items-center gap-2 mb-3 mt-1 bg-[#f4f5f0]/50 border border-[#e4e6df]/60 px-2.5 py-1 rounded-xl w-fit">
+                    <span className="text-[11px] font-semibold text-gray-500">
+                      {product.farmer?.name || 'Local Farmer'}
+                    </span>
+                    <div className="flex items-center gap-0.5 text-amber-500 border-l border-gray-200 pl-1.5 ml-0.5">
+                      <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                      <span className="text-[11px] font-bold text-gray-700">
+                        {product.farmer?.avgRating > 0 ? product.farmer.avgRating.toFixed(1) : 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+
                   <div className="flex flex-col gap-1 mb-4">
                     <div className="flex justify-between items-center">
                       <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Available Stock</span>
