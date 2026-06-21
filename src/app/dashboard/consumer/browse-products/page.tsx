@@ -16,7 +16,7 @@ import {
   MapPin,
 } from 'lucide-react';
 import { productService } from '@/services/productService';
-import { orderService } from '@/services/orderService';
+import { useLanguage } from '@/context/LanguageContext';
 
 const categories = [
   { name: 'All Products', icon: Grid3X3, key: 'all' },
@@ -33,7 +33,10 @@ export default function BrowseProductsPage() {
   const [totalProducts, setTotalProducts] = useState(0);
   const [sortBy, setSortBy] = useState('Latest Arrivals');
   const limit = 12;
-  // Removed fetchPendingOrders to display all products
+
+  const langContext = useLanguage();
+  const t = langContext ? langContext.t : (key: string) => key;
+
   useEffect(() => {
     const loadProducts = async () => {
       setLoading(true);
@@ -73,6 +76,17 @@ export default function BrowseProductsPage() {
 
   const totalPages = Math.ceil(totalProducts / limit) || 1;
 
+  const getLocalizedCategory = (cat: string) => {
+    if (!cat) return t('products.other');
+    const c = cat.toLowerCase();
+    if (c === 'vegetables') return t('products.vegetables');
+    if (c === 'grains') return t('products.grains');
+    if (c === 'fruits') return t('products.fruits');
+    if (c === 'dairy') return t('products.dairy');
+    if (c === 'herbs') return t('products.herbs');
+    return t('products.other');
+  };
+
   return (
     <div className="p-8 max-w-[1200px]">
 
@@ -84,6 +98,11 @@ export default function BrowseProductsPage() {
           {categories.map((cat) => {
             const Icon = cat.icon;
             const isActive = activeCategory === cat.key;
+            const displayName = cat.key === 'all' ? t('products.allProducts') :
+              cat.key === 'vegetables' ? t('products.vegetables') :
+              cat.key === 'grains' ? t('products.grains') :
+              cat.key === 'fruits' ? t('products.fruits') : cat.name;
+
             return (
               <button
                 key={cat.key}
@@ -97,7 +116,7 @@ export default function BrowseProductsPage() {
                   }`}
               >
                 <Icon className="w-4 h-4" />
-                {cat.name}
+                {displayName}
               </button>
             );
           })}
@@ -105,16 +124,16 @@ export default function BrowseProductsPage() {
 
         {/* Sort */}
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-sm text-gray-500">Sort:</span>
+          <span className="text-sm text-gray-500">{t('products.sort')}</span>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             className="border border-[#e4e6df] rounded-lg px-3 py-2 text-sm font-semibold text-gray-800 bg-white focus:outline-none focus:border-[#1e4d1e] cursor-pointer"
           >
-            <option>Latest Arrivals</option>
-            <option>Price: Low to High</option>
-            <option>Price: High to Low</option>
-
+            <option value="Latest Arrivals">{t('products.latestArrivals')}</option>
+            <option value="Price: Low to High">{t('products.priceLowToHigh')}</option>
+            <option value="Price: High to Low">{t('products.priceHighToLow')}</option>
+            <option value="Top Rated">{t('products.topRated')}</option>
           </select>
         </div>
       </div>
@@ -123,11 +142,11 @@ export default function BrowseProductsPage() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20">
           <Loader2 className="w-8 h-8 text-[#1e4d1e] animate-spin" />
-          <p className="text-sm text-gray-500 mt-2">Loading products...</p>
+          <p className="text-sm text-gray-500 mt-2">{t('products.loading')}</p>
         </div>
       ) : products.length === 0 ? (
         <div className="text-center py-20 bg-white border border-[#e4e6df] rounded-2xl">
-          <p className="text-gray-500">No products found in this category.</p>
+          <p className="text-gray-500">{t('products.noProductsFound')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
@@ -151,7 +170,7 @@ export default function BrowseProductsPage() {
                     />
                     {/* Category badge */}
                     <span className="absolute top-3 left-3 bg-white/95 text-gray-800 text-[10px] font-extrabold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm backdrop-blur-sm">
-                      {product.category}
+                      {getLocalizedCategory(product.category)}
                     </span>
                   </div>
                 </div>
@@ -169,7 +188,7 @@ export default function BrowseProductsPage() {
                   {/* Farmer Info & Rating */}
                   <div className="flex items-center gap-2 mb-3 mt-1 bg-[#f4f5f0]/50 border border-[#e4e6df]/60 px-2.5 py-1 rounded-xl w-fit">
                     <span className="text-[11px] font-semibold text-gray-500">
-                      {product.farmer?.name || 'Local Farmer'}
+                      {product.farmer?.name || t('products.localFarmer')}
                     </span>
                     <div className="flex items-center gap-0.5 text-amber-500 border-l border-gray-200 pl-1.5 ml-0.5">
                       <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
@@ -181,7 +200,7 @@ export default function BrowseProductsPage() {
 
                   <div className="flex flex-col gap-1 mb-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Available Stock</span>
+                      <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">{t('products.availableStock')}</span>
                       <span className="font-black text-[#1e4d1e] text-[20px] leading-none">{product.stock} <span className="text-[13px] font-bold">{product.unit || 'kg'}</span></span>
                     </div>
                   </div>
@@ -196,7 +215,7 @@ export default function BrowseProductsPage() {
                     className="mt-auto w-full bg-[#17451e] hover:bg-[#113316] text-white text-sm font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
                   >
                     <ShoppingCart className="w-4 h-4" />
-                    Buy
+                    {t('consumer.buy')}
                   </Link>
                 </div>
               </div>
@@ -250,4 +269,3 @@ export default function BrowseProductsPage() {
     </div>
   );
 }
-

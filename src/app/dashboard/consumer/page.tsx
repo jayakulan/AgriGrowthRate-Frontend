@@ -19,10 +19,13 @@ import {
   Loader2,
   MapPin,
 } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function ConsumerDashboardPage() {
   const { user } = useAuth();
   const userName = user?.name || 'Alex';
+  const langContext = useLanguage();
+  const t = langContext ? langContext.t : (key: string) => key;
 
   const [freshProducts, setFreshProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -84,6 +87,17 @@ export default function ConsumerDashboardPage() {
     },
   ];
 
+  const getLocalizedCategory = (cat: string) => {
+    if (!cat) return t('products.other');
+    const c = cat.toLowerCase();
+    if (c === 'vegetables') return t('products.vegetables');
+    if (c === 'grains') return t('products.grains');
+    if (c === 'fruits') return t('products.fruits');
+    if (c === 'dairy') return t('products.dairy');
+    if (c === 'herbs') return t('products.herbs');
+    return t('products.other');
+  };
+
   return (
     <div className="p-8 max-w-[1200px] bg-[#f9faf7] min-h-screen">
 
@@ -94,7 +108,7 @@ export default function ConsumerDashboardPage() {
         <div className="bg-white border border-[#e4e6df] rounded-3xl p-6 shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-1">Total Orders</h3>
+              <h3 className="text-sm font-medium text-gray-500 mb-1">{t('consumer.totalOrders')}</h3>
               <p className="text-3xl font-bold text-gray-900">42</p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-[#e2fbe9] flex items-center justify-center text-[#1e4d1e]">
@@ -113,7 +127,7 @@ export default function ConsumerDashboardPage() {
         <div className="bg-white border border-[#e4e6df] rounded-3xl p-6 shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-1">Active Deliveries</h3>
+              <h3 className="text-sm font-medium text-gray-500 mb-1">{t('consumer.activeDeliveries')}</h3>
               <p className="text-3xl font-bold text-gray-900">03</p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-[#f4f5f0] flex items-center justify-center text-gray-600">
@@ -130,7 +144,7 @@ export default function ConsumerDashboardPage() {
         <div className="bg-white border border-[#e4e6df] rounded-3xl p-6 shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-1">Favorite Farmers</h3>
+              <h3 className="text-sm font-medium text-gray-500 mb-1">{t('consumer.favoriteFarmers')}</h3>
               <p className="text-3xl font-bold text-gray-900">{favCount < 10 ? `0${favCount}` : favCount}</p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-[#c0f0cc] flex items-center justify-center text-[#1e4d1e]">
@@ -157,7 +171,7 @@ export default function ConsumerDashboardPage() {
                 )}
               </>
             ) : (
-              <p className="text-[11px] text-gray-400 font-medium">No favorites yet</p>
+              <p className="text-[11px] text-gray-400 font-medium">{t('consumer.noFavorites')}</p>
             )}
           </div>
         </div>
@@ -167,12 +181,12 @@ export default function ConsumerDashboardPage() {
       {/* ── Fresh from the farm today ──────────────────────── */}
       <div className="mb-10">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-[#0a2318]">Fresh from the farm today</h2>
+          <h2 className="text-xl font-bold text-[#0a2318]">{t('consumer.freshFarmToday')}</h2>
           <Link
             href="/dashboard/consumer/browse-products"
             className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors flex items-center gap-1"
           >
-            View Marketplace <ArrowRight className="w-4 h-4" />
+            {t('consumer.viewMarketplace')} <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
@@ -182,7 +196,7 @@ export default function ConsumerDashboardPage() {
           </div>
         ) : freshProducts.length === 0 ? (
           <div className="text-center py-10 bg-white border border-[#e4e6df] rounded-3xl">
-            <p className="text-gray-500">No products available at the moment.</p>
+            <p className="text-gray-500">{t('consumer.noProducts')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -203,7 +217,7 @@ export default function ConsumerDashboardPage() {
                       />
                       {/* Category badge */}
                       <span className="absolute top-3 left-3 bg-white/95 text-gray-800 text-[10px] font-extrabold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm backdrop-blur-sm">
-                        {product.category || 'Product'}
+                        {getLocalizedCategory(product.category)}
                       </span>
                     </div>
                   </div>
@@ -220,7 +234,7 @@ export default function ConsumerDashboardPage() {
 
                     <div className="flex flex-col gap-1 mb-4">
                       <div className="flex justify-between items-center">
-                        <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Available Stock</span>
+                        <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">{t('products.availableStock')}</span>
                         <span className="font-black text-[#1e4d1e] text-[20px] leading-none">{product.stock} <span className="text-[13px] font-bold">{product.unit || 'kg'}</span></span>
                       </div>
                     </div>
@@ -235,7 +249,7 @@ export default function ConsumerDashboardPage() {
                       className="mt-auto w-full bg-[#17451e] hover:bg-[#113316] text-white text-sm font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
                     >
                       <ShoppingCart className="w-4 h-4" />
-                      Buy
+                      {t('consumer.buy')}
                     </Link>
                   </div>
                 </div>
@@ -250,11 +264,15 @@ export default function ConsumerDashboardPage() {
 
         {/* Recent Activity */}
         <div className="lg:col-span-2 bg-white border border-[#e4e6df] rounded-[2rem] p-8 shadow-sm">
-          <h2 className="text-xl font-bold text-[#1e4d1e] mb-8">Recent Activity</h2>
+          <h2 className="text-xl font-bold text-[#1e4d1e] mb-8">{t('consumer.recentActivity')}</h2>
 
           <div className="flex flex-col gap-6">
             {recentActivity.map((activity, index) => {
               const Icon = activity.icon;
+              const statusText = activity.status === 'DELIVERED' ? t('consumer.delivered') :
+                activity.status === 'PROCESSING' ? t('consumer.processing') :
+                t('consumer.outForDelivery');
+
               return (
                 <div key={index} className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -275,7 +293,7 @@ export default function ConsumerDashboardPage() {
                         activity.status === 'PROCESSING' ? 'bg-[#e5e7eb] text-gray-600' :
                           'bg-[#bbf7d0] text-[#166534]'
                       }`}>
-                      {activity.status}
+                      {statusText}
                     </span>
                     <span className="text-[15px] font-bold text-gray-900 w-16 text-right">{activity.amount}</span>
                     <button className="text-gray-400 hover:text-gray-600">
@@ -293,7 +311,7 @@ export default function ConsumerDashboardPage() {
 
           {/* Farm Proximity */}
           <div className="bg-white border border-[#e4e6df] rounded-[2rem] p-6 shadow-sm">
-            <h3 className="text-[15px] font-medium text-gray-600 mb-4">Farm Proximity</h3>
+            <h3 className="text-[15px] font-medium text-gray-600 mb-4">{t('consumer.farmProximity')}</h3>
             <div className="bg-gray-400 w-full h-36 rounded-2xl mb-4 overflow-hidden relative">
               {/* Fake map image */}
               <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=600&h=300&fit=crop" alt="Map" className="w-full h-full object-cover opacity-60 grayscale" />
@@ -304,19 +322,19 @@ export default function ConsumerDashboardPage() {
               </div>
             </div>
             <p className="text-[11px] font-medium text-gray-500 leading-relaxed">
-              There are <span className="font-bold text-[#1e4d1e]">12 active farms</span> within 20 miles of your location currently harvesting.
+              {t('consumer.farmsProximityDesc').replace('{count}', '12')}
             </p>
           </div>
 
           {/* Sustainable Choice */}
           <div className="bg-[#0a2318] rounded-[2rem] p-8 relative overflow-hidden text-white flex-1 flex flex-col justify-between">
             <div className="relative z-10">
-              <h3 className="text-[15px] font-bold mb-3">Sustainable Choice</h3>
+              <h3 className="text-[15px] font-bold mb-3">{t('consumer.sustainableChoice')}</h3>
               <p className="text-xs text-gray-300 leading-relaxed mb-6">
-                Learn how your recent purchases reduced carbon emissions by 4.2kg this month.
+                {t('consumer.sustainableDesc')}
               </p>
               <button className="bg-white hover:bg-gray-100 text-[#0a2318] px-5 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 w-fit">
-                View Report
+                {t('consumer.viewReport')}
                 <TrendingUp className="w-3.5 h-3.5" />
               </button>
             </div>
