@@ -156,7 +156,7 @@ export default function ConsumerOrdersPage() {
                       <p className="text-xs font-semibold text-gray-900 mb-2">
                         Ordered on {formattedDate} • {itemsCount} {itemsCount === 1 ? 'item' : 'items'}
                       </p>
-                      <p className="text-xl font-extrabold text-[#1e4d1e]">${order.totalAmount.toFixed(2)}</p>
+                      <p className="text-xl font-extrabold text-[#1e4d1e]">Rs {order.totalAmount.toFixed(2)}</p>
                     </div>
                   </div>
                 </div>

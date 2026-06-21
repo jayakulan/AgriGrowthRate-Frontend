@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '@/lib/axios';
 import {
   Search,
   Download,
@@ -137,15 +137,13 @@ export default function ManageProductsPage() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       const params: any = { page: currentPage, limit: 12 };
       if (searchTerm) params.search = searchTerm;
       if (categoryFilter !== 'All Categories') params.category = categoryFilter;
       if (statusFilter !== 'All') params.status = statusFilter.toLowerCase();
       if (activeTab !== 'All') params.tab = activeTab.toLowerCase();
 
-      const response = await axios.get('http://localhost:5001/api/admin/products', {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await api.get('/admin/products', {
         params,
       }).catch(() => null);
 
@@ -162,19 +160,35 @@ export default function ManageProductsPage() {
     }
   };
 
-  const handleApprove = (productId: string) => {
-    toast.success('Product approved successfully!');
-    fetchProducts();
+  const handleApprove = async (productId: string) => {
+    try {
+      await api.patch(`/admin/products/${productId}/status`, { status: 'Active' });
+      toast.success('Product approved successfully! 🌱');
+      fetchProducts();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to approve product');
+    }
   };
 
-  const handleReject = (productId: string) => {
-    toast.error('Product rejected.');
-    fetchProducts();
+  const handleReject = async (productId: string) => {
+    try {
+      await api.patch(`/admin/products/${productId}/status`, { status: 'Rejected' });
+      toast.error('Product rejected.');
+      fetchProducts();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to reject product');
+    }
   };
 
-  const handleDelete = (productId: string) => {
-    toast.success('Product deleted.');
-    fetchProducts();
+  const handleDelete = async (productId: string) => {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+    try {
+      await api.delete(`/admin/products/${productId}`);
+      toast.success('Product deleted.');
+      fetchProducts();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to delete product');
+    }
   };
 
   const handleExportReport = () => {
@@ -272,7 +286,6 @@ export default function ManageProductsPage() {
                 <option value="Grains">Grains</option>
                 <option value="Vegetables">Vegetables</option>
                 <option value="Fruits">Fruits</option>
-                <option value="Dairy">Dairy</option>
               </select>
             </div>
 

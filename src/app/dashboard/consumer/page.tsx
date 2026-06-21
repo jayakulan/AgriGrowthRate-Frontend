@@ -65,21 +65,21 @@ export default function ConsumerDashboardPage() {
       id: 'AG-9842',
       date: 'Oct 24, 2023 • 14:30',
       status: 'DELIVERED',
-      amount: '$142.50',
+      amount: 'Rs 142.50',
       icon: Package,
     },
     {
       id: 'AG-9910',
       date: 'Oct 26, 2023 • 09:15',
       status: 'PROCESSING',
-      amount: '$86.20',
+      amount: 'Rs 86.20',
       icon: Clock,
     },
     {
       id: 'AG-9915',
       date: 'Today • 11:45',
       status: 'OUT FOR DELIVERY',
-      amount: '$54.00',
+      amount: 'Rs 54.00',
       icon: Truck,
     },
   ];
@@ -213,7 +213,7 @@ export default function ConsumerDashboardPage() {
                     <div className="flex justify-between items-start mb-1">
                       <h3 className="text-[15px] font-bold text-[#0f172a] leading-snug line-clamp-1">{product.name}</h3>
                       <div className="text-right shrink-0 ml-2">
-                        <span className="text-[14px] font-bold text-[#0f172a]">${product.price.toFixed(2)}</span>
+                        <span className="text-[14px] font-bold text-[#0f172a]">Rs {product.price.toFixed(2)}</span>
                         <span className="text-[12px] font-bold text-[#0f172a]">/{product.unit || 'kg'}</span>
                       </div>
                     </div>

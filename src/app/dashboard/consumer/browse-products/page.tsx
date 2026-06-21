@@ -161,7 +161,7 @@ export default function BrowseProductsPage() {
                   <div className="flex justify-between items-start mb-1">
                     <h3 className="text-[15px] font-bold text-[#0f172a] leading-snug line-clamp-1">{product.name}</h3>
                     <div className="text-right shrink-0 ml-2">
-                      <span className="text-[14px] font-bold text-[#0f172a]">${product.price.toFixed(2)}</span>
+                      <span className="text-[14px] font-bold text-[#0f172a]">Rs {product.price.toFixed(2)}</span>
                       <span className="text-[12px] font-bold text-[#0f172a]">/{product.unit || 'kg'}</span>
                     </div>
                   </div>

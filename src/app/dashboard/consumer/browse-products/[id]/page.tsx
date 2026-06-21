@@ -146,7 +146,7 @@ export default function ProductDetailsPage() {
             </h1>
             <div className="mb-8">
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-extrabold text-gray-900">${product.price.toFixed(2)}</span>
+                <span className="text-4xl font-extrabold text-gray-900">Rs {product.price.toFixed(2)}</span>
                 <span className="text-sm font-bold text-gray-500">/ {product.unit || 'kg'}</span>
               </div>
               {product.stock > 0 && (
@@ -344,14 +344,14 @@ export default function ProductDetailsPage() {
                     <div>
                       <h4 className="text-sm font-extrabold text-gray-900 leading-snug line-clamp-1">{product.name}</h4>
                       <p className="text-xs text-gray-500 mt-1">Quantity: <span className="font-extrabold text-gray-900">{quantity}</span></p>
-                      <p className="text-xs text-[#1e4d1e] font-extrabold mt-0.5">Price: ${product.price.toFixed(2)} / {product.unit || 'kg'}</p>
+                      <p className="text-xs text-[#1e4d1e] font-extrabold mt-0.5">Price: Rs {product.price.toFixed(2)} / {product.unit || 'kg'}</p>
                     </div>
                   </div>
 
                   {/* Order total amount calculation */}
                   <div className="flex justify-between items-center px-1">
                     <span className="text-sm font-bold text-gray-500">Order Total</span>
-                    <span className="text-2xl font-black text-[#1e4d1e]">${(product.price * quantity).toFixed(2)}</span>
+                    <span className="text-2xl font-black text-[#1e4d1e]">Rs {(product.price * quantity).toFixed(2)}</span>
                   </div>
 
                   <div className="border-t border-[#e4e6df] pt-4 text-center">
@@ -482,7 +482,7 @@ export default function ProductDetailsPage() {
                   <div className="p-4 flex flex-col justify-between h-28">
                     <h3 className="text-xs font-extrabold text-gray-900 leading-snug line-clamp-2">{prod.name}</h3>
                     <div className="flex items-end justify-between mt-auto">
-                      <span className="text-sm font-extrabold text-[#1e4d1e]">${prod.price.toFixed(2)}</span>
+                      <span className="text-sm font-extrabold text-[#1e4d1e]">Rs {prod.price.toFixed(2)}</span>
                       <button className="w-8 h-8 bg-[#e2fbe9] hover:bg-[#c6efc6] text-[#1e4d1e] rounded-lg flex items-center justify-center transition-colors">
                         <ShoppingCart className="w-4 h-4" />
                       </button>

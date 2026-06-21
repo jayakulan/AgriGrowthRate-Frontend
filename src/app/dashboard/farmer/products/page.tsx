@@ -33,9 +33,12 @@ interface Product {
   isAvailable: boolean;
   images: string[];
   description: string;
+  status?: string;
 }
 
 function deriveStatus(p: Product): string {
+  if (p.status === 'Pending Review') return 'Pending Approval';
+  if (p.status === 'Rejected') return 'Rejected';
   if (p.stock === 0) return 'Out of Stock';
   if (!p.isAvailable) return 'Draft';
   return 'Active';
@@ -156,7 +159,8 @@ export default function MyProductsPage() {
   // ── Status badge helper ───────────────────────────────────────────────────────
   const statusBadgeClass = (status: string) => {
     if (status === 'Active') return 'bg-green-500 text-white';
-    if (status === 'Out of Stock') return 'bg-red-500 text-white';
+    if (status === 'Pending Approval') return 'bg-amber-500 text-white';
+    if (status === 'Rejected' || status === 'Out of Stock') return 'bg-red-500 text-white';
     return 'bg-gray-500 text-white';
   };
   return (
