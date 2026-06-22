@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '@/lib/axios';
 import {
   Search,
   Download,
@@ -42,6 +42,8 @@ export default function ManageProductsPage() {
   const [statusFilter, setStatusFilter] = useState('All');
   const [activeTab, setActiveTab] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
+
+  const [counts, setCounts] = useState({ all: 0, approved: 0, rejected: 0 });
 
   const mockProducts: Product[] = [
     {
@@ -137,44 +139,71 @@ export default function ManageProductsPage() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       const params: any = { page: currentPage, limit: 12 };
       if (searchTerm) params.search = searchTerm;
       if (categoryFilter !== 'All Categories') params.category = categoryFilter;
       if (statusFilter !== 'All') params.status = statusFilter.toLowerCase();
       if (activeTab !== 'All') params.tab = activeTab.toLowerCase();
 
-      const response = await axios.get('http://localhost:5001/api/admin/products', {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await api.get('/admin/products', {
         params,
       }).catch(() => null);
 
       if (response?.data?.data) {
         setProducts(response.data.data);
+        if (response.data.counts) {
+          setCounts(response.data.counts);
+        }
       } else {
         setProducts(mockProducts);
+        setCounts({
+          all: mockProducts.length,
+          approved: mockProducts.filter(p => p.status === 'Approved').length,
+          rejected: mockProducts.filter(p => p.status === 'Rejected').length
+        });
       }
     } catch (error) {
       console.warn('Could not fetch products, using mock data:', error);
       setProducts(mockProducts);
+      setCounts({
+        all: mockProducts.length,
+        approved: mockProducts.filter(p => p.status === 'Approved').length,
+        rejected: mockProducts.filter(p => p.status === 'Rejected').length
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleApprove = (productId: string) => {
-    toast.success('Product approved successfully!');
-    fetchProducts();
+  const handleApprove = async (productId: string) => {
+    try {
+      await api.patch(`/admin/products/${productId}/status`, { status: 'Active' });
+      toast.success('Product approved successfully! 🌱');
+      fetchProducts();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to approve product');
+    }
   };
 
-  const handleReject = (productId: string) => {
-    toast.error('Product rejected.');
-    fetchProducts();
+  const handleReject = async (productId: string) => {
+    try {
+      await api.patch(`/admin/products/${productId}/status`, { status: 'Rejected' });
+      toast.error('Product rejected.');
+      fetchProducts();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to reject product');
+    }
   };
 
-  const handleDelete = (productId: string) => {
-    toast.success('Product deleted.');
-    fetchProducts();
+  const handleDelete = async (productId: string) => {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+    try {
+      await api.delete(`/admin/products/${productId}`);
+      toast.success('Product deleted.');
+      fetchProducts();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to delete product');
+    }
   };
 
   const handleExportReport = () => {
@@ -201,9 +230,9 @@ export default function ManageProductsPage() {
   });
 
   const stats = [
-    { label: 'All Products', count: mockProducts.length, color: '#1e4d1e' },
-    { label: 'Approved', count: mockProducts.filter(p => p.status === 'Approved').length, color: '#16a34a' },
-    { label: 'Rejected', count: mockProducts.filter(p => p.status === 'Rejected').length, color: '#dc2626' },
+    { label: 'All Products', count: counts.all, color: '#1e4d1e' },
+    { label: 'Approved', count: counts.approved, color: '#16a34a' },
+    { label: 'Rejected', count: counts.rejected, color: '#dc2626' },
   ];
 
   const getStatusColor = (status: string) => {
@@ -272,7 +301,6 @@ export default function ManageProductsPage() {
                 <option value="Grains">Grains</option>
                 <option value="Vegetables">Vegetables</option>
                 <option value="Fruits">Fruits</option>
-                <option value="Dairy">Dairy</option>
               </select>
             </div>
 
@@ -325,7 +353,7 @@ export default function ManageProductsPage() {
             <p className="text-gray-500 font-medium">No products found</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredProducts.map((product, idx) => (
               <React.Fragment key={product._id}>
                 <motion.div
@@ -335,7 +363,7 @@ export default function ManageProductsPage() {
                   className="bg-white border border-[#e4e6df] rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group flex flex-col h-full"
                 >
                   {/* Product Image */}
-                  <div className="relative h-48 overflow-hidden shrink-0 p-3 pb-0">
+                  <div className="relative h-36 overflow-hidden shrink-0 p-3 pb-0">
                     <div className="relative w-full h-full rounded-2xl overflow-hidden bg-gray-100">
                       <img
                         src={product.image || 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&q=80&w=600&h=400'}
@@ -343,8 +371,8 @@ export default function ManageProductsPage() {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute top-3 left-3 flex gap-2">
-                        <span className={`inline-flex px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider shadow-sm backdrop-blur-sm border ${getStatusColor(product.status)}`}>
-                          {product.status}
+                        <span className={`inline-flex px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider shadow-sm backdrop-blur-sm border ${product.quantity === 0 ? 'bg-red-50 text-red-700 border-red-200' : getStatusColor(product.status)}`}>
+                          {product.quantity === 0 ? 'Out of Stock' : product.status}
                         </span>
                       </div>
                     </div>
@@ -370,7 +398,13 @@ export default function ManageProductsPage() {
                       <div className="flex justify-between items-center">
                         <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Available Stock</span>
                         <span className="font-black text-[#1e4d1e] text-[20px] leading-none">
-                          {product.quantity || 0} <span className="text-[13px] font-bold">units</span>
+                          {product.quantity && product.quantity > 0 ? (
+                            <>
+                              {product.quantity} <span className="text-[13px] font-bold">units</span>
+                            </>
+                          ) : (
+                            <span className="text-red-500 text-[15px] font-extrabold uppercase tracking-wide">Out of Stock</span>
+                          )}
                         </span>
                       </div>
                     </div>
@@ -409,7 +443,7 @@ export default function ManageProductsPage() {
 
                     {/* Action Buttons at Bottom */}
                     <div className="mt-auto space-y-2">
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-2 gap-2">
                         <button
                           onClick={() => handleApprove(product._id)}
                           className="py-2 px-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white text-xs font-bold rounded-xl transition-all cursor-pointer text-center"
@@ -422,13 +456,14 @@ export default function ManageProductsPage() {
                         >
                           Reject
                         </button>
-                        <button
-                          onClick={() => showDetails(product)}
-                          className="py-2 px-3 bg-gray-50 hover:bg-gray-100 text-gray-600 text-xs font-bold rounded-xl transition-all cursor-pointer border border-gray-100 flex items-center justify-center gap-1"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
                       </div>
+                      <button
+                        onClick={() => showDetails(product)}
+                        className="w-full py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-600 text-xs font-bold rounded-xl transition-all cursor-pointer border border-gray-100 flex items-center justify-center gap-1.5"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>View Details</span>
+                      </button>
 
                       <button
                         onClick={() => handleDelete(product._id)}
@@ -470,20 +505,76 @@ export default function ManageProductsPage() {
 // Detail popup (render inside same file)
 function DetailPopup({ product, open, onClose }: { product: Product | null; open: boolean; onClose: () => void }) {
   if (!open || !product) return null;
+  
+  const formattedDate = product.dateAdded 
+    ? new Date(product.dateAdded).toISOString().split('T')[0] 
+    : '';
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-sm bg-white rounded-2xl p-6 shadow-2xl">
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700">✕</button>
-        <h4 className="text-lg font-extrabold text-gray-900">{product.name}</h4>
-        <p className="text-xs text-gray-500 mt-2">Farmer: <span className="font-bold text-gray-700">{product.farmerName}</span></p>
-        <p className="text-xs text-gray-500">Location: <span className="font-bold text-gray-700">{product.location}</span></p>
-        <p className="text-xs text-gray-500">Added: <span className="font-bold text-gray-700">{product.dateAdded ? new Date(product.dateAdded).toLocaleDateString() : '-'}</span></p>
-        <p className="text-xs text-gray-500 mt-3">Description:</p>
-        <p className="text-sm text-gray-700">{product.description}</p>
-        <div className="flex gap-3 mt-4">
-          <div className="text-sm font-bold text-gray-800">Price: ₹{product.price.toLocaleString()}</div>
-          <div className="text-sm font-bold text-gray-800">Qty: {product.quantity ?? '-'}</div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
+      <div className="absolute inset-0" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-4xl bg-white rounded-3xl overflow-hidden shadow-2xl animate-scale-up border border-[#e4e6df] flex flex-col md:flex-row h-[90vh] md:h-[500px]">
+        {/* Left Side: Large Product Image */}
+        <div className="w-full md:w-1/2 h-[200px] md:h-full relative bg-gray-100 shrink-0">
+          <img 
+            src={product.image || 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&q=80&w=600&h=400'} 
+            alt={product.name} 
+            className="w-full h-full object-cover"
+          />
+        </div>
+
+        {/* Right Side: Product Details */}
+        <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col justify-between overflow-y-auto h-full bg-white">
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-extrabold text-gray-900">Product Detailed Info</h3>
+              <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-lg font-bold">✕</button>
+            </div>
+
+            {/* Info Table */}
+            <div className="space-y-4 text-sm mb-6">
+              <div className="grid grid-cols-3 items-center">
+                <span className="font-extrabold text-xs text-[#1e4d1e] tracking-wide uppercase">Farmer</span>
+                <span className="col-span-2 text-gray-700 font-semibold">{product.farmerName}</span>
+              </div>
+              <div className="grid grid-cols-3 items-center">
+                <span className="font-extrabold text-xs text-[#1e4d1e] tracking-wide uppercase">Location</span>
+                <span className="col-span-2 text-gray-700 font-semibold">{product.location || 'N/A'}</span>
+              </div>
+              <div className="grid grid-cols-3 items-center">
+                <span className="font-extrabold text-xs text-[#1e4d1e] tracking-wide uppercase">Product</span>
+                <span className="col-span-2 text-gray-900 font-black">{product.name}</span>
+              </div>
+              <div className="grid grid-cols-3 items-center">
+                <span className="font-extrabold text-xs text-[#1e4d1e] tracking-wide uppercase">Price</span>
+                <span className="col-span-2 text-[#1e4d1e] font-black">₹{product.price} / unit</span>
+              </div>
+              <div className="grid grid-cols-3 items-center">
+                <span className="font-extrabold text-xs text-[#1e4d1e] tracking-wide uppercase">Quantity</span>
+                <span className="col-span-2 text-gray-700 font-semibold">{product.quantity || 0} units</span>
+              </div>
+              <div className="grid grid-cols-3 items-center">
+                <span className="font-extrabold text-xs text-[#1e4d1e] tracking-wide uppercase">Uploaded</span>
+                <span className="col-span-2 text-gray-700 font-semibold">{formattedDate}</span>
+              </div>
+            </div>
+
+            {/* About Product Box */}
+            <div className="mb-6">
+              <span className="block text-[10px] font-extrabold text-gray-400 tracking-wider uppercase mb-2">About Product</span>
+              <div className="bg-[#f4f5f0]/60 border border-[#e4e6df]/80 rounded-xl p-3.5 text-xs text-gray-600 font-medium leading-relaxed">
+                {product.description || 'No additional details provided.'}
+              </div>
+            </div>
+          </div>
+
+          {/* Close Button */}
+          <button 
+            onClick={onClose}
+            className="w-full py-3.5 bg-[#1e4d1e] hover:bg-[#163d16] text-white text-xs font-black rounded-xl uppercase tracking-widest transition-colors shadow-sm text-center"
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>

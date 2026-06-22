@@ -218,7 +218,7 @@ export default function FarmerProfilePage() {
                 {/* Total Sales */}
                 <div className="bg-[#f8fae5] border border-[#eff1da] rounded-2xl p-5">
                   <p className="text-[11px] font-bold text-gray-500 mb-4 uppercase tracking-wider">Total Sales</p>
-                  <p className="text-2xl font-bold text-[#1e4d1e]">$1,250</p>
+                  <p className="text-2xl font-bold text-[#1e4d1e]">Rs 1,250</p>
                   <div className="flex items-center gap-1 mt-3">
                     <TrendingUp className="w-3.5 h-3.5 text-[#4a6d2f]" />
                     <span className="text-[11px] font-medium text-[#4a6d2f]">+12% this month</span>

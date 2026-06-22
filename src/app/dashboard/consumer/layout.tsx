@@ -18,20 +18,31 @@ import {
   LogOut,
 } from 'lucide-react';
 import DashboardHeader from '@/components/DashboardHeader';
+import { LanguageProvider, useLanguage } from '@/context/LanguageContext';
 
 const menuItems = [
-  { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/consumer' },
-  { name: 'Browse Products', icon: ShoppingBag, href: '/dashboard/consumer/browse-products' },
-  { name: 'Orders', icon: ShoppingCart, href: '/dashboard/consumer/orders' },
-  { name: 'Chat', icon: MessageSquare, href: '/dashboard/consumer/chat' },
-  { name: 'AI Recommendations', icon: Sparkles, href: '/dashboard/consumer/recommendations' },
-  { name: 'Profile', icon: UserIcon, href: '/dashboard/consumer/profile' },
+  { key: 'menu.dashboard', name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/consumer' },
+  { key: 'menu.browseProducts', name: 'Browse Products', icon: ShoppingBag, href: '/dashboard/consumer/browse-products' },
+  { key: 'menu.orders', name: 'Orders', icon: ShoppingCart, href: '/dashboard/consumer/orders' },
+  { key: 'menu.chat', name: 'Chat', icon: MessageSquare, href: '/dashboard/consumer/chat' },
+  { key: 'menu.aiRecommendations', name: 'AI Recommendations', icon: Sparkles, href: '/dashboard/consumer/recommendations' },
+  { key: 'menu.profile', name: 'Profile', icon: UserIcon, href: '/dashboard/consumer/profile' },
 ];
 
 export default function ConsumerLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <LanguageProvider>
+      <ConsumerLayoutContent>{children}</ConsumerLayoutContent>
+    </LanguageProvider>
+  );
+}
+
+function ConsumerLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [cartCount] = useState(3);
+  const langContext = useLanguage();
+  const t = langContext ? langContext.t : (key: string) => key;
 
   const isActive = (href: string) => {
     if (href === '/dashboard/consumer') return pathname === '/dashboard/consumer';
@@ -61,7 +72,7 @@ export default function ConsumerLayout({ children }: { children: React.ReactNode
 
                 return (
                   <Link
-                    key={item.name}
+                    key={item.key}
                     href={item.href}
                     className="block"
                   >
@@ -86,7 +97,7 @@ export default function ConsumerLayout({ children }: { children: React.ReactNode
                       )}
                       <div className="flex items-center gap-3">
                         <Icon className={`w-[18px] h-[18px] shrink-0 transition-colors ${active ? 'text-[#1e4d1e]' : 'text-[#1e4d1e]/70 group-hover:text-[#1e4d1e]'}`} />
-                        <span className="text-[13px] tracking-wide">{item.name}</span>
+                        <span className="text-[13px] tracking-wide">{t(item.key)}</span>
                       </div>
                     </div>
                   </Link>
@@ -103,7 +114,7 @@ export default function ConsumerLayout({ children }: { children: React.ReactNode
               className="w-full flex items-center justify-center gap-2 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/50 font-bold rounded-xl transition-colors text-[12px] cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
-              <span>Logout</span>
+              <span>{t('menu.logout')}</span>
             </button>
           </div>
         </aside>
