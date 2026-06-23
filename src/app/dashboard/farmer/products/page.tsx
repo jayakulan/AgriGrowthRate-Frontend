@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { productService } from '@/services/productService';
+import { useLanguage } from '@/context/LanguageContext';
 
 // ── Type ─────────────────────────────────────────────────────────────────────
 interface Product {
@@ -33,9 +34,12 @@ interface Product {
   isAvailable: boolean;
   images: string[];
   description: string;
+  status?: string;
 }
 
 function deriveStatus(p: Product): string {
+  if (p.status === 'Pending Review') return 'Pending Approval';
+  if (p.status === 'Rejected') return 'Rejected';
   if (p.stock === 0) return 'Out of Stock';
   if (!p.isAvailable) return 'Draft';
   return 'Active';
@@ -45,6 +49,8 @@ function deriveStatus(p: Product): string {
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=400&h=300&fit=crop';
 
 export default function MyProductsPage() {
+  const langCtx = useLanguage();
+  const t = langCtx ? langCtx.t : (k: string) => k;
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -156,7 +162,8 @@ export default function MyProductsPage() {
   // ── Status badge helper ───────────────────────────────────────────────────────
   const statusBadgeClass = (status: string) => {
     if (status === 'Active') return 'bg-green-500 text-white';
-    if (status === 'Out of Stock') return 'bg-red-500 text-white';
+    if (status === 'Pending Approval') return 'bg-amber-500 text-white';
+    if (status === 'Rejected' || status === 'Out of Stock') return 'bg-red-500 text-white';
     return 'bg-gray-500 text-white';
   };
   return (
@@ -185,7 +192,7 @@ export default function MyProductsPage() {
             
             <div className="flex items-center gap-2 bg-[#f4f5f0] border border-[#e4e6df] px-3 py-2 rounded-lg text-xs font-semibold text-gray-600">
               <Filter className="w-3.5 h-3.5 text-gray-400" />
-              <span>Category:</span>
+              <span>{t('products.category')}</span>
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
@@ -203,7 +210,7 @@ export default function MyProductsPage() {
             
             <div className="flex items-center gap-2 bg-[#f4f5f0] border border-[#e4e6df] px-3 py-2 rounded-lg text-xs font-semibold text-gray-600">
               <SlidersHorizontal className="w-3.5 h-3.5 text-gray-400" />
-              <span>Status:</span>
+              <span>{t('products.status')}</span>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -234,7 +241,7 @@ export default function MyProductsPage() {
           className="flex items-center justify-center gap-2 bg-[#1e4d1e] hover:bg-[#163d16] text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm transition-colors shrink-0 self-stretch xl:self-auto h-fit"
         >
           <Plus className="w-4 h-4" />
-          <span>Add New Product</span>
+          <span>{t('products.addNewProduct')}</span>
         </Link>
       </div>
 
@@ -304,7 +311,7 @@ export default function MyProductsPage() {
 
       {/* Products grid */}
       {!loading && !error && filtered.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
           {filtered.map((p) => {
             const status = deriveStatus(p);
             const isDoingAction = actionId === p._id;
@@ -313,73 +320,85 @@ export default function MyProductsPage() {
             return (
               <div
                 key={p._id}
-                className="bg-white border border-[#e4e6df] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative flex flex-col"
+                className="bg-white border border-[#e4e6df] rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group flex flex-col h-full relative"
               >
                 {/* Overlay when action in progress */}
                 {isDoingAction && (
-                  <div className="absolute inset-0 bg-white/70 z-10 flex items-center justify-center rounded-2xl">
+                  <div className="absolute inset-0 bg-white/70 z-10 flex items-center justify-center rounded-3xl">
                     <Loader2 className="w-7 h-7 text-[#1e4d1e] animate-spin" />
                   </div>
                 )}
 
-                {/* Image + badges */}
-                <div className="relative h-48 w-full bg-gray-100">
-                  <img
-                    src={imageUrl}
-                    alt={p.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
-                  />
-                  <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-                    <span className={`text-[9px] font-extrabold px-2.5 py-1 rounded-md tracking-wider shadow-sm uppercase ${statusBadgeClass(status)}`}>
-                      {status}
+                {/* Image */}
+                <div className="relative h-48 overflow-hidden shrink-0 p-3 pb-0">
+                  <div className="relative w-full h-full rounded-2xl overflow-hidden">
+                    <img
+                      src={imageUrl}
+                      alt={p.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
+                    />
+                    {/* Category badge */}
+                    <span className="absolute top-3 left-3 bg-white/95 text-gray-800 text-[10px] font-extrabold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm backdrop-blur-sm">
+                      {t(`products.${p.category.toLowerCase()}`) || p.category}
                     </span>
-                    {p.isOrganic && (
-                      <span className="text-[9px] font-extrabold px-2.5 py-1 rounded-md bg-[#edf4e2] text-[#4A6D2F] tracking-wider shadow-sm flex items-center gap-1">
-                        <Leaf className="w-2.5 h-2.5" /> ORGANIC
+                    {/* Status & Organic badges */}
+                    <div className="absolute bottom-3 left-3 flex flex-wrap gap-1.5">
+                      <span className={`text-[9px] font-extrabold px-2.5 py-1.5 rounded-full tracking-wider shadow-sm uppercase backdrop-blur-sm ${statusBadgeClass(status)}`}>
+                        {t(status === 'Pending Approval' ? 'products.pendingApproval' : status === 'Out of Stock' ? 'products.outOfStock' : `products.${status.toLowerCase()}`)}
                       </span>
-                    )}
+                      {p.isOrganic && (
+                        <span className="text-[9px] font-extrabold px-2.5 py-1.5 rounded-full bg-[#edf4e2]/95 text-[#4A6D2F] tracking-wider shadow-sm flex items-center gap-1 backdrop-blur-sm">
+                          <Leaf className="w-2.5 h-2.5" /> {t('products.organic')}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* Card content */}
-                <div className="p-5 flex-1 flex flex-col justify-between">
-                  <div>
-                    <span className="text-[10px] text-gray-400 font-extrabold tracking-wide uppercase">{p.category}</span>
-                    <h3 className="font-bold text-gray-900 mt-1 text-base">{p.name}</h3>
-                    {p.description && (
-                      <p className="text-xs text-gray-400 mt-1 line-clamp-2">{p.description}</p>
-                    )}
-                    <div className="grid grid-cols-2 gap-4 mt-4 py-3 border-y border-[#f4f5f0] text-sm">
-                      <div>
-                        <p className="text-xs text-gray-400 font-semibold">Price</p>
-                        <p className="font-extrabold text-gray-900 mt-0.5">${p.price.toFixed(2)} / {p.unit}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-400 font-semibold">Stock</p>
-                        <p className="font-extrabold text-gray-900 mt-0.5">
-                          {p.stock > 0
-                            ? `${p.stock} ${p.unit}s`
-                            : <span className="text-red-500">None</span>}
-                        </p>
-                      </div>
+                {/* Details */}
+                <div className="p-4 flex flex-col flex-grow">
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="text-[15px] font-bold text-[#0f172a] leading-snug line-clamp-1">{p.name}</h3>
+                    <div className="text-right shrink-0 ml-2">
+                      <span className="text-[14px] font-bold text-[#0f172a]">Rs {p.price.toFixed(2)}</span>
+                      <span className="text-[12px] font-bold text-[#0f172a]">/{p.unit || 'kg'}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1 mb-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">{t('products.availableStock')}</span>
+                      <span className="font-black text-[#1e4d1e] text-[20px] leading-none">
+                        {p.stock > 0 ? (
+                          <>
+                            {p.stock} <span className="text-[13px] font-bold">{p.unit || 'kg'}</span>
+                          </>
+                        ) : (
+                          <span className="text-red-500 text-[15px]">{t('products.outOfStock')}</span>
+                        )}
+                      </span>
                     </div>
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-2 mt-4 pt-1">
+                  <div className="mt-auto flex gap-2 w-full pt-2">
                     <button
                       onClick={() => handleToggleStatus(p)}
                       disabled={isDoingAction}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-bold transition-colors disabled:opacity-50 ${
+                        p.isAvailable
+                          ? 'bg-[#f4f5f0] hover:bg-[#e4e6df] text-gray-700'
+                          : 'bg-[#17451e] hover:bg-[#113316] text-white'
+                      }`}
                     >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>{p.isAvailable ? 'Unlist' : 'List'}</span>
+                      <Eye className="w-4 h-4" />
+                      <span>{p.isAvailable ? t('products.unlist') : t('products.list')}</span>
                     </button>
                     <button
                       onClick={() => handleEditClick(p)}
                       disabled={isDoingAction}
-                      className="w-10 h-9 flex items-center justify-center bg-gray-50 hover:bg-gray-100 border border-[#e4e6df] text-gray-600 rounded-lg transition-colors"
+                      className="w-[46px] h-[46px] flex items-center justify-center bg-[#f4f5f0] hover:bg-[#e4e6df] text-gray-600 rounded-xl transition-colors shrink-0"
                       title="Edit product"
                     >
                       <Edit2 className="w-4 h-4" />
@@ -387,7 +406,7 @@ export default function MyProductsPage() {
                     <button
                       onClick={() => handleDelete(p)}
                       disabled={isDoingAction}
-                      className="w-10 h-9 flex items-center justify-center bg-red-50 hover:bg-red-100 border border-red-100 text-red-600 rounded-lg transition-colors disabled:opacity-50"
+                      className="w-[46px] h-[46px] flex items-center justify-center bg-[#fef2f2] hover:bg-[#fee2e2] text-red-600 rounded-xl transition-colors disabled:opacity-50 shrink-0"
                       title="Delete product"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -400,12 +419,7 @@ export default function MyProductsPage() {
         </div>
       )}
 
-      {/* Product count footer note */}
-      {!loading && !error && products.length > 0 && (
-        <p className="text-center text-xs text-gray-400 font-semibold mt-8">
-          Showing {filtered.length} of {products.length} product{products.length !== 1 ? 's' : ''}
-        </p>
-      )}
+
       {editProduct && (
 
         <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50">

@@ -22,24 +22,27 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DashboardHeader from '@/components/DashboardHeader';
+import { LanguageProvider, useLanguage } from '@/context/LanguageContext';
 
-export default function FarmerLayout({
+function FarmerLayoutContent({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const langCtx = useLanguage();
+  const t = langCtx ? langCtx.t : (k: string) => k;
 
   const menuItems = [
-    { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/farmer' },
-    { name: 'My Products', icon: Package, href: '/dashboard/farmer/products' },
-    { name: 'Add Product', icon: PlusCircle, href: '/dashboard/farmer/add-product' },
-    { name: 'Orders', icon: ShoppingBag, href: '/dashboard/farmer/orders' },
-    { name: 'Chat', icon: MessageSquare, href: '/dashboard/farmer/chat' },
-    { name: 'Crop Disease Detection', icon: Activity, href: '/dashboard/farmer/disease-detect' },
-    { name: 'AI Assistant', icon: Cpu, href: '/dashboard/farmer/ai' },
-    { name: 'Profile', icon: UserIcon, href: '/dashboard/farmer/profile' },
+    { name: t('menu.dashboard'), icon: LayoutDashboard, href: '/dashboard/farmer' },
+    { name: t('menu.myProducts'), icon: Package, href: '/dashboard/farmer/products' },
+    { name: t('menu.addProduct'), icon: PlusCircle, href: '/dashboard/farmer/add-product' },
+    { name: t('menu.orders'), icon: ShoppingBag, href: '/dashboard/farmer/orders' },
+    { name: t('menu.chat'), icon: MessageSquare, href: '/dashboard/farmer/chat' },
+    { name: t('menu.diseaseDetect'), icon: Activity, href: '/dashboard/farmer/disease-detect' },
+    { name: t('menu.aiAssistant'), icon: Cpu, href: '/dashboard/farmer/ai' },
+    { name: t('menu.profile'), icon: UserIcon, href: '/dashboard/farmer/profile' },
   ];
 
   const handleLogout = async () => {
@@ -121,7 +124,7 @@ export default function FarmerLayout({
               className="w-full flex items-center justify-center gap-2 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/50 font-bold rounded-xl transition-colors text-[12px] cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
-              <span>Logout</span>
+              <span>{t('menu.logout')}</span>
             </button>
           </div>
         </aside>
@@ -137,10 +140,20 @@ export default function FarmerLayout({
             {children}
           </main>
 
-
-
         </div>
       </div>
     </div>
+  );
+}
+
+export default function FarmerLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <LanguageProvider>
+      <FarmerLayoutContent>{children}</FarmerLayoutContent>
+    </LanguageProvider>
   );
 }

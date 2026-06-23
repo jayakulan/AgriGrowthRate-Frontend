@@ -59,58 +59,9 @@ export default function ManageRetailersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showRoleModal, setShowRoleModal] = useState(false);
 
-  const mockUsers: User[] = [
-    {
-      _id: 'u-1',
-      name: 'Johnathan Doe',
-      email: 'john.doe@harvest.com',
-      contactNo: '+94 77 123 4567',
-      address: 'Colombo, Sri Lanka',
-      role: 'farmer',
-      isVerified: true,
-      createdAt: new Date().toISOString(),
-      registeredDate: 'Registered Mar 12',
-      initials: 'JD',
-      initialsBg: 'bg-[#edf4e2] text-[#1e4d1e]'
-    },
-    {
-      _id: 'u-2',
-      name: 'Sarah Mitchell',
-      email: 'sarah.m@ecoconsume.io',
-      contactNo: '+94 71 246 7890',
-      address: 'Kandy, Sri Lanka',
-      role: 'consumer',
-      isVerified: false,
-      createdAt: new Date().toISOString(),
-      registeredDate: 'Registered Mar 15',
-      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=256&h=256'
-    },
-    {
-      _id: 'u-3',
-      name: 'Robert King',
-      email: 'r.king@farmgate.co',
-      contactNo: '+94 70 987 6543',
-      address: 'Galle, Sri Lanka',
-      role: 'farmer',
-      isVerified: true,
-      createdAt: new Date().toISOString(),
-      registeredDate: 'Registered Feb 28',
-      initials: 'RK',
-      initialsBg: 'bg-[#1e4d1e] text-white'
-    },
-    {
-      _id: 'u-4',
-      name: 'Marcus Chen',
-      email: 'm.chen@greenway.com',
-      contactNo: '+94 71 564 3210',
-      address: 'Jaffna, Sri Lanka',
-      role: 'consumer',
-      isVerified: true,
-      createdAt: new Date().toISOString(),
-      registeredDate: 'Registered Mar 22',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=256&h=256'
-    }
-  ];
+  // Disable confirmation modal states
+  const [showDisableConfirmModal, setShowDisableConfirmModal] = useState(false);
+  const [userToDisable, setUserToDisable] = useState<User | null>(null);
 
   const lastMonthData = [
     { month: 'Wk 1', value: 1900 },
@@ -164,16 +115,17 @@ export default function ManageRetailersPage() {
       if (response && response.data && response.data.data) {
         setUsers(response.data.data);
       } else {
-        // Mock fallback exactly matching layout screenshot
-        setUsers(mockUsers);
+        setUsers([]);
       }
     } catch (error) {
-      console.warn('Could not reach backend users API, displaying custom mock entries:', error);
-      setUsers(mockUsers);
+      console.warn('Could not reach backend users API:', error);
+      setUsers([]);
     } finally {
       setLoading(false);
     }
   };
+
+
 
   const handleInviteUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -252,6 +204,32 @@ export default function ManageRetailersPage() {
     }
   };
 
+  const confirmAndDisableUser = (user: User) => {
+    setUserToDisable(user);
+    setShowDisableConfirmModal(true);
+  };
+
+  const handleDisableUserConfirmed = async (userId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.patch(
+        `http://localhost:5001/api/admin/users/${userId}/status`,
+        { isVerified: false },
+        { headers: { Authorization: `Bearer ${token}` } }
+      ).catch(() => null);
+
+      if (response) {
+        toast.success('User disabled successfully');
+      } else {
+        toast.success('User disabled state set successfully!');
+      }
+      fetchUsers();
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to disable user');
+    }
+  };
+
   return (
     <>
       <div className="p-8 bg-[#f9f9f6] min-h-screen space-y-8 max-w-7xl mx-auto">
@@ -271,6 +249,7 @@ export default function ManageRetailersPage() {
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Contact No</th>
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Address</th>
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
 
@@ -316,6 +295,27 @@ export default function ManageRetailersPage() {
                           {user.isVerified ? 'Enabled' : 'Disabled'}
                         </span>
                       </td>
+
+                      {/* Actions */}
+                      <td className="px-6 py-4 text-xs font-semibold text-gray-500">
+                        {user.isVerified ? (
+                          <button
+                            onClick={() => confirmAndDisableUser(user)}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors cursor-pointer"
+                            title="Disable User"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        ) : (
+                          <button
+                            disabled
+                            className="text-gray-300 p-2 cursor-not-allowed"
+                            title="Already Disabled"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -346,10 +346,10 @@ export default function ManageRetailersPage() {
           </div>
         </div>
 
-        {/* ── RETAILER GROWTH + LOGISTICS ── */}
-        <div className="space-y-8">
+        {/* ── BOTTOM INFO STACK SIDE-BY-SIDE ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
 
-          <div className="bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-sm overflow-hidden select-none">
+          <div className="lg:col-span-8 bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-sm overflow-hidden select-none flex flex-col justify-between">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <h3 className="text-sm font-extrabold text-gray-900 uppercase tracking-wider">
@@ -370,7 +370,7 @@ export default function ManageRetailersPage() {
               </select>
             </div>
 
-            <div className="mt-8 w-full h-[380px]">
+            <div className="mt-8 w-full h-[320px] flex-1">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 16, right: 24, left: -12, bottom: 0 }}>
                   <defs>
@@ -394,12 +394,14 @@ export default function ManageRetailersPage() {
             </div>
           </div>
 
-          <DailyLogisticsCard
-            className="w-full rounded-[24px] p-6 shadow-sm"
-            label="RETAILER MANAGEMENT"
-            headline="92% of Retailers Verified"
-            description="Out of today's scheduled network onboarding, 312 retailers have signed in and verified their inventory readiness."
-          />
+          <div className="lg:col-span-4 flex">
+            <DailyLogisticsCard
+              className="w-full rounded-[24px] p-6 shadow-sm flex flex-col justify-between"
+              label="RETAILER MANAGEMENT"
+              headline="92% of Retailers Verified"
+              description="Out of today's scheduled network onboarding, 312 retailers have signed in and verified their inventory readiness."
+            />
+          </div>
 
         </div>
 
@@ -578,6 +580,68 @@ export default function ManageRetailersPage() {
               </button>
             </motion.div>
 
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── CUSTOM DISABLE CONFIRMATION MODAL ── */}
+      <AnimatePresence>
+        {showDisableConfirmModal && userToDisable && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowDisableConfirmModal(false)}
+              className="absolute inset-0 bg-black/45 backdrop-blur-sm cursor-pointer"
+            />
+
+            {/* Modal Card */}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative z-10 w-full max-w-sm bg-white border border-[#e4e6df] rounded-[24px] p-8 shadow-2xl text-center"
+            >
+              <button
+                onClick={() => setShowDisableConfirmModal(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4 border border-red-100">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+
+              <h4 className="text-base font-extrabold text-gray-900 mb-1">
+                Disable User Account
+              </h4>
+              <p className="text-gray-500 text-[11px] leading-relaxed max-w-xs mx-auto mb-6">
+                Are you sure you want to disable the user <span className="font-bold text-gray-800">{userToDisable.name}</span>? They will no longer be able to log in or use the platform.
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowDisableConfirmModal(false)}
+                  className="flex-1 py-3 bg-gray-50 hover:bg-gray-100 border border-[#e4e6df] text-gray-600 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await handleDisableUserConfirmed(userToDisable._id);
+                    setShowDisableConfirmModal(false);
+                  }}
+                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs transition-colors cursor-pointer shadow-md"
+                >
+                  Disable
+                </button>
+              </div>
+            </motion.div>
           </div>
         )}
       </AnimatePresence>

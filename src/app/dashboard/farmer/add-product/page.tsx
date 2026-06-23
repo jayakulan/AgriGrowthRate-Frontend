@@ -27,10 +27,13 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { productService } from '@/services/productService';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function AddProductPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const langContext = useLanguage();
+  const t = langContext ? langContext.t : (key: string) => key;
 
   // Form State
   const [name, setName] = useState('');
@@ -44,10 +47,10 @@ export default function AddProductPage() {
 
   // Pre-defined sample photos so user can easily mock images
   const sampleImages = [
-    { name: 'Tomato', url: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=300&fit=crop' },
-    { name: 'Wheat', url: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop' },
-    { name: 'Spinach', url: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop' },
-    { name: 'Potatoes', url: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&h=300&fit=crop' },
+    { name: t('addproduct.tomato'), url: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=300&fit=crop' },
+    { name: t('addproduct.wheat'), url: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop' },
+    { name: t('addproduct.spinach'), url: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop' },
+    { name: t('addproduct.potatoes'), url: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&h=300&fit=crop' },
   ];
 
   const handleImageMock = (url: string) => {
@@ -71,6 +74,10 @@ export default function AddProductPage() {
     e.preventDefault();
     if (!name || !price || !stock || !description) {
       return toast.error('Please fill in all required fields');
+    }
+
+    if (Number(stock) < 50) {
+      return toast.error('Initial stock must be 50kg or above to publish this product.');
     }
 
     setLoading(true);
@@ -112,12 +119,12 @@ export default function AddProductPage() {
           <div className="bg-white border border-[#e4e6df] rounded-2xl p-6 shadow-sm space-y-5">
             <div className="flex items-center gap-2 pb-2 border-b border-[#f4f5f0]">
               <Layers className="w-4 h-4 text-[#1e4d1e]" />
-              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">General Information</h3>
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">{t('addproduct.genInfo')}</h3>
             </div>
 
             {/* Product Name */}
             <div>
-              <label className="text-xs font-bold text-gray-700 block mb-1.5">Product Name</label>
+              <label className="text-xs font-bold text-gray-700 block mb-1.5">{t('addproduct.prodName')}</label>
               <input
                 type="text"
                 value={name}
@@ -131,15 +138,15 @@ export default function AddProductPage() {
             {/* Category & Organic Toggle */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1.5">Category</label>
+                <label className="text-xs font-bold text-gray-700 block mb-1.5">{t('addproduct.category')}</label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   className="w-full px-4 py-2.5 bg-[#f4f5f0] border border-[#e4e6df] rounded-lg text-sm text-gray-800 focus:outline-none focus:border-[#1e4d1e]"
                 >
-                  <option value="Vegetables">Vegetables</option>
-                  <option value="Grains">Grains</option>
-                  <option value="Fruits">Fruits</option>
+                  <option value="Vegetables">{t('addproduct.vegetables')}</option>
+                  <option value="Grains">{t('addproduct.grains')}</option>
+                  <option value="Fruits">{t('addproduct.fruits')}</option>
                 </select>
               </div>
 
@@ -148,7 +155,7 @@ export default function AddProductPage() {
 
             {/* Description */}
             <div>
-              <label className="text-xs font-bold text-gray-700 block mb-1.5">Detailed Description</label>
+              <label className="text-xs font-bold text-gray-700 block mb-1.5">{t('addproduct.detailedDesc')}</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -164,15 +171,15 @@ export default function AddProductPage() {
           <div className="bg-white border border-[#e4e6df] rounded-2xl p-6 shadow-sm space-y-5">
             <div className="flex items-center gap-2 pb-2 border-b border-[#f4f5f0]">
               <DollarSign className="w-4 h-4 text-[#1e4d1e]" />
-              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Pricing & Inventory</h3>
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">{t('addproduct.pricingInv')}</h3>
             </div>
 
             {/* Price & Unit Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1.5">Unit Price ($)</label>
+                <label className="text-xs font-bold text-gray-700 block mb-1.5">{t('addproduct.unitPrice')}</label>
                 <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 select-none">Rs</span>
                   <input
                     type="number"
                     step="0.01"
@@ -186,24 +193,20 @@ export default function AddProductPage() {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1.5">Selling Unit</label>
+                <label className="text-xs font-bold text-gray-700 block mb-1.5">{t('addproduct.sellingUnit')}</label>
                 <select
                   value={unit}
                   onChange={(e) => setUnit(e.target.value)}
                   className="w-full px-4 py-2.5 bg-[#f4f5f0] border border-[#e4e6df] rounded-lg text-sm text-gray-800 focus:outline-none focus:border-[#1e4d1e]"
                 >
                   <option value="kg">Per Kilogram (kg)</option>
-                  <option value="bundle">Per Bundle</option>
-                  <option value="bag">Per Bag</option>
-                  <option value="ear">Per Ear</option>
-                  <option value="box">Per Box</option>
                 </select>
               </div>
             </div>
 
             {/* Stock Quantity */}
             <div>
-              <label className="text-xs font-bold text-gray-700 block mb-1.5">Initial Stock Quantity</label>
+              <label className="text-xs font-bold text-gray-700 block mb-1.5">{t('addproduct.initialStock')}</label>
               <input
                 type="number"
                 value={stock}
@@ -221,7 +224,7 @@ export default function AddProductPage() {
               href="/dashboard/farmer/products"
               className="flex-1 text-center py-3 bg-white border border-[#e4e6df] hover:bg-gray-50 text-gray-700 font-bold rounded-xl text-sm transition-colors"
             >
-              Cancel
+              {t('addproduct.cancel')}
             </Link>
             <button
               type="submit"
@@ -229,9 +232,9 @@ export default function AddProductPage() {
               className="flex-1 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl text-sm transition-colors shadow-md flex items-center justify-center gap-2 disabled:opacity-60"
             >
               {loading ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Publishing...</>
+                <><Loader2 className="w-4 h-4 animate-spin" /> {t('addproduct.publishing')}</>
               ) : (
-                'Publish Product'
+                t('addproduct.publish')
               )}
             </button>
           </div>
@@ -245,7 +248,7 @@ export default function AddProductPage() {
           <div className="bg-white border border-[#e4e6df] rounded-2xl p-6 shadow-sm">
             <div className="flex items-center gap-2 pb-2 border-b border-[#f4f5f0] mb-5">
               <Upload className="w-4 h-4 text-[#1e4d1e]" />
-              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Listing Image</h3>
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">{t('addproduct.listingImg')}</h3>
             </div>
 
             {/* Visual Drag Zone */}
@@ -268,8 +271,8 @@ export default function AddProductPage() {
               ) : (
                 <>
                   <Upload className="w-10 h-10 text-gray-400 group-hover:text-[#1e4d1e] transition-colors mb-3" />
-                  <h4 className="text-xs font-bold text-gray-800">Drag & drop your crop image</h4>
-                  <p className="text-[10px] text-gray-400 mt-1 max-w-[160px]">Supports PNG, JPG, JPEG up to 5MB</p>
+                  <h4 className="text-xs font-bold text-gray-800">{t('addproduct.dragDrop')}</h4>
+                  <p className="text-[10px] text-gray-400 mt-1 max-w-[160px]">{t('addproduct.supports')}</p>
                   <input
                     type="file"
                     accept="image/*"
@@ -282,7 +285,7 @@ export default function AddProductPage() {
 
             {/* Sample Mock Select Photos */}
             <div className="mt-6">
-              <p className="text-[10px] font-extrabold text-gray-400 tracking-wider uppercase mb-3">Or choose a mock crop photo</p>
+              <p className="text-[10px] font-extrabold text-gray-400 tracking-wider uppercase mb-3">{t('addproduct.mockPhoto')}</p>
               <div className="grid grid-cols-4 gap-2">
                 {sampleImages.map((img) => (
                   <button
@@ -310,9 +313,9 @@ export default function AddProductPage() {
               <img src="/logo.png" alt="Logo" className="w-5 h-5 object-contain" />
             </div>
             <div>
-              <h4 className="text-xs font-extrabold text-[#1e4d1e]">Modern Market Standard</h4>
+              <h4 className="text-xs font-extrabold text-[#1e4d1e]">{t('addproduct.marketStandard')}</h4>
               <p className="text-[11px] text-gray-600 mt-1.5 leading-relaxed font-medium">
-                All products listed undergo a quick automated check. Organic labels require authentic farmer verification. Ensure descriptions accurately represent pesticide and soil quality standards.
+                {t('addproduct.marketStandardDesc')}
               </p>
             </div>
           </div>
@@ -324,7 +327,7 @@ export default function AddProductPage() {
         <div className="fixed inset-0 z-50 bg-black/10 backdrop-blur-xs flex items-center justify-center">
           <div className="bg-white border border-[#e4e6df] p-4 rounded-xl shadow-lg flex items-center gap-3">
             <Loader2 className="w-5 h-5 text-[#1e4d1e] animate-spin" />
-            <span className="text-xs font-bold text-gray-700">Listing product...</span>
+            <span className="text-xs font-bold text-gray-700">{t('addproduct.listingProduct')}</span>
           </div>
         </div>
       )}
