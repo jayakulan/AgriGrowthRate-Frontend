@@ -159,12 +159,19 @@ export default function DashboardHeader() {
     if (pathname.includes('/retailers')) {
       return { title: 'Manage Retailers', description: 'View and manage registered retailers and consumers.' };
     }
+    if (pathname.includes('/reports')) {
+      return { title: 'Reports & Analytics', description: 'In-depth analysis of platform performance, user metrics, and agricultural marketplace yield.' };
+    }
     return { title: t('dashboard.title'), description: t('dashboard.desc') };
   };
 
   const { title, description } = getPageInfo();
   const userName = user?.name || 'Guest User';
   const role = user?.role || 'user';
+  
+  const isAdminHeader = pathname.includes('/dashboard/admin');
+  const displayRole = isAdminHeader ? 'AGRI ADMIN' : role;
+  const displayName = isAdminHeader ? 'Nuha Nazardeen' : userName;
   
   return (
     <header className="h-[84px] bg-[#edf4e2] flex items-center justify-between px-8 select-none shrink-0 relative z-50 border-b border-[#d2dfc2]">
@@ -294,11 +301,11 @@ export default function DashboardHeader() {
             </div>
           )}
           <div className="flex flex-col justify-center text-left">
-            <h4 className="text-[14px] font-bold text-[#1e4d1e] leading-none mb-1">
-              {userName}
+            <h4 className="text-[14px] font-bold text-[#1e4d1e] leading-none mb-0.5 uppercase">
+              {displayRole}
             </h4>
-            <span className="text-[11px] font-extrabold text-[#2c6e2c] leading-none uppercase">
-              {role}
+            <span className="text-[11px] font-extrabold text-[#2c6e2c] leading-none">
+              {displayName}
             </span>
           </div>
         </div>

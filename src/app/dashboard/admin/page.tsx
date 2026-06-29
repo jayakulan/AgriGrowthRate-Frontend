@@ -223,8 +223,8 @@ export default function AdminDashboardPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={displayedDataWithIndex} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                  <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fill: '#9ca3af', fontSize: 11, fontWeight: 700 }} />
-                  <YAxis tickLine={false} axisLine={false} tick={{ fill: '#9ca3af', fontSize: 11, fontWeight: 700 }} />
+                  <XAxis dataKey="name" tickLine={false} axisLine={{ stroke: '#1e4d1e', strokeWidth: 1.5, className: 'chart-axis-shine' }} tick={{ fill: '#9ca3af', fontSize: 11, fontWeight: 700 }} />
+                  <YAxis tickLine={false} axisLine={{ stroke: '#1e4d1e', strokeWidth: 1.5, className: 'chart-axis-shine' }} tick={{ fill: '#9ca3af', fontSize: 11, fontWeight: 700 }} />
                   <Tooltip
                     contentStyle={{ background: 'var(--brand-dark)', border: 'none', borderRadius: '12px', color: '#fff', fontSize: '11px' }}
                     itemStyle={{ color: '#fff' }}

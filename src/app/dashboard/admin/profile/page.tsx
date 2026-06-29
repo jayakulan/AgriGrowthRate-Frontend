@@ -1,452 +1,770 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
+import React, { useEffect, useState } from 'react';
 import api from '@/lib/axios';
-import {
-  MapPin,
-  Edit2,
-  Camera,
+import { useAuth } from '@/context/AuthContext';
+import { 
+  Lock, 
+  Shield, 
+  Eye, 
+  EyeOff, 
+  ChevronRight, 
+  ShieldCheck, 
+  Activity, 
+  Download, 
   User as UserIcon,
-  Store,
-  Shield,
-  ChevronRight,
-  X,
-  Loader2
+  CheckCircle2,
+  AlertTriangle,
+  Loader2,
+  X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { AnimatePresence, motion } from 'framer-motion';
+
+interface AdminProfile {
+  _id: string;
+  name: string;
+  email: string;
+  phone: string;
+  avatar: string;
+  role: string;
+  isVerified: boolean;
+  createdAt: string;
+}
 
 export default function AdminProfilePage() {
   const { user, updateUser } = useAuth();
-  const router = useRouter();
-
-  // Profile states
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('Sri Lanka');
-  const [avatar, setAvatar] = useState('https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=256&h=256');
-
-  // Stats states
-  const [farmersCount, setFarmersCount] = useState(0);
-  const [consumersCount, setConsumersCount] = useState(0);
+  const [profile, setProfile] = useState<AdminProfile | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // Modals
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [changingPassword, setChangingPassword] = useState(false);
+  // Form states
+  const [formData, setFormData] = useState({
+    name: user?.name || 'Agri Admin',
+    email: user?.email || 'admin@gmail.com',
+    phone: user?.phone || '94777123458',
+    location: user?.location || 'San Jose, CA',
+    bio: user?.bio || "Managing digital stewardship and infrastructural integrity for AgriGrowthRate's enterprise ecosystem. Focused on sustainable AgTech scalability and secure user governance.",
+  });
 
-  // Sync user info
-  useEffect(() => {
-    if (user) {
-      setName(user.name || '');
-      setEmail(user.email || '');
-      setPhone(user.phone || '');
-      setAddress(user.address || 'Sri Lanka');
-      if (user.avatar) setAvatar(user.avatar);
-    }
-  }, [user]);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [tempFormData, setTempFormData] = useState({
+    name: user?.name || 'Agri Admin',
+    email: user?.email || 'admin@gmail.com',
+    phone: user?.phone || '94777123458',
+    location: user?.location || 'San Jose, CA',
+    bio: user?.bio || "Managing digital stewardship and infrastructural integrity for AgriGrowthRate's enterprise ecosystem. Focused on sustainable AgTech scalability and secure user governance.",
+  });
 
-  // Fetch admin-specific details and stats
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        // Get admin profile details
-        const profRes = await api.get('/admin/profile').catch(() => null);
-        if (profRes && profRes.data && profRes.data.data) {
-          const d = profRes.data.data;
-          setName(d.name || '');
-          setEmail(d.email || '');
-          setPhone(d.phone || '');
-          setAddress(d.address || 'Sri Lanka');
-          if (d.avatar) setAvatar(d.avatar);
-        }
+  const [avatarUrl, setAvatarUrl] = useState(
+    'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=256&h=256'
+  );
+  const avatarInputRef = React.useRef<HTMLInputElement>(null);
 
-        // Get analytics count for Platform Overview
-        const statsRes = await api.get('/admin/analytics').catch(() => null);
-        if (statsRes && statsRes.data && statsRes.data.success) {
-          setFarmersCount(statsRes.data.data.users.farmers || 0);
-          setConsumersCount(statsRes.data.data.users.consumers || 0);
-        }
-      } catch (e) {
-        console.warn('Failed to load admin profile info:', e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newPassword !== confirmPassword) {
-      toast.error('New Password and Confirm Password do not match');
-      return;
-    }
-    setChangingPassword(true);
-    try {
-      const response = await api.put('/auth/update-password', { currentPassword, newPassword }).catch((e) => e.response);
-      if (response && response.data && response.data.success) {
-        toast.success('Password updated successfully!');
-        setIsPasswordModalOpen(false);
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
-      } else {
-        toast.error(response?.data?.message || 'Failed to update password');
-      }
-    } catch (error) {
-      toast.error('An error occurred');
-    } finally {
-      setChangingPassword(false);
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const localUrl = URL.createObjectURL(file);
+      setAvatarUrl(localUrl);
+      toast.success('Avatar preview updated locally! Save changes to finalize. 📸');
     }
   };
 
-  const handleSaveProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Sync user context when user loaded
+  useEffect(() => {
+    if (user) {
+      const updated = {
+        name: user.name || 'Agri Admin',
+        email: user.email || 'admin@gmail.com',
+        phone: user.phone || '94777123458',
+        location: user.location || 'San Jose, CA',
+        bio: user.bio || "Managing digital stewardship and infrastructural integrity for AgriGrowthRate's enterprise ecosystem. Focused on sustainable AgTech scalability and secure user governance.",
+      };
+      setFormData(prev => ({ ...prev, ...updated }));
+      setTempFormData(prev => ({ ...prev, ...updated }));
+      if (user.avatar) {
+        setAvatarUrl(user.avatar);
+      }
+    }
+  }, [user]);
+
+  // Password modal states
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [showPwd, setShowPwd] = useState(false);
+  const [twoFAEnabled, setTwoFAEnabled] = useState(true);
+
+  // Active Sessions state
+  const [sessions, setSessions] = useState([
+    {
+      id: 'sess-1',
+      device: 'MacBook Pro - San Jose, CA',
+      details: 'Current Session • Chrome 118',
+      current: true,
+      time: 'Just now'
+    },
+    {
+      id: 'sess-2',
+      device: 'iPhone 15 Pro - Austin, TX',
+      details: 'Logged in 2h ago • Safari',
+      current: false,
+      time: '2h ago'
+    }
+  ]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/admin/profile').catch(() => null);
+
+      if (response && response.data && response.data.data) {
+        const data = response.data.data;
+        setProfile(data);
+        if (data.avatar) {
+          setAvatarUrl(data.avatar);
+        }
+        const updated = {
+          name: data.name || 'Agri Admin',
+          email: data.email || 'admin@gmail.com',
+          phone: data.phone || '94777123458',
+          location: data.location || data.department || 'San Jose, CA',
+          bio: data.bio || "Managing digital stewardship and infrastructural integrity for AgriGrowthRate's enterprise ecosystem. Focused on sustainable AgTech scalability and secure user governance.",
+        };
+        setFormData(updated);
+        setTempFormData(updated);
+      }
+    } catch (error) {
+      console.warn('Could not reach backend profile API, using state mocks:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirmEdit = async () => {
     setSaving(true);
     try {
-      const response = await api.put('/admin/profile', { name, phone, address, avatar }).catch(() => null);
+      const payload = {
+        ...tempFormData,
+        avatar: avatarUrl
+      };
+      const response = await api.put('/admin/profile', payload).catch(() => null);
+
       if (response && response.data && response.data.success) {
         updateUser(response.data.data);
-        toast.success('Profile updated successfully!');
+        toast.success('Admin changes saved to remote server! 🌳');
       } else {
-        updateUser({ name, phone, address, avatar });
-        toast.success('Profile updated (simulated)!');
+        updateUser({ 
+          name: tempFormData.name, 
+          email: tempFormData.email,
+          phone: tempFormData.phone, 
+          avatar: avatarUrl, 
+          location: tempFormData.location,
+          bio: tempFormData.bio
+        });
+        toast.success('Profile preferences simulated successfully! 🌱');
       }
-      setIsEditModalOpen(false);
+      setFormData(tempFormData);
+      setShowEditModal(false);
     } catch (error) {
-      toast.error('Failed to update profile');
+      console.error(error);
+      toast.error('Failed to update admin profile');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleChangeAvatar = async () => {
-    const newAvatarUrl = prompt('Enter Image URL for profile avatar:', avatar);
-    if (newAvatarUrl) {
-      setAvatar(newAvatarUrl);
-      try {
-        const response = await api.put('/admin/profile', { name, phone, address, avatar: newAvatarUrl }).catch(() => null);
-        if (response && response.data && response.data.success) {
-          updateUser(response.data.data);
-          toast.success('Avatar updated!');
-        } else {
-          updateUser({ name, phone, address, avatar: newAvatarUrl });
-          toast.success('Avatar updated (locally)!');
-        }
-      } catch (error) {
-        console.error(error);
-        toast.success('Avatar updated (locally)!');
-      }
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!passwordData.currentPassword || !passwordData.newPassword) {
+      return toast.error('Please enter passwords');
     }
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      return toast.error('Passwords do not match');
+    }
+    if (passwordData.newPassword.length < 6) {
+      return toast.error('New password must be at least 6 characters long');
+    }
+
+    const loadId = toast.loading('Updating security keys...');
+    try {
+      const response = await api.put('/auth/update-password', {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
+
+      toast.dismiss(loadId);
+      if (response.data && response.data.success) {
+        toast.success('Security keys rotated successfully! 🔑');
+        setShowPasswordModal(false);
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      } else {
+        toast.error('Failed to update password');
+      }
+    } catch (error: any) {
+      toast.dismiss(loadId);
+      console.error(error);
+      const msg = error.response?.data?.message || 'Failed to update password';
+      toast.error(msg);
+    }
+  };
+
+  const handleTerminateSession = (id: string) => {
+    setSessions(sessions.filter(s => s.id !== id));
+    toast.success('Session terminated successfully');
+  };
+
+  const handleDownloadReport = () => {
+    toast.success('Administrative log report compiled & downloaded!');
   };
 
   if (loading) {
     return (
-      <div className="p-12 flex flex-col items-center justify-center h-[calc(100vh-64px)] bg-[#f9f9f6]">
-        <Loader2 className="w-8 h-8 text-[#1e4d1e] animate-spin mb-4" />
-        <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">Loading Admin Profile...</div>
-      </div>
+      <>
+        <div className="p-12 flex flex-col items-center justify-center h-[calc(100vh-64px)] bg-[#f9f9f6]">
+          <Loader2 className="w-8 h-8 text-[#1e4d1e] animate-spin mb-4" />
+          <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">Loading Admin Profile...</div>
+        </div>
+      </>
     );
   }
 
+  // Administrative activity logs exact matching reference design
+  const activityLogs = [
+    {
+      action: 'Updated price index for Wheat Futures',
+      entity: 'Commodity Market',
+      time: 'Oct 24, 2023 • 09:42 AM',
+      status: 'COMPLETED',
+      statusColor: 'bg-[#edf4e2] text-[#1e4d1e] border-[#d2dfc2]'
+    },
+    {
+      action: 'Authorized User #88219 Farmer Access',
+      entity: 'User Accounts',
+      time: 'Oct 23, 2023 • 04:15 PM',
+      status: 'SUCCESS',
+      statusColor: 'bg-[#e3f2fd] text-[#1565c0] border-[#bbdefb]'
+    },
+    {
+      action: 'System-wide Security Audit Triggered',
+      entity: 'Infrastructure',
+      time: 'Oct 22, 2023 • 11:00 PM',
+      status: 'SYSTEM',
+      statusColor: 'bg-[#f5f5f5] text-gray-600 border-gray-200'
+    },
+  ];
+
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-[#f9f9f6] p-8 font-sans">
-      <div className="max-w-4xl mx-auto space-y-6">
-
-        {/* TOP HEADER CARD */}
-        <div className="bg-white rounded-[24px] p-6 shadow-sm flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 relative overflow-hidden">
-          {/* Background subtle gradient matching original mockup */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#f9f9f6] to-transparent opacity-50 rounded-bl-[100px] pointer-events-none" />
-
-          <div className="flex flex-col sm:flex-row items-center sm:items-center gap-6 z-10">
-            {/* Avatar */}
-            <div className="relative">
-              <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-white shadow-sm">
-                <img src={avatar} alt={name} className="w-full h-full object-cover" />
-              </div>
-              <button
-                onClick={handleChangeAvatar}
-                className="absolute -bottom-2 -right-2 w-8 h-8 bg-[#1e4d1e] hover:bg-[#163d16] text-white rounded-lg flex items-center justify-center border-2 border-white transition-colors shadow-sm"
+    <>
+      <div className="p-8 bg-[#f9f9f6] min-h-screen space-y-8 max-w-7xl mx-auto">
+        
+        {/* ── HERO BANNER PANEL (Green curved panel) ── */}
+        <div className="bg-[#245229] rounded-[24px] p-8 text-white relative overflow-hidden shadow-lg flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent pointer-events-none" />
+          
+          <div className="flex flex-col md:flex-row items-center gap-6 relative z-10">
+            {/* Avatar Circle with edit button overlay */}
+            <div className="relative group shrink-0">
+              <img
+                src={avatarUrl}
+                alt={`${formData.name} Profile`}
+                className="w-24 h-24 rounded-[20px] object-cover border-2 border-white/20 shadow-md"
+              />
+              <button 
+                type="button" 
+                onClick={() => avatarInputRef.current?.click()}
+                className="absolute bottom-1 right-1 bg-[#1e4d1e] hover:bg-[#163d16] text-white p-2 rounded-lg transition-all border border-white/30 shadow-sm cursor-pointer"
               >
-                <Camera className="w-4 h-4" />
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
               </button>
+              <input
+                type="file"
+                ref={avatarInputRef}
+                onChange={handleAvatarChange}
+                accept="image/*"
+                style={{ display: 'none' }}
+              />
             </div>
 
-            {/* Info */}
-            <div className="text-center sm:text-left">
-              <h1 className="text-2xl font-bold text-[#1e4d1e]">{name}</h1>
-              <div className="flex items-center justify-center sm:justify-start gap-3 mt-2">
-                <span className="bg-[#1e4d1e] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                  ADMIN
+            {/* Profile Credentials */}
+            <div className="text-center md:text-left space-y-2">
+              <h2 className="text-2xl font-extrabold tracking-tight">AGRI ADMIN</h2>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5">
+                <span className="text-[10px] font-bold bg-white/10 border border-white/15 px-3 py-1 rounded-full uppercase tracking-wider">
+                  SYSTEM ADMINISTRATOR
                 </span>
-                <div className="flex items-center text-gray-500 text-sm font-medium">
-                  <MapPin className="w-4 h-4 mr-1 text-gray-400" />
-                  {address.split(',').pop()?.trim() || 'Sri Lanka'}
-                </div>
+                <span className="text-[10px] font-bold text-[#bcfcbb] flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#bcfcbb]" /> Full Access Level
+                </span>
               </div>
             </div>
           </div>
 
-          <div className="z-10">
+          {/* Quick Actions inside Hero */}
+          <div className="flex items-center gap-3 relative z-10 shrink-0">
             <button
-              onClick={() => setIsEditModalOpen(true)}
-              className="flex items-center gap-2 px-5 py-2 rounded-full border border-[#1e4d1e] text-[#1e4d1e] hover:bg-[#1e4d1e] hover:text-white transition-colors text-sm font-bold"
+              onClick={() => {
+                setTempFormData({ ...formData });
+                setShowEditModal(true);
+              }}
+              className="px-6 py-2.5 text-xs font-bold bg-[#bcfcbb] hover:bg-[#a1eba0] text-[#1e4d1e] rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer select-none"
             >
-              <Edit2 className="w-4 h-4" />
-              Edit Profile
+              <span>Update Profile</span>
             </button>
           </div>
         </div>
 
-        {/* BOTTOM SECTION */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+        {/* ── MAIN CONTENT GRID ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          {/* General Information Card */}
+          <div className="lg:col-span-8 bg-white rounded-[24px] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-6 shiny-card">
+            <div className="flex items-center gap-3 border-b border-[#f4f5f0] pb-4">
+              <div className="p-2 rounded-lg bg-[#edf4e2]">
+                <UserIcon className="w-4.5 h-4.5 text-[#1e4d1e]" />
+              </div>
+              <h3 className="text-sm font-extrabold text-gray-900 uppercase tracking-wider">
+                General Information
+              </h3>
+            </div>
 
-          {/* LEFT COLUMN */}
-          <div className="flex flex-col">
-
-            {/* Personal Information Card */}
-            <div className="bg-white rounded-[24px] p-6 shadow-sm flex-1 flex flex-col">
-              <div className="flex items-center gap-2 mb-6 pb-4 border-b border-[#f4f6ee]">
-                <UserIcon className="w-5 h-5 text-[#4a6d2f]" />
-                <h2 className="text-[20px] font-bold text-[#4a6d2f]">Personal Information</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {/* Full Name */}
+              <div className="space-y-1 text-left">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+                  Full Name
+                </span>
+                <p className="text-xs font-bold text-gray-800 bg-[#f4f5f0]/30 border border-[#e4e6df]/50 rounded-xl py-3 px-4 min-h-[42px] flex items-center">
+                  {formData.name}
+                </p>
               </div>
 
-              <div className="space-y-6 flex-1 text-left">
-                <div>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Full Name</p>
-                  <p className="text-sm text-gray-800 font-bold">{name}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Email Address</p>
-                  <p className="text-sm text-gray-800 font-bold">{email}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Phone</p>
-                  <p className="text-sm text-gray-800 font-bold">{phone || 'Not Provided'}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Address</p>
-                  <p className="text-sm text-gray-800 font-bold leading-relaxed">{address}</p>
-                </div>
+              {/* Email Address */}
+              <div className="space-y-1 text-left">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+                  Email Address
+                </span>
+                <p className="text-xs font-bold text-gray-800 bg-[#f4f5f0]/30 border border-[#e4e6df]/50 rounded-xl py-3 px-4 min-h-[42px] flex items-center">
+                  {formData.email}
+                </p>
+              </div>
+
+              {/* Contact Number */}
+              <div className="space-y-1 text-left">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+                  Contact Number
+                </span>
+                <p className="text-xs font-bold text-gray-800 bg-[#f4f5f0]/30 border border-[#e4e6df]/50 rounded-xl py-3 px-4 min-h-[42px] flex items-center">
+                  {formData.phone || 'Not Provided'}
+                </p>
+              </div>
+
+              {/* Location */}
+              <div className="space-y-1 text-left">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+                  Location
+                </span>
+                <p className="text-xs font-bold text-gray-800 bg-[#f4f5f0]/30 border border-[#e4e6df]/50 rounded-xl py-3 px-4 min-h-[42px] flex items-center">
+                  {formData.location || 'Not Provided'}
+                </p>
               </div>
             </div>
 
+            {/* Professional Bio */}
+            <div className="space-y-1 text-left">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+                Professional Bio
+              </span>
+              <p className="text-xs font-semibold text-gray-700 bg-[#f4f5f0]/30 border border-[#e4e6df]/50 rounded-2xl py-4 px-5 leading-relaxed min-h-[100px]">
+                {formData.bio || 'No biography written yet.'}
+              </p>
+            </div>
           </div>
 
-          {/* RIGHT COLUMN */}
-          <div className="space-y-6">
-
-            {/* Platform Activity Card */}
-            <div className="bg-white rounded-[24px] p-6 shadow-sm">
-              <div className="flex items-center gap-2 mb-6 pb-4 border-b border-[#f4f6ee]">
-                <Store className="w-5 h-5 text-[#4a6d2f]" />
-                <h2 className="text-[20px] font-bold text-[#4a6d2f]">Platform Overview</h2>
+          {/* Right Column Stack */}
+          <div className="lg:col-span-4 space-y-8 w-full">
+            
+            {/* Security Controls */}
+            <div className="bg-white rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-6 shiny-card">
+              <div className="flex items-center gap-3 border-b border-[#f4f5f0] pb-4">
+                <div className="p-2 rounded-lg bg-[#edf4e2]">
+                  <Shield className="w-4.5 h-4.5 text-[#1e4d1e]" />
+                </div>
+                <h3 className="text-sm font-extrabold text-gray-900 uppercase tracking-wider">
+                  Security
+                </h3>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-6">
-
-                {/* Registered Farmers */}
-                <div className="bg-[#f8fae5] border border-[#eff1da] rounded-2xl p-5 text-left">
-                  <p className="text-[10px] font-bold text-gray-500 mb-4 uppercase tracking-wider">Farmers</p>
-                  <p className="text-2xl font-bold text-[#1e4d1e]">{farmersCount}</p>
-                  <div className="w-full h-1 bg-gray-200 rounded-full mt-4 overflow-hidden">
-                    <div className="h-full bg-[#1e4d1e] w-1/2 rounded-full" />
-                  </div>
+              {/* Password Action Link */}
+              <button
+                type="button"
+                onClick={() => setShowPasswordModal(true)}
+                className="w-full flex items-center justify-between p-4 bg-[#f4f5f0]/40 border border-[#e4e6df] rounded-xl hover:bg-[#edf4e2]/60 hover:border-[#1e4d1e]/30 transition-all text-left cursor-pointer group"
+              >
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-gray-800 group-hover:text-[#1e4d1e] transition-colors">
+                    Change Password
+                  </p>
+                  <p className="text-[10px] text-gray-400 font-semibold">
+                    Last updated: 14 days ago
+                  </p>
                 </div>
-
-                {/* Registered Consumers */}
-                <div className="bg-[#f8fae5] border border-[#eff1da] rounded-2xl p-5 text-left">
-                  <p className="text-[10px] font-bold text-gray-500 mb-4 uppercase tracking-wider">Consumers</p>
-                  <p className="text-2xl font-bold text-[#1e4d1e]">{consumersCount}</p>
-                  <div className="w-full h-1 bg-gray-200 rounded-full mt-4 overflow-hidden">
-                    <div className="h-full bg-[#1e4d1e] w-1/3 rounded-full" />
-                  </div>
-                </div>
-
-              </div>
-
-              <button onClick={() => router.push('/dashboard/admin/farmers')} className="w-full py-3.5 rounded-xl border border-[#e4e6df] text-[#4a6d2f] text-sm font-bold hover:bg-[#f4f6ee] transition-colors cursor-pointer">
-                Manage Farmers
+                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#1e4d1e] transition-all" />
               </button>
-            </div>
 
-            {/* Security & Access Card */}
-            <div className="bg-white rounded-[24px] p-6 shadow-sm">
-              <div className="flex items-center gap-2 mb-4 pb-4 border-b border-[#f4f6ee]">
-                <Shield className="w-5 h-5 text-[#4a6d2f]" />
-                <h2 className="text-[20px] font-bold text-[#4a6d2f]">Security & Access</h2>
-              </div>
-
-              <div className="space-y-3">
-                <button
-                  onClick={() => setIsPasswordModalOpen(true)}
-                  className="w-full flex items-center justify-between p-4 border border-[#e4e6df] rounded-2xl hover:bg-gray-50 transition-colors cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                      <Edit2 className="w-4 h-4 text-gray-600" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm font-bold text-gray-900">Password Change</p>
-                      <p className="text-[11px] text-gray-500 mt-0.5">Update your account password</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
-                </button>
+              {/* Two-Factor Auth Toggle row */}
+              <div className="flex items-center justify-between p-4 bg-[#f4f5f0]/40 border border-[#e4e6df] rounded-xl text-left">
+                <div className="space-y-0.5 max-w-[70%]">
+                  <p className="text-xs font-bold text-gray-800">
+                    Two-Factor Auth
+                  </p>
+                  <p className="text-[9px] text-gray-400 font-bold leading-normal">
+                    Enhanced account protection
+                  </p>
+                </div>
+                
+                {/* Clean Toggle Switch */}
+                <label className="relative inline-flex items-center cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={twoFAEnabled}
+                    onChange={(e) => {
+                      setTwoFAEnabled(e.target.checked);
+                      toast.success(e.target.checked ? '2FA Protection enabled' : '2FA Protection disabled');
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#1e4d1e]" />
+                </label>
               </div>
             </div>
 
           </div>
 
         </div>
+
+        {/* ── RECENT ACTIVITY LIST ── */}
+        <div className="bg-white rounded-[24px] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-6 shiny-card">
+          <div className="flex items-center justify-between border-b border-[#f4f5f0] pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-[#edf4e2]">
+                <Activity className="w-4.5 h-4.5 text-[#1e4d1e]" />
+              </div>
+              <h3 className="text-sm font-extrabold text-gray-900 uppercase tracking-wider">
+                Recent Administrative Activity
+              </h3>
+            </div>
+          </div>
+
+          {/* Activity Table */}
+          <div className="overflow-x-auto select-none">
+            <table className="w-full text-left border-collapse min-w-[600px]">
+              <thead>
+                <tr className="border-b border-[#f4f5f0]">
+                  <th className="py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Action Taken</th>
+                  <th className="py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Entity Type</th>
+                  <th className="py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Timestamp</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#f4f5f0]/80">
+                {activityLogs.map((log, index) => (
+                  <tr key={index} className="hover:bg-[#f4f5f0]/20 transition-colors">
+                    {/* Action Taken */}
+                    <td className="py-4 pr-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-7 h-7 rounded-full bg-[#f4f5f0] flex items-center justify-center shrink-0">
+                          <Activity className="w-3.5 h-3.5 text-gray-500" />
+                        </div>
+                        <span className="text-xs font-bold text-gray-800">{log.action}</span>
+                      </div>
+                    </td>
+
+                    {/* Entity Type */}
+                    <td className="py-4 text-xs font-semibold text-gray-500">
+                      {log.entity}
+                    </td>
+
+                    {/* Timestamp */}
+                    <td className="py-4 text-xs font-semibold text-gray-400">
+                      {log.time}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
-      {/* EDIT PROFILE MODAL */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-[24px] w-full max-w-md shadow-xl overflow-hidden relative">
-            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <h3 className="text-lg font-bold text-gray-900">Edit Profile</h3>
-              </div>
-              <button onClick={() => setIsEditModalOpen(false)} className="text-gray-400 hover:text-gray-700 cursor-pointer">
+      {/* ── CHANGE PASSWORD OVERLAY MODAL ── */}
+      <AnimatePresence>
+        {showPasswordModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowPasswordModal(false)}
+              className="absolute inset-0 bg-[#1e4d1e]/20 backdrop-blur-md cursor-pointer"
+            />
+
+            {/* Modal Card */}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: 'spring', duration: 0.4 }}
+              className="relative z-10 w-full max-w-md bg-white border border-[#e4e6df] rounded-[24px] p-8 shadow-2xl"
+            >
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+              >
                 <X className="w-5 h-5" />
               </button>
-            </div>
 
-            <form onSubmit={handleSaveProfile} className="p-6 space-y-4 text-left">
-              <div>
-                <label className="text-xs font-bold text-gray-500 block mb-1">Full Name</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  className="w-full bg-[#f4f6ee] border border-[#e4e6df] rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#1e4d1e]"
-                  required
-                />
+              <div className="text-center space-y-4 mb-6">
+                <div className="w-12 h-12 rounded-full bg-[#edf4e2] flex items-center justify-center mx-auto border border-[#d2dfc2]">
+                  <Lock className="w-6 h-6 text-[#1e4d1e]" />
+                </div>
+                <h4 className="text-lg font-extrabold text-gray-900">Change Password</h4>
+                <p className="text-gray-500 text-[11px] leading-relaxed">
+                  Enter your current keys to verify administrative authorization status.
+                </p>
               </div>
 
-              <div>
-                <label className="text-xs font-bold text-gray-500 block mb-1">Phone Number</label>
-                <input
-                  type="text"
-                  value={phone}
-                  onChange={e => setPhone(e.target.value)}
-                  className="w-full bg-[#f4f6ee] border border-[#e4e6df] rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#1e4d1e]"
-                />
+              <form onSubmit={handleChangePassword} className="space-y-4 text-left">
+                {/* Current Password */}
+                <div className="space-y-1.5 relative">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+                    Current Password
+                  </label>
+                  <input
+                    type={showPwd ? 'text' : 'password'}
+                    value={passwordData.currentPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                    className="w-full bg-[#f4f5f0]/50 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-xl py-3 px-4 text-xs font-bold text-gray-800 outline-none pr-10"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPwd(!showPwd)}
+                    className="absolute right-3.5 top-8 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+
+                {/* New Password */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                    className="w-full bg-[#f4f5f0]/50 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-xl py-3 px-4 text-xs font-bold text-gray-800 outline-none"
+                    required
+                  />
+                </div>
+
+                {/* Confirm Password */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+                    Confirm Password
+                  </label>
+                  <input
+                    type="password"
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                    className="w-full bg-[#f4f5f0]/50 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-xl py-3 px-4 text-xs font-bold text-gray-800 outline-none"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordModal(false)}
+                    className="py-3 bg-gray-50 hover:bg-gray-100 border border-[#e4e6df] text-gray-600 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl text-xs transition-colors cursor-pointer text-center"
+                  >
+                    Confirm Password
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── EDIT PROFILE OVERLAY MODAL ── */}
+      <AnimatePresence>
+        {showEditModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowEditModal(false)}
+              className="absolute inset-0 bg-[#1e4d1e]/20 backdrop-blur-md cursor-pointer"
+            />
+
+            {/* Modal Card */}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: 'spring', duration: 0.4 }}
+              className="relative z-10 w-full max-w-lg bg-white border border-[#e4e6df] rounded-[24px] p-8 shadow-2xl flex flex-col max-h-[90vh] text-left overflow-y-auto"
+            >
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="text-center mb-6">
+                {/* Big profile pic with pen icon click to upload */}
+                <div className="relative w-28 h-28 mx-auto mb-3 group">
+                  <img
+                    src={avatarUrl}
+                    alt="Big Profile Preview"
+                    className="w-full h-full rounded-[24px] object-cover border-4 border-[#edf4e2] shadow-md"
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="absolute bottom-1 right-1 bg-[#1e4d1e] hover:bg-[#163d16] text-white p-2 rounded-lg transition-all border-2 border-white shadow-sm cursor-pointer"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
+                </div>
+                <h4 className="text-lg font-extrabold text-gray-900">Update Profile Details</h4>
+                <p className="text-gray-500 text-[11px] leading-relaxed">
+                  Modify your administrative details and save preferences.
+                </p>
               </div>
 
-              <div>
-                <label className="text-xs font-bold text-gray-500 block mb-1">Mailing Address</label>
-                <textarea
-                  value={address}
-                  onChange={e => setAddress(e.target.value)}
-                  className="w-full bg-[#f4f6ee] border border-[#e4e6df] rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#1e4d1e] resize-none h-24"
-                  required
-                />
+              <div className="space-y-4 flex-1">
+                {/* Full Name */}
+                <div className="space-y-1.5 text-left">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    value={tempFormData.name}
+                    onChange={(e) => setTempFormData({ ...tempFormData, name: e.target.value })}
+                    placeholder="Enter full name"
+                    className="w-full bg-[#f4f5f0]/50 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-xl py-3 px-4 text-xs font-bold text-gray-800 outline-none transition-all placeholder:text-gray-400 placeholder:font-semibold"
+                  />
+                </div>
+
+                {/* Email Address */}
+                <div className="space-y-1.5 text-left">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={tempFormData.email}
+                    onChange={(e) => setTempFormData({ ...tempFormData, email: e.target.value })}
+                    placeholder="Enter email address"
+                    className="w-full bg-[#f4f5f0]/50 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-xl py-3 px-4 text-xs font-bold text-gray-800 outline-none transition-all placeholder:text-gray-400 placeholder:font-semibold"
+                  />
+                </div>
+
+                {/* Contact Number & Location */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5 text-left">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+                      Contact Number
+                    </label>
+                    <input
+                      type="text"
+                      value={tempFormData.phone}
+                      onChange={(e) => setTempFormData({ ...tempFormData, phone: e.target.value })}
+                      placeholder="Contact number"
+                      className="w-full bg-[#f4f5f0]/50 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-xl py-3 px-4 text-xs font-bold text-gray-800 outline-none transition-all placeholder:text-gray-400 placeholder:font-semibold"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5 text-left">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+                      Location
+                    </label>
+                    <input
+                      type="text"
+                      value={tempFormData.location}
+                      onChange={(e) => setTempFormData({ ...tempFormData, location: e.target.value })}
+                      placeholder="Location"
+                      className="w-full bg-[#f4f5f0]/50 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-xl py-3 px-4 text-xs font-bold text-gray-800 outline-none transition-all placeholder:text-gray-400 placeholder:font-semibold"
+                    />
+                  </div>
+                </div>
+
+                {/* Bio */}
+                <div className="space-y-1.5 text-left">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+                    Professional Bio
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={tempFormData.bio}
+                    onChange={(e) => setTempFormData({ ...tempFormData, bio: e.target.value })}
+                    placeholder="Describe your role and focus"
+                    className="w-full bg-[#f4f5f0]/50 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-2xl py-3 px-4 text-xs font-semibold text-gray-800 outline-none transition-all placeholder:text-gray-400 placeholder:font-semibold resize-none"
+                  />
+                </div>
               </div>
 
-              <div className="pt-4 flex gap-3">
+              <div className="grid grid-cols-2 gap-3 pt-6 shrink-0">
                 <button
                   type="button"
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-sm transition-colors cursor-pointer"
+                  onClick={() => setShowEditModal(false)}
+                  className="py-3 bg-gray-50 hover:bg-gray-100 border border-[#e4e6df] text-gray-600 font-bold rounded-xl text-xs transition-colors cursor-pointer text-center"
                 >
                   Cancel
                 </button>
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handleConfirmEdit}
                   disabled={saving}
-                  className="flex-1 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-70 cursor-pointer"
+                  className="py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl text-xs transition-colors cursor-pointer text-center flex items-center justify-center gap-1.5 disabled:opacity-60"
                 >
-                  {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Save Changes
+                  {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Save Changes'}
                 </button>
               </div>
-            </form>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
-      {/* CHANGE PASSWORD MODAL */}
-      {isPasswordModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-[24px] w-full max-w-md shadow-xl overflow-hidden relative">
-            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <h3 className="text-lg font-bold text-gray-900">Change Password</h3>
-              </div>
-              <button onClick={() => setIsPasswordModalOpen(false)} className="text-gray-400 hover:text-gray-700 cursor-pointer">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleChangePassword} className="p-6 space-y-4 text-left">
-              <div>
-                <label className="text-xs font-bold text-gray-500 block mb-1">Current Password</label>
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={e => setCurrentPassword(e.target.value)}
-                  className="w-full bg-[#f4f6ee] border border-[#e4e6df] rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#1e4d1e]"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-gray-500 block mb-1">New Password</label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={e => setNewPassword(e.target.value)}
-                  className="w-full bg-[#f4f6ee] border border-[#e4e6df] rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#1e4d1e]"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-gray-500 block mb-1">Confirm Password</label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
-                  className="w-full bg-[#f4f6ee] border border-[#e4e6df] rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#1e4d1e]"
-                  required
-                />
-              </div>
-
-              <div className="pt-4 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsPasswordModalOpen(false)}
-                  className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-sm transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={changingPassword}
-                  className="flex-1 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-70 cursor-pointer"
-                >
-                  {changingPassword && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Update Password
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-    </div>
+    </>
   );
 }
