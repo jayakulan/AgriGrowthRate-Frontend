@@ -124,8 +124,35 @@ export default function DashboardHeader() {
 
   // Helper to get title and description from pathname
   const getPageInfo = () => {
-
     const t = langCtx ? langCtx.t : (k: string) => k;
+
+    // ── Admin-specific routes (must come before generic checks) ──
+    if (pathname.includes('/dashboard/admin/farmers')) {
+      return { title: 'Manage Farmers', description: 'View and manage registered farmers on the platform.' };
+    }
+    if (pathname.includes('/dashboard/admin/retailers')) {
+      return { title: 'Manage Retailers', description: 'View and manage registered retailers and consumers.' };
+    }
+    if (pathname.includes('/dashboard/admin/products')) {
+      return { title: 'Manage Products', description: 'Review, approve or reject products listed by farmers on the marketplace.' };
+    }
+    if (pathname.includes('/dashboard/admin/orders')) {
+      return { title: 'Orders Monitoring', description: 'Monitor and manage all orders placed across the platform.' };
+    }
+    if (pathname.includes('/dashboard/admin/reports')) {
+      return { title: 'Reports & Analytics', description: 'Monitor and review platform performance, transactions, and user activities.' };
+    }
+    if (pathname.includes('/dashboard/admin/ai')) {
+      return { title: 'AI Management', description: 'Manage AI knowledge base, model settings, and monitor platform intelligence.' };
+    }
+    if (pathname.includes('/dashboard/admin/profile')) {
+      return { title: 'Profile', description: 'Manage your personal information and account settings.' };
+    }
+    if (pathname.includes('/dashboard/admin')) {
+      return { title: 'Dashboard', description: 'Welcome back! Here\'s an overview of the AgriGrowthRate platform.' };
+    }
+
+    // ── Generic routes ──
     if (pathname.includes('/add-product')) {
       return { title: t('menu.addProduct'), description: 'List a new agricultural product or equipment to the marketplace.' };
     }
@@ -138,9 +165,6 @@ export default function DashboardHeader() {
     if (pathname.includes('/chat')) {
       return { title: t('menu.chat'), description: 'Connect and communicate with your community and customers.' };
     }
-    if (pathname.includes('/admin/ai')) {
-      return { title: 'AI Management', description: 'Manage AI knowledge base, model settings, and monitor platform intelligence.' };
-    }
     if (pathname.includes('/ai') || pathname.includes('/recommendations')) {
       return { title: t('menu.aiAssistant'), description: 'Powered by Retrieval-Augmented Generation (RAG). Get smart recommendations and advice.' };
     }
@@ -148,22 +172,15 @@ export default function DashboardHeader() {
       return { title: t('menu.diseaseDetect'), description: 'Upload crop images to identify diseases and receive treatment suggestions.' };
     }
     if (pathname.includes('/reports')) {
-      return { title: 'Report and Analytics', description: 'Monitor and review platform performance, transactions, and user activities.' };
-    }
-    if (pathname.includes('/profile')) {
-      return { title: t('menu.profile'), description: 'Manage your personal information and account settings.' };
-    }
-    if (pathname.includes('/farmers')) {
-      return { title: 'Manage Farmers', description: 'View and manage registered farmers on the platform.' };
-    }
-    if (pathname.includes('/retailers')) {
-      return { title: 'Manage Retailers', description: 'View and manage registered retailers and consumers.' };
-    }
-    if (pathname.includes('/reports')) {
       return { title: 'Reports & Analytics', description: 'In-depth analysis of platform performance, user metrics, and agricultural marketplace yield.' };
     }
-    return { title: t('dashboard.title'), description: t('dashboard.desc') };
+    if (pathname.includes('/profile')) {
+      return { title: 'Profile', description: 'Manage your personal information and account settings.' };
+    }
+
+    return { title: 'Dashboard', description: 'Welcome back! Here\'s an overview of your AgriGrowthRate activity.' };
   };
+
 
   const { title, description } = getPageInfo();
   const userName = user?.name || 'Guest User';
