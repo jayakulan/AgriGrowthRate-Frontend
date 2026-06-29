@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 import { 
   Lock, 
   Shield, 
@@ -16,7 +17,11 @@ import {
   CheckCircle2,
   AlertTriangle,
   Loader2,
-  X
+  X,
+  Pencil,
+  MapPin,
+  Store,
+  Camera
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -34,26 +39,27 @@ interface AdminProfile {
 
 export default function AdminProfilePage() {
   const { user, updateUser } = useAuth();
+  const router = useRouter();
   const [profile, setProfile] = useState<AdminProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [farmerCount, setFarmerCount] = useState(3);
+  const [consumerCount, setConsumerCount] = useState(5);
 
   // Form states
   const [formData, setFormData] = useState({
-    name: user?.name || 'Agri Admin',
-    email: user?.email || 'admin@gmail.com',
-    phone: user?.phone || '94777123458',
-    location: user?.location || 'San Jose, CA',
-    bio: user?.bio || "Managing digital stewardship and infrastructural integrity for AgriGrowthRate's enterprise ecosystem. Focused on sustainable AgTech scalability and secure user governance.",
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    location: user?.location || '',
   });
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [tempFormData, setTempFormData] = useState({
-    name: user?.name || 'Agri Admin',
-    email: user?.email || 'admin@gmail.com',
-    phone: user?.phone || '94777123458',
-    location: user?.location || 'San Jose, CA',
-    bio: user?.bio || "Managing digital stewardship and infrastructural integrity for AgriGrowthRate's enterprise ecosystem. Focused on sustainable AgTech scalability and secure user governance.",
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    location: user?.location || '',
   });
 
   const [avatarUrl, setAvatarUrl] = useState(
@@ -74,11 +80,10 @@ export default function AdminProfilePage() {
   useEffect(() => {
     if (user) {
       const updated = {
-        name: user.name || 'Agri Admin',
-        email: user.email || 'admin@gmail.com',
-        phone: user.phone || '94777123458',
-        location: user.location || 'San Jose, CA',
-        bio: user.bio || "Managing digital stewardship and infrastructural integrity for AgriGrowthRate's enterprise ecosystem. Focused on sustainable AgTech scalability and secure user governance.",
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        location: user.location || '',
       };
       setFormData(prev => ({ ...prev, ...updated }));
       setTempFormData(prev => ({ ...prev, ...updated }));
@@ -87,6 +92,32 @@ export default function AdminProfilePage() {
       }
     }
   }, [user]);
+
+  // Fetch real counts if available, otherwise fallback to mock values
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const [farmersRes, consumersRes] = await Promise.all([
+          api.get('/admin/users', { params: { role: 'farmer', limit: 1 } }),
+          api.get('/admin/users', { params: { role: 'consumer', limit: 1 } })
+        ]);
+        if (farmersRes.data?.success && typeof farmersRes.data?.total === 'number') {
+          setFarmerCount(farmersRes.data.total);
+        } else if (farmersRes.data?.data && Array.isArray(farmersRes.data.data)) {
+          setFarmerCount(farmersRes.data.data.length);
+        }
+        if (consumersRes.data?.success && typeof consumersRes.data?.total === 'number') {
+          setConsumerCount(consumersRes.data.total);
+        } else if (consumersRes.data?.data && Array.isArray(consumersRes.data.data)) {
+          setConsumerCount(consumersRes.data.data.length);
+        }
+      } catch (err) {
+        console.warn('Failed to fetch live dashboard counts, using defaults:', err);
+      }
+    };
+    fetchCounts();
+  }, []);
 
   // Password modal states
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -132,11 +163,10 @@ export default function AdminProfilePage() {
           setAvatarUrl(data.avatar);
         }
         const updated = {
-          name: data.name || 'Agri Admin',
-          email: data.email || 'admin@gmail.com',
-          phone: data.phone || '94777123458',
-          location: data.location || data.department || 'San Jose, CA',
-          bio: data.bio || "Managing digital stewardship and infrastructural integrity for AgriGrowthRate's enterprise ecosystem. Focused on sustainable AgTech scalability and secure user governance.",
+          name: data.name || '',
+          email: data.email || '',
+          phone: data.phone || '',
+          location: data.location || data.department || '',
         };
         setFormData(updated);
         setTempFormData(updated);
@@ -167,7 +197,6 @@ export default function AdminProfilePage() {
           phone: tempFormData.phone, 
           avatar: avatarUrl, 
           location: tempFormData.location,
-          bio: tempFormData.bio
         });
         toast.success('Profile preferences simulated successfully! 🌱');
       }
@@ -263,28 +292,24 @@ export default function AdminProfilePage() {
 
   return (
     <>
-      <div className="p-8 bg-[#f9f9f6] min-h-screen space-y-8 max-w-7xl mx-auto">
+      <div className="p-8 bg-[#f9f9f6] min-h-screen space-y-6 max-w-7xl mx-auto relative select-none">
         
-        {/* ── HERO BANNER PANEL (Green curved panel) ── */}
-        <div className="bg-[#245229] rounded-[24px] p-8 text-white relative overflow-hidden shadow-lg flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent pointer-events-none" />
-          
-          <div className="flex flex-col md:flex-row items-center gap-6 relative z-10">
+        {/* ── TOP PROFILE PANEL (White border card matching screenshot) ── */}
+        <div className="bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col md:flex-row items-center gap-6 text-left w-full">
             {/* Avatar Circle with edit button overlay */}
-            <div className="relative group shrink-0">
+            <div className="relative group shrink-0 w-20 h-20">
               <img
                 src={avatarUrl}
                 alt={`${formData.name} Profile`}
-                className="w-24 h-24 rounded-[20px] object-cover border-2 border-white/20 shadow-md"
+                className="w-20 h-20 rounded-[20px] object-cover border border-[#e4e6df]"
               />
               <button 
                 type="button" 
                 onClick={() => avatarInputRef.current?.click()}
-                className="absolute bottom-1 right-1 bg-[#1e4d1e] hover:bg-[#163d16] text-white p-2 rounded-lg transition-all border border-white/30 shadow-sm cursor-pointer"
+                className="absolute -bottom-1 -right-1 bg-[#1e4d1e] hover:bg-[#163d16] text-white p-1.5 rounded-[6px] transition-all border-2 border-white shadow-sm cursor-pointer"
               >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
+                <Camera className="w-3.5 h-3.5" />
               </button>
               <input
                 type="file"
@@ -296,54 +321,53 @@ export default function AdminProfilePage() {
             </div>
 
             {/* Profile Credentials */}
-            <div className="text-center md:text-left space-y-2">
-              <h2 className="text-2xl font-extrabold tracking-tight">AGRI ADMIN</h2>
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5">
-                <span className="text-[10px] font-bold bg-white/10 border border-white/15 px-3 py-1 rounded-full uppercase tracking-wider">
-                  SYSTEM ADMINISTRATOR
+            <div className="space-y-1.5 flex-1 text-center md:text-left">
+              <h2 className="text-xl font-extrabold text-[#1e4d1e] tracking-tight">{formData.name}</h2>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                <span className="text-[10px] font-bold bg-[#1e4d1e] text-white px-2.5 py-0.5 rounded-[4px] uppercase tracking-wider">
+                  ADMIN
                 </span>
-                <span className="text-[10px] font-bold text-[#bcfcbb] flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#bcfcbb]" /> Full Access Level
+                <span className="text-xs font-semibold text-gray-500 flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-gray-400" /> {formData.location}
                 </span>
               </div>
             </div>
-          </div>
 
-          {/* Quick Actions inside Hero */}
-          <div className="flex items-center gap-3 relative z-10 shrink-0">
-            <button
-              onClick={() => {
-                setTempFormData({ ...formData });
-                setShowEditModal(true);
-              }}
-              className="px-6 py-2.5 text-xs font-bold bg-[#bcfcbb] hover:bg-[#a1eba0] text-[#1e4d1e] rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer select-none"
-            >
-              <span>Update Profile</span>
-            </button>
+            {/* Edit Profile Action Button */}
+            <div className="shrink-0">
+              <button
+                onClick={() => {
+                  setTempFormData({ ...formData });
+                  setShowEditModal(true);
+                }}
+                className="px-5 py-2 border border-[#e4e6df] hover:border-[#1e4d1e] rounded-full text-xs font-bold text-gray-700 hover:text-[#1e4d1e] hover:bg-[#edf4e2]/10 transition-all flex items-center gap-2 cursor-pointer bg-white shadow-xs"
+              >
+                <Pencil className="w-3.5 h-3.5 text-gray-400" />
+                <span>Edit Profile</span>
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* ── MAIN CONTENT GRID ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* ── MAIN CONTENT GRID (Two Columns) ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
-          {/* General Information Card */}
-          <div className="lg:col-span-8 bg-white rounded-[24px] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-6 shiny-card">
+          {/* Left Column: Personal Information Card */}
+          <div className="lg:col-span-7 bg-white border border-[#e4e6df] rounded-[24px] p-8 shadow-sm space-y-6">
             <div className="flex items-center gap-3 border-b border-[#f4f5f0] pb-4">
-              <div className="p-2 rounded-lg bg-[#edf4e2]">
-                <UserIcon className="w-4.5 h-4.5 text-[#1e4d1e]" />
-              </div>
-              <h3 className="text-sm font-extrabold text-gray-900 uppercase tracking-wider">
-                General Information
+              <UserIcon className="w-5 h-5 text-[#1e4d1e]" />
+              <h3 className="text-sm font-extrabold text-[#1e4d1e] uppercase tracking-wider">
+                Personal Information
               </h3>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="space-y-6">
               {/* Full Name */}
               <div className="space-y-1 text-left">
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
-                  Full Name
+                  FULL NAME
                 </span>
-                <p className="text-xs font-bold text-gray-800 bg-[#f4f5f0]/30 border border-[#e4e6df]/50 rounded-xl py-3 px-4 min-h-[42px] flex items-center">
+                <p className="text-xs font-extrabold text-gray-800">
                   {formData.name}
                 </p>
               </div>
@@ -351,157 +375,116 @@ export default function AdminProfilePage() {
               {/* Email Address */}
               <div className="space-y-1 text-left">
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
-                  Email Address
+                  EMAIL ADDRESS
                 </span>
-                <p className="text-xs font-bold text-gray-800 bg-[#f4f5f0]/30 border border-[#e4e6df]/50 rounded-xl py-3 px-4 min-h-[42px] flex items-center">
+                <p className="text-xs font-extrabold text-gray-800">
                   {formData.email}
                 </p>
               </div>
 
-              {/* Contact Number */}
+              {/* Phone */}
               <div className="space-y-1 text-left">
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
-                  Contact Number
+                  PHONE
                 </span>
-                <p className="text-xs font-bold text-gray-800 bg-[#f4f5f0]/30 border border-[#e4e6df]/50 rounded-xl py-3 px-4 min-h-[42px] flex items-center">
-                  {formData.phone || 'Not Provided'}
+                <p className="text-xs font-extrabold text-gray-800">
+                  {formData.phone || '94777123488'}
                 </p>
               </div>
 
-              {/* Location */}
+              {/* Address */}
               <div className="space-y-1 text-left">
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
-                  Location
+                  ADDRESS
                 </span>
-                <p className="text-xs font-bold text-gray-800 bg-[#f4f5f0]/30 border border-[#e4e6df]/50 rounded-xl py-3 px-4 min-h-[42px] flex items-center">
-                  {formData.location || 'Not Provided'}
+                <p className="text-xs font-extrabold text-gray-800">
+                  {formData.location || 'Sri Lanka'}
                 </p>
               </div>
-            </div>
-
-            {/* Professional Bio */}
-            <div className="space-y-1 text-left">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
-                Professional Bio
-              </span>
-              <p className="text-xs font-semibold text-gray-700 bg-[#f4f5f0]/30 border border-[#e4e6df]/50 rounded-2xl py-4 px-5 leading-relaxed min-h-[100px]">
-                {formData.bio || 'No biography written yet.'}
-              </p>
             </div>
           </div>
 
-          {/* Right Column Stack */}
-          <div className="lg:col-span-4 space-y-8 w-full">
+          {/* Right Column: Platform Overview & Security Stack */}
+          <div className="lg:col-span-5 space-y-6 w-full">
             
-            {/* Security Controls */}
-            <div className="bg-white rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-6 shiny-card">
-              <div className="flex items-center gap-3 border-b border-[#f4f5f0] pb-4">
-                <div className="p-2 rounded-lg bg-[#edf4e2]">
-                  <Shield className="w-4.5 h-4.5 text-[#1e4d1e]" />
-                </div>
-                <h3 className="text-sm font-extrabold text-gray-900 uppercase tracking-wider">
-                  Security
+            {/* Platform Overview */}
+            <div className="bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-sm">
+              <div className="flex items-center gap-3 border-b border-[#f4f5f0] pb-4 mb-4">
+                <Store className="w-5 h-5 text-[#1e4d1e]" />
+                <h3 className="text-sm font-extrabold text-[#1e4d1e] uppercase tracking-wider">
+                  Platform Overview
                 </h3>
               </div>
 
-              {/* Password Action Link */}
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                {/* Farmers Mini-Card */}
+                <div className="bg-[#edf4e2]/20 border border-[#e4e6df]/40 rounded-[16px] p-4 text-left">
+                  <span className="text-[9px] font-bold text-gray-400 tracking-wider uppercase block mb-1">
+                    Farmers
+                  </span>
+                  <h4 className="text-2xl font-black text-[#1e4d1e]">
+                    {farmerCount}
+                  </h4>
+                  <div className="w-full bg-gray-200/60 rounded-full h-1 mt-3 overflow-hidden">
+                    <div className="bg-[#1e4d1e] h-full rounded-full" style={{ width: '40%' }}></div>
+                  </div>
+                </div>
+
+                {/* Consumers Mini-Card */}
+                <div className="bg-[#edf4e2]/20 border border-[#e4e6df]/40 rounded-[16px] p-4 text-left">
+                  <span className="text-[9px] font-bold text-gray-400 tracking-wider uppercase block mb-1">
+                    Consumers
+                  </span>
+                  <h4 className="text-2xl font-black text-[#1e4d1e]">
+                    {consumerCount}
+                  </h4>
+                  <div className="w-full bg-gray-200/60 rounded-full h-1 mt-3 overflow-hidden">
+                    <div className="bg-[#1e4d1e] h-full rounded-full" style={{ width: '60%' }}></div>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => router.push('/dashboard/admin/farmers')}
+                className="w-full border border-[#e4e6df] hover:border-[#1e4d1e] rounded-xl py-3 text-xs font-bold text-[#1e4d1e] hover:bg-[#edf4e2]/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer bg-white"
+              >
+                Manage Farmers
+              </button>
+            </div>
+
+            {/* Security & Access */}
+            <div className="bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-sm">
+              <div className="flex items-center gap-3 border-b border-[#f4f5f0] pb-4 mb-4">
+                <Shield className="w-5 h-5 text-[#1e4d1e]" />
+                <h3 className="text-sm font-extrabold text-[#1e4d1e] uppercase tracking-wider">
+                  Security & Access
+                </h3>
+              </div>
+
               <button
                 type="button"
                 onClick={() => setShowPasswordModal(true)}
-                className="w-full flex items-center justify-between p-4 bg-[#f4f5f0]/40 border border-[#e4e6df] rounded-xl hover:bg-[#edf4e2]/60 hover:border-[#1e4d1e]/30 transition-all text-left cursor-pointer group"
+                className="w-full flex items-center justify-between p-4 bg-white border border-[#e4e6df] rounded-2xl hover:bg-gray-50/50 hover:border-[#1e4d1e]/30 transition-all text-left group cursor-pointer"
               >
-                <div className="space-y-1">
-                  <p className="text-xs font-bold text-gray-800 group-hover:text-[#1e4d1e] transition-colors">
-                    Change Password
-                  </p>
-                  <p className="text-[10px] text-gray-400 font-semibold">
-                    Last updated: 14 days ago
-                  </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-[#f4f5f0] group-hover:bg-[#edf4e2] transition-colors flex items-center justify-center text-gray-500 group-hover:text-[#1e4d1e] shrink-0">
+                    <Pencil className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-gray-800 group-hover:text-[#1e4d1e] transition-colors">
+                      Password Change
+                    </p>
+                    <p className="text-[10px] text-gray-400 font-semibold mt-0.5">
+                      Update your account password
+                    </p>
+                  </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#1e4d1e] transition-all" />
+                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#1e4d1e] group-hover:translate-x-0.5 transition-all" />
               </button>
-
-              {/* Two-Factor Auth Toggle row */}
-              <div className="flex items-center justify-between p-4 bg-[#f4f5f0]/40 border border-[#e4e6df] rounded-xl text-left">
-                <div className="space-y-0.5 max-w-[70%]">
-                  <p className="text-xs font-bold text-gray-800">
-                    Two-Factor Auth
-                  </p>
-                  <p className="text-[9px] text-gray-400 font-bold leading-normal">
-                    Enhanced account protection
-                  </p>
-                </div>
-                
-                {/* Clean Toggle Switch */}
-                <label className="relative inline-flex items-center cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={twoFAEnabled}
-                    onChange={(e) => {
-                      setTwoFAEnabled(e.target.checked);
-                      toast.success(e.target.checked ? '2FA Protection enabled' : '2FA Protection disabled');
-                    }}
-                    className="sr-only peer"
-                  />
-                  <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#1e4d1e]" />
-                </label>
-              </div>
             </div>
 
           </div>
 
-        </div>
-
-        {/* ── RECENT ACTIVITY LIST ── */}
-        <div className="bg-white rounded-[24px] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-6 shiny-card">
-          <div className="flex items-center justify-between border-b border-[#f4f5f0] pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-[#edf4e2]">
-                <Activity className="w-4.5 h-4.5 text-[#1e4d1e]" />
-              </div>
-              <h3 className="text-sm font-extrabold text-gray-900 uppercase tracking-wider">
-                Recent Administrative Activity
-              </h3>
-            </div>
-          </div>
-
-          {/* Activity Table */}
-          <div className="overflow-x-auto select-none">
-            <table className="w-full text-left border-collapse min-w-[600px]">
-              <thead>
-                <tr className="border-b border-[#f4f5f0]">
-                  <th className="py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Action Taken</th>
-                  <th className="py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Entity Type</th>
-                  <th className="py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Timestamp</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#f4f5f0]/80">
-                {activityLogs.map((log, index) => (
-                  <tr key={index} className="hover:bg-[#f4f5f0]/20 transition-colors">
-                    {/* Action Taken */}
-                    <td className="py-4 pr-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-7 h-7 rounded-full bg-[#f4f5f0] flex items-center justify-center shrink-0">
-                          <Activity className="w-3.5 h-3.5 text-gray-500" />
-                        </div>
-                        <span className="text-xs font-bold text-gray-800">{log.action}</span>
-                      </div>
-                    </td>
-
-                    {/* Entity Type */}
-                    <td className="py-4 text-xs font-semibold text-gray-500">
-                      {log.entity}
-                    </td>
-
-                    {/* Timestamp */}
-                    <td className="py-4 text-xs font-semibold text-gray-400">
-                      {log.time}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
 
       </div>
@@ -599,7 +582,7 @@ export default function AdminProfilePage() {
                   <button
                     type="button"
                     onClick={() => setShowPasswordModal(false)}
-                    className="py-3 bg-gray-50 hover:bg-gray-100 border border-[#e4e6df] text-gray-600 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+                    className="py-3 bg-gray-50 hover:bg-gray-100 border border-[#e4e6df] text-gray-600 font-bold rounded-xl text-xs transition-colors cursor-pointer text-center"
                   >
                     Cancel
                   </button>
@@ -685,20 +668,6 @@ export default function AdminProfilePage() {
                   />
                 </div>
 
-                {/* Email Address */}
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    value={tempFormData.email}
-                    onChange={(e) => setTempFormData({ ...tempFormData, email: e.target.value })}
-                    placeholder="Enter email address"
-                    className="w-full bg-[#f4f5f0]/50 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-xl py-3 px-4 text-xs font-bold text-gray-800 outline-none transition-all placeholder:text-gray-400 placeholder:font-semibold"
-                  />
-                </div>
-
                 {/* Contact Number & Location */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5 text-left">
@@ -727,20 +696,6 @@ export default function AdminProfilePage() {
                     />
                   </div>
                 </div>
-
-                {/* Bio */}
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
-                    Professional Bio
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={tempFormData.bio}
-                    onChange={(e) => setTempFormData({ ...tempFormData, bio: e.target.value })}
-                    placeholder="Describe your role and focus"
-                    className="w-full bg-[#f4f5f0]/50 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-2xl py-3 px-4 text-xs font-semibold text-gray-800 outline-none transition-all placeholder:text-gray-400 placeholder:font-semibold resize-none"
-                  />
-                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3 pt-6 shrink-0">
@@ -764,7 +719,6 @@ export default function AdminProfilePage() {
           </div>
         )}
       </AnimatePresence>
-
     </>
   );
 }
