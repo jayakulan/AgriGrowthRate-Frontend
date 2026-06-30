@@ -177,6 +177,9 @@ export default function DashboardHeader() {
     if (pathname.includes('/profile')) {
       return { title: 'Profile', description: 'Manage your personal information and account settings.' };
     }
+    if (pathname.includes('/weather')) {
+      return { title: t('menu.weather') || 'Weather Forecast', description: 'Real-time weather insights & 7-day planning for your fields.' };
+    }
 
     return { title: 'Dashboard', description: 'Welcome back! Here\'s an overview of your AgriGrowthRate activity.' };
   };

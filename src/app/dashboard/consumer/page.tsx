@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { productService } from '@/services/productService';
+import { orderService } from '@/services/orderService';
 import api from '@/lib/axios';
 import {
   ShoppingBag,
@@ -27,10 +27,10 @@ export default function ConsumerDashboardPage() {
   const langContext = useLanguage();
   const t = langContext ? langContext.t : (key: string) => key;
 
-  const [freshProducts, setFreshProducts] = useState<any[]>([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
   const [favCount, setFavCount] = useState(0);
   const [favFarmers, setFavFarmers] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
 
   useEffect(() => {
     const fetchFavorites = async () => {
@@ -44,59 +44,24 @@ export default function ConsumerDashboardPage() {
         console.error('Failed to fetch favorites', err);
       }
     };
-    fetchFavorites();
-  }, []);
-
-  useEffect(() => {
-    const fetchProducts = async () => {
+    
+    const fetchOrders = async () => {
       try {
-        const res = await productService.getAll({ limit: '4' });
+        const res = await orderService.getMyOrders();
         if (res && res.success) {
-          setFreshProducts(res.data);
+          setOrders(res.data || []);
         }
       } catch (err) {
-        console.error('Failed to fetch dashboard products', err);
+        console.error('Failed to fetch dashboard orders', err);
       } finally {
-        setLoadingProducts(false);
+        setLoadingOrders(false);
       }
     };
-    fetchProducts();
+
+    fetchFavorites();
+    fetchOrders();
   }, []);
 
-  const recentActivity = [
-    {
-      id: 'AG-9842',
-      date: 'Oct 24, 2023 • 14:30',
-      status: 'DELIVERED',
-      amount: 'Rs 142.50',
-      icon: Package,
-    },
-    {
-      id: 'AG-9910',
-      date: 'Oct 26, 2023 • 09:15',
-      status: 'PROCESSING',
-      amount: 'Rs 86.20',
-      icon: Clock,
-    },
-    {
-      id: 'AG-9915',
-      date: 'Today • 11:45',
-      status: 'OUT FOR DELIVERY',
-      amount: 'Rs 54.00',
-      icon: Truck,
-    },
-  ];
-
-  const getLocalizedCategory = (cat: string) => {
-    if (!cat) return t('products.other');
-    const c = cat.toLowerCase();
-    if (c === 'vegetables') return t('products.vegetables');
-    if (c === 'grains') return t('products.grains');
-    if (c === 'fruits') return t('products.fruits');
-    if (c === 'dairy') return t('products.dairy');
-    if (c === 'herbs') return t('products.herbs');
-    return t('products.other');
-  };
 
   return (
     <div className="p-8 max-w-[1200px] bg-[#f9faf7] min-h-screen">
@@ -109,7 +74,7 @@ export default function ConsumerDashboardPage() {
           <div className="flex justify-between items-start mb-6">
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-1">{t('consumer.totalOrders')}</h3>
-              <p className="text-3xl font-bold text-gray-900">42</p>
+              <p className="text-3xl font-bold text-gray-900">{orders.length}</p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-[#e2fbe9] flex items-center justify-center text-[#1e4d1e]">
               <ShoppingBag className="w-5 h-5" />
@@ -117,9 +82,8 @@ export default function ConsumerDashboardPage() {
           </div>
           <div className="flex items-center gap-3">
             <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full bg-[#1e4d1e] rounded-full w-[75%]"></div>
+              <div className="h-full bg-[#1e4d1e] rounded-full w-full"></div>
             </div>
-            <span className="text-xs font-bold text-[#1e4d1e]">+12%</span>
           </div>
         </div>
 
@@ -128,15 +92,28 @@ export default function ConsumerDashboardPage() {
           <div className="flex justify-between items-start mb-6">
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-1">{t('consumer.activeDeliveries')}</h3>
-              <p className="text-3xl font-bold text-gray-900">03</p>
+              <p className="text-3xl font-bold text-gray-900">
+                {orders.filter(o => o.status === 'pending' || o.status === 'processing' || o.status === 'shipped').length.toString().padStart(2, '0')}
+              </p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-[#f4f5f0] flex items-center justify-center text-gray-600">
               <Truck className="w-5 h-5" />
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-[#1e4d1e]"></div>
-            <span className="text-xs font-medium text-gray-500">In transit from Green Valley Farm</span>
+            {orders.filter(o => o.status === 'pending' || o.status === 'processing' || o.status === 'shipped').length > 0 ? (
+              <>
+                <div className="w-2 h-2 rounded-full bg-[#1e4d1e] animate-pulse"></div>
+                <span className="text-xs font-medium text-gray-500">
+                  Latest: {orders.find(o => o.status === 'pending' || o.status === 'processing' || o.status === 'shipped')?.items?.[0]?.product?.name || 'In transit'}
+                </span>
+              </>
+            ) : (
+              <>
+                <div className="w-2 h-2 rounded-full bg-gray-300"></div>
+                <span className="text-xs font-medium text-gray-400">No active deliveries</span>
+              </>
+            )}
           </div>
         </div>
 
@@ -178,87 +155,6 @@ export default function ConsumerDashboardPage() {
 
       </div>
 
-      {/* ── Fresh from the farm today ──────────────────────── */}
-      <div className="mb-10">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-[#0a2318]">{t('consumer.freshFarmToday')}</h2>
-          <Link
-            href="/dashboard/consumer/browse-products"
-            className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors flex items-center gap-1"
-          >
-            {t('consumer.viewMarketplace')} <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-
-        {loadingProducts ? (
-          <div className="flex flex-col items-center justify-center py-10">
-            <Loader2 className="w-8 h-8 text-[#1e4d1e] animate-spin" />
-          </div>
-        ) : freshProducts.length === 0 ? (
-          <div className="text-center py-10 bg-white border border-[#e4e6df] rounded-3xl">
-            <p className="text-gray-500">{t('consumer.noProducts')}</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {freshProducts.map((product) => {
-              const productImg = product.images && product.images[0]
-                ? (product.images[0].startsWith('http') || product.images[0].startsWith('data:') ? product.images[0] : `http://localhost:5001${product.images[0]}`)
-                : 'https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=400&h=300&fit=crop';
-
-              return (
-                <div key={product._id} className="bg-white border border-[#e4e6df] rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group flex flex-col h-full">
-                  {/* Image */}
-                  <div className="relative h-48 overflow-hidden shrink-0 p-3 pb-0">
-                    <div className="relative w-full h-full rounded-2xl overflow-hidden">
-                      <img
-                        src={productImg}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      {/* Category badge */}
-                      <span className="absolute top-3 left-3 bg-white/95 text-gray-800 text-[10px] font-extrabold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm backdrop-blur-sm">
-                        {getLocalizedCategory(product.category)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Details */}
-                  <div className="p-4 flex flex-col flex-grow">
-                    <div className="flex justify-between items-start mb-1">
-                      <h3 className="text-[15px] font-bold text-[#0f172a] leading-snug line-clamp-1">{product.name}</h3>
-                      <div className="text-right shrink-0 ml-2">
-                        <span className="text-[14px] font-bold text-[#0f172a]">Rs {product.price.toFixed(2)}</span>
-                        <span className="text-[12px] font-bold text-[#0f172a]">/{product.unit || 'kg'}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-1 mb-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">{t('products.availableStock')}</span>
-                        <span className="font-black text-[#1e4d1e] text-[20px] leading-none">{product.stock} <span className="text-[13px] font-bold">{product.unit || 'kg'}</span></span>
-                      </div>
-                    </div>
-
-                    <p className="text-[12px] text-gray-600 mb-4 flex items-start gap-1">
-                      <MapPin className="w-3.5 h-3.5 text-[#1e4d1e] shrink-0 mt-0.5" />
-                      <span className="line-clamp-2">{product.farmer?.address || product.location || 'Address not available'}</span>
-                    </p>
-
-                    <Link
-                      href="/dashboard/consumer/browse-products"
-                      className="mt-auto w-full bg-[#17451e] hover:bg-[#113316] text-white text-sm font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
-                    >
-                      <ShoppingCart className="w-4 h-4" />
-                      {t('consumer.buy')}
-                    </Link>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
       {/* ── Bottom Section ─────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -267,42 +163,54 @@ export default function ConsumerDashboardPage() {
           <h2 className="text-xl font-bold text-[#1e4d1e] mb-8">{t('consumer.recentActivity')}</h2>
 
           <div className="flex flex-col gap-6">
-            {recentActivity.map((activity, index) => {
-              const Icon = activity.icon;
-              const statusText = activity.status === 'DELIVERED' ? t('consumer.delivered') :
-                activity.status === 'PROCESSING' ? t('consumer.processing') :
-                t('consumer.outForDelivery');
+            {orders.length === 0 ? (
+              <p className="text-xs font-medium text-gray-400">No recent orders found</p>
+            ) : (
+              orders.slice(0, 3).map((ord) => {
+                const statusText = ord.status === 'delivered' ? t('consumer.delivered') :
+                  ord.status === 'pending' ? t('consumer.processing') :
+                  ord.status === 'shipped' ? t('consumer.outForDelivery') : ord.status.toUpperCase();
 
-              return (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${activity.status === 'DELIVERED' ? 'bg-[#e2fbe9] text-[#1e4d1e]' :
-                        activity.status === 'PROCESSING' ? 'bg-[#f4f5f0] text-gray-500' :
-                          'bg-[#dcfce7] text-[#166534]'
-                      }`}>
-                      <Icon className="w-5 h-5" />
+                const formattedOrderDate = new Date(ord.createdAt).toLocaleDateString(undefined, {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric'
+                });
+
+                return (
+                  <div key={ord._id} className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${ord.status === 'delivered' ? 'bg-[#e2fbe9] text-[#1e4d1e]' :
+                          ord.status === 'cancelled' ? 'bg-red-50 text-red-500' :
+                            'bg-[#f4f5f0] text-gray-500'
+                        }`}>
+                        {ord.status === 'delivered' ? (
+                          <Package className="w-5 h-5" />
+                        ) : ord.status === 'shipped' ? (
+                          <Truck className="w-5 h-5" />
+                        ) : (
+                          <Clock className="w-5 h-5" />
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="text-[15px] font-bold text-gray-900 mb-0.5">Order #{ord.orderConfirmationNumber || ord._id.slice(-6).toUpperCase()}</h4>
+                        <p className="text-[11px] font-medium text-gray-500">{formattedOrderDate}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-[15px] font-bold text-gray-900 mb-0.5">Order #{activity.id}</h4>
-                      <p className="text-[11px] font-medium text-gray-500">{activity.date}</p>
+
+                    <div className="flex items-center gap-6">
+                      <span className={`text-[9px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider ${ord.status === 'delivered' ? 'bg-[#1e4d1e] text-white' :
+                          ord.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                            'bg-[#e5e7eb] text-gray-600'
+                        }`}>
+                        {statusText}
+                      </span>
+                      <span className="text-[15px] font-bold text-gray-900 w-24 text-right">Rs {ord.totalAmount.toFixed(2)}</span>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-6">
-                    <span className={`text-[9px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider ${activity.status === 'DELIVERED' ? 'bg-[#1e4d1e] text-white' :
-                        activity.status === 'PROCESSING' ? 'bg-[#e5e7eb] text-gray-600' :
-                          'bg-[#bbf7d0] text-[#166534]'
-                      }`}>
-                      {statusText}
-                    </span>
-                    <span className="text-[15px] font-bold text-gray-900 w-16 text-right">{activity.amount}</span>
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <MoreVertical className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
 

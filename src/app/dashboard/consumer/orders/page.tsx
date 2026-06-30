@@ -12,6 +12,8 @@ import {
   AlertCircle,
   HelpCircle,
   Star,
+  Trash2,
+  X,
 } from 'lucide-react';
 import { orderService } from '@/services/orderService';
 import { feedbackService } from '@/services/feedbackService';
@@ -32,6 +34,30 @@ export default function ConsumerOrdersPage() {
   const [rating, setRating] = useState<number>(5);
   const [feedbackComment, setFeedbackComment] = useState<string>('');
   const [submittingFeedback, setSubmittingFeedback] = useState<boolean>(false);
+
+  // Cancellation states
+  const [orderToCancel, setOrderToCancel] = useState<any | null>(null);
+  const [cancellingOrder, setCancellingOrder] = useState<boolean>(false);
+
+  const handleCancelOrder = async () => {
+    if (!orderToCancel) return;
+    try {
+      setCancellingOrder(true);
+      const res = await orderService.cancel(orderToCancel._id);
+      if (res && res.success) {
+        toast.success('Order cancelled successfully! Stock updated.');
+        setOrderToCancel(null);
+        fetchOrders();
+      } else {
+        toast.error(res.message || 'Failed to cancel order');
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to cancel order');
+    } finally {
+      setCancellingOrder(false);
+    }
+  };
 
   const fetchOrders = async () => {
     try {
@@ -177,7 +203,7 @@ export default function ConsumerOrdersPage() {
                       <img src={productImg} alt={product?.name || 'Produce Item'} className="w-full h-full object-cover" />
                     </div>
                     <div>
-                      <div className="flex flex-wrap items-center gap-3 mb-1.5">
+                      <div className="flex flex-wrap items-center gap-3 mb-1">
                         <h2 className="text-base font-extrabold text-[#1e4d1e] tracking-tight">
                           {order.orderConfirmationNumber || `#ORD-${order._id.slice(-6).toUpperCase()}`}
                         </h2>
@@ -196,6 +222,9 @@ export default function ConsumerOrdersPage() {
                           {order.paymentStatus}
                         </span>
                       </div>
+                      <p className="text-[10px] font-mono text-gray-400 font-bold mb-1.5">
+                        ID: {order._id}
+                      </p>
                       <p className="text-xs font-semibold text-gray-900 mb-2">
                         {t('consumer.orders.orderedOn')} {formattedDate} • {itemsCount} {itemsCount === 1 ? t('consumer.orders.item') : t('consumer.orders.items')}
                       </p>
@@ -203,27 +232,39 @@ export default function ConsumerOrdersPage() {
                     </div>
                   </div>
 
-                  {/* Rate & Review Button */}
-                  {order.status === 'delivered' && (
-                    <div className="shrink-0">
-                      {order.isReviewedByConsumer ? (
-                        <span className="text-[11px] font-bold text-gray-400 bg-[#f4f5f0] border border-[#e4e6df] px-3 py-1.5 rounded-lg">
-                          {t('consumer.orders.reviewed')}
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            setOrderToRate(order);
-                            setRating(5);
-                            setFeedbackComment('');
-                          }}
-                          className="bg-[#1e4d1e] hover:bg-[#163d16] text-white text-xs font-extrabold px-4 py-2.5 rounded-xl transition-colors shadow-sm cursor-pointer"
-                        >
-                          {t('consumer.orders.rateReviewBtn')}
-                        </button>
-                      )}
-                    </div>
-                  )}
+                  <div className="shrink-0 flex items-center gap-2">
+                    {/* Rate & Review Button */}
+                    {order.status === 'delivered' && (
+                      <>
+                        {order.isReviewedByConsumer ? (
+                          <span className="text-[11px] font-bold text-gray-400 bg-[#f4f5f0] border border-[#e4e6df] px-3 py-1.5 rounded-lg">
+                            {t('consumer.orders.reviewed')}
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setOrderToRate(order);
+                              setRating(5);
+                              setFeedbackComment('');
+                            }}
+                            className="bg-[#1e4d1e] hover:bg-[#163d16] text-white text-xs font-extrabold px-4 py-2.5 rounded-xl transition-colors shadow-sm cursor-pointer"
+                          >
+                            {t('consumer.orders.rateReviewBtn')}
+                          </button>
+                        )}
+                      </>
+                    )}
+
+                    {/* Cancel Button */}
+                    {order.status === 'pending' && (
+                      <button
+                        onClick={() => setOrderToCancel(order)}
+                        className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-extrabold px-4 py-2.5 rounded-xl transition-colors shadow-sm cursor-pointer"
+                      >
+                        Cancel Order
+                      </button>
+                    )}
+                  </div>
 
                 </div>
 
@@ -295,6 +336,62 @@ export default function ConsumerOrdersPage() {
                 className="flex-1 bg-[#1e4d1e] hover:bg-[#163d16] text-white px-4 py-3 rounded-xl text-xs font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {submittingFeedback ? <Loader2 className="w-4 h-4 animate-spin" /> : t('dashboard.rateModal.submit')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Cancel Confirmation Popup Modal ────────────────────── */}
+      {orderToCancel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
+          <div className="bg-white border border-[#e4e6df] rounded-[2rem] max-w-md w-full p-6 shadow-xl relative animate-scale-up">
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-[#f4f5f0] mb-5">
+              <div className="flex items-center gap-2">
+                <img src="/logo.png" alt="Logo" className="h-6 w-auto object-contain" />
+                <h3 className="text-base font-extrabold text-gray-900">Cancel Order</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOrderToCancel(null)}
+                className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="text-left mb-6">
+              <p className="text-sm font-medium text-gray-600 leading-relaxed">
+                Are you sure you want to cancel order <span className="font-extrabold text-gray-900">#{orderToCancel.orderConfirmationNumber || orderToCancel._id.slice(-6).toUpperCase()}</span>? This action will release the reserved stock back to the marketplace.
+              </p>
+            </div>
+
+            {/* Modal Footer Buttons */}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setOrderToCancel(null)}
+                className="flex-1 bg-[#f4f5f0] hover:bg-gray-200 text-gray-800 font-bold py-3 rounded-2xl text-[13px] transition-colors cursor-pointer text-center"
+              >
+                No, Keep Order
+              </button>
+              <button
+                type="button"
+                disabled={cancellingOrder}
+                onClick={handleCancelOrder}
+                className="flex-1 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold py-3 rounded-2xl text-[13px] transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {cancellingOrder ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>Yes, Cancel Order</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
