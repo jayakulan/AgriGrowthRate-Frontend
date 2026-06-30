@@ -207,6 +207,12 @@ export default function AddProductPage() {
             {/* Stock Quantity */}
             <div>
               <label className="text-xs font-bold text-gray-700 block mb-1.5">{t('addproduct.initialStock')}</label>
+              {stock !== '' && Number(stock) < 50 && (
+                <div className="flex items-center gap-2 mb-2.5 p-3 bg-amber-50 border border-amber-200 text-amber-700 rounded-lg text-xs font-medium">
+                  <BadgeAlert className="w-4.5 h-4.5 text-amber-500 shrink-0" />
+                  <span>Initial stock must be 50kg or above to publish this product.</span>
+                </div>
+              )}
               <input
                 type="number"
                 value={stock}
