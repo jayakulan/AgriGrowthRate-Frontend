@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { productService } from '@/services/productService';
+import { orderService } from '@/services/orderService';
 import {
   Sprout,
   LayoutDashboard,
@@ -24,6 +26,7 @@ import {
   Plus,
   Scan,
   Compass,
+  Loader2,
 } from 'lucide-react';
 
 export default function FarmerDashboardPage() {
@@ -32,38 +35,126 @@ export default function FarmerDashboardPage() {
   const t = langCtx ? langCtx.t : (k: string) => k;
   const userName = user?.name || 'Thomas';
 
-  const activities = [
-    {
-      id: 1,
-      type: 'harvest',
-      image: 'https://images.unsplash.com/photo-1622206193988-72439c2794eb?w=80&h=80&fit=crop',
-      title: t('dashboard.activity.harvest'),
-      details: t('dashboard.activity.harvestDesc'),
-      time: '2 hours ago',
-      badge: 'SUCCESS',
-      badgeClass: 'bg-[#edf4e2] text-[#4A6D2F]',
-    },
-    {
-      id: 2,
-      type: 'order',
-      icon: Truck,
-      title: t('dashboard.activity.order'),
-      details: t('dashboard.activity.orderDesc'),
-      time: '5 hours ago',
-      badge: 'NEW',
-      badgeClass: 'bg-[#edf4e2] text-[#4A6D2F]',
-    },
-    {
-      id: 3,
-      type: 'diagnostic',
-      image: 'https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?w=80&h=80&fit=crop',
-      title: t('dashboard.activity.soil'),
-      details: t('dashboard.activity.soilDesc'),
-      time: 'Yesterday',
-      badge: 'ACTION',
-      badgeClass: 'bg-red-50 text-red-600',
-    },
-  ];
+  // Real statistics states
+  const [productsCount, setProductsCount] = useState(0);
+  const [activeOrdersCount, setActiveOrdersCount] = useState(0);
+  const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
+  const [totalEarnings, setTotalEarnings] = useState(0);
+  const [activities, setActivities] = useState<any[]>([]);
+  const [weather, setWeather] = useState<any>(null);
+  const [weatherLoading, setWeatherLoading] = useState(true);
+
+  // Dynamic tip generator
+  const getDynamicTip = (current: any) => {
+    if (!current) return 'Optimizing field conditions...';
+
+    const humidity = current.humidity;
+    const wind = current.wind_kph;
+    const textLower = current.condition.text.toLowerCase();
+    const isRaining = textLower.includes('rain') || textLower.includes('drizzle') || textLower.includes('shower');
+    const temp = current.temp_c;
+
+    if (isRaining) {
+      return '🌧️ Rain Alert: Avoid irrigation, check drainage paths, and delay any chemical sprays to prevent runoff.';
+    }
+    if (humidity > 85) {
+      return '💧 High Humidity Alert: Increased risk of fungal diseases. Inspect leaves for powdery mildew and improve airflow.';
+    }
+    if (wind > 20) {
+      return '💨 High Wind Alert: Postpone pesticide spraying to avoid drift, and secure delicate nursery plants.';
+    }
+    if (temp > 32) {
+      return '☀️ Heat Alert: High temp. Irrigate crops in early morning or evening hours to reduce water evaporation loss.';
+    }
+    return '🌱 Weather conditions are optimal. Ideal time for planting, weeding, and compost application.';
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const combinedActivities: any[] = [];
+
+        const prodRes = await productService.getMyProducts();
+        if (prodRes && prodRes.data) {
+          setProductsCount(prodRes.data.length);
+          // Add products to activities list
+          prodRes.data.forEach((p: any) => {
+            combinedActivities.push({
+              id: `prod-${p._id}`,
+              type: 'product',
+              title: `Product Listed: ${p.name}`,
+              details: `Stock: ${p.stock} ${p.unit || 'units'} | Price: SLR ${p.price.toFixed(2)}`,
+              createdAt: new Date(p.createdAt),
+              badge: p.isAvailable ? 'ACTIVE' : 'DRAFT',
+              badgeClass: p.isAvailable ? 'bg-[#edf4e2] text-[#4A6D2F]' : 'bg-gray-100 text-gray-500',
+              icon: Package,
+            });
+          });
+        }
+
+        const ordRes = await orderService.getFarmerOrders();
+        if (ordRes && ordRes.success && ordRes.data) {
+          const orders = ordRes.data;
+
+          const pending = orders.filter((o: any) => o.status === 'pending').length;
+          setPendingOrdersCount(pending);
+
+          const active = orders.filter((o: any) => o.status !== 'delivered' && o.status !== 'cancelled').length;
+          setActiveOrdersCount(active);
+
+          const earnings = orders
+            .filter((o: any) => o.status === 'delivered')
+            .reduce((sum: number, o: any) => sum + (o.totalAmount || 0), 0);
+          setTotalEarnings(earnings);
+
+          // Add orders to activities list
+          orders.forEach((o: any) => {
+            const firstItem = o.items?.[0];
+            const pName = firstItem?.product?.name || 'Produce';
+            const customerName = o.consumer?.name || 'Guest';
+
+            let statusClass = 'bg-blue-50 text-blue-600';
+            if (o.status === 'pending') statusClass = 'bg-amber-50 text-amber-600';
+            else if (o.status === 'delivered') statusClass = 'bg-[#edf4e2] text-[#4A6D2F]';
+            else if (o.status === 'cancelled') statusClass = 'bg-red-50 text-red-600';
+
+            combinedActivities.push({
+              id: `order-${o._id}`,
+              type: 'order',
+              title: `New Order: ${pName}`,
+              details: `Ordered by ${customerName}. Amount: SLR ${o.totalAmount.toFixed(2)}`,
+              createdAt: new Date(o.createdAt),
+              badge: o.status.toUpperCase(),
+              badgeClass: statusClass,
+              icon: Truck,
+            });
+          });
+        }
+
+        // Sort by date (newest first) and limit to top 5
+        combinedActivities.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+        setActivities(combinedActivities.slice(0, 5));
+
+        // Fetch Weather
+        const query = user?.address || user?.location || 'Colombo';
+        const apiKey = process.env.NEXT_PUBLIC_WEATHER_API_KEY || '47ad32d93de6480e64413263006';
+        const weatherRes = await fetch(
+          `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${encodeURIComponent(query)}&days=1&aqi=no`
+        );
+        if (weatherRes.ok) {
+          const wData = await weatherRes.json();
+          setWeather(wData);
+        }
+      } catch (err) {
+        console.error('Error fetching dashboard statistics:', err);
+      } finally {
+        setWeatherLoading(false);
+      }
+    };
+    if (user) {
+      fetchData();
+    }
+  }, [user]);
 
   return (
     <div className="p-8">
@@ -95,7 +186,7 @@ export default function FarmerDashboardPage() {
             <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-md">+4% this week</span>
           </div>
           <div className="mt-4">
-            <span className="text-4xl font-extrabold text-gray-900">24</span>
+            <span className="text-4xl font-extrabold text-gray-900">{productsCount}</span>
             <p className="text-xs font-semibold text-gray-400 mt-1">{t('dashboard.totalProducts')}</p>
           </div>
           {/* Subtle graphic background node */}
@@ -110,10 +201,10 @@ export default function FarmerDashboardPage() {
             <div className="w-10 h-10 rounded-xl bg-[#edf4e2] flex items-center justify-center text-[#1e4d1e]">
               <ShoppingBag className="w-5 h-5" />
             </div>
-            <span className="text-xs font-bold text-gray-500 bg-gray-50 px-2 py-0.5 rounded-md">8 pending</span>
+            <span className="text-xs font-bold text-gray-500 bg-gray-50 px-2 py-0.5 rounded-md">{pendingOrdersCount} pending</span>
           </div>
           <div className="mt-4">
-            <span className="text-4xl font-extrabold text-gray-900">12</span>
+            <span className="text-4xl font-extrabold text-gray-900">{activeOrdersCount}</span>
             <p className="text-xs font-semibold text-gray-400 mt-1">{t('dashboard.activeOrders')}</p>
           </div>
           {/* Subtle graphic background node */}
@@ -131,7 +222,9 @@ export default function FarmerDashboardPage() {
             <Link href="#" className="text-xs font-bold text-[#1e4d1e] hover:underline">{t('dashboard.table.complete')} report</Link>
           </div>
           <div className="mt-4">
-            <span className="text-4xl font-extrabold text-gray-900">Rs 4,250.00</span>
+            <span className="text-4xl font-extrabold text-gray-900">
+              Rs {totalEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
             <p className="text-xs font-semibold text-gray-400 mt-1">{t('dashboard.totalEarnings')}</p>
           </div>
           {/* Subtle graphic background node */}
@@ -180,7 +273,14 @@ export default function FarmerDashboardPage() {
                   <span className={`text-[9px] font-extrabold px-2 py-1 rounded-md tracking-wider ${act.badgeClass}`}>
                     {act.badge}
                   </span>
-                  <p className="text-[10px] text-gray-400 mt-2 font-medium">{act.time}</p>
+                  <p className="text-[10px] text-gray-400 mt-2 font-medium">
+                    {act.createdAt.toLocaleDateString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
                 </div>
               </div>
             ))}
@@ -225,6 +325,60 @@ export default function FarmerDashboardPage() {
 
             </div>
           </div>
+
+          {/* Weather Advisory Card */}
+          <Link href="/dashboard/farmer/weather" className="block bg-white border border-[#e4e6df] rounded-2xl p-5 shadow-sm space-y-4 hover:shadow-md transition-shadow cursor-pointer">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-bold text-gray-900">{t('dashboard.weatherAdvisory') || 'Weather Advisory'}</h4>
+              <span className="text-[10px] font-extrabold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100 uppercase tracking-wider">Live</span>
+            </div>
+
+            {weatherLoading ? (
+              <div className="flex items-center justify-center py-4 gap-2 text-xs font-semibold text-gray-400">
+                <Loader2 className="w-4 h-4 animate-spin text-[#1e4d1e]" />
+                <span>Loading advisory...</span>
+              </div>
+            ) : weather ? (
+              <>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-500">
+                    <img
+                      src={`https:${weather.current.condition.icon}`}
+                      alt={weather.current.condition.text}
+                      className="w-8 h-8 object-contain"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-extrabold text-gray-900 leading-none">
+                      {weather.current.temp_c}°C
+                    </h3>
+                    <p className="text-xs font-semibold text-gray-500 mt-1">
+                      {weather.current.condition.text} • {weather.location.name}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 border-t border-[#f4f5f0] pt-3 text-[11px] text-gray-500">
+                  <div>
+                    <span className="block text-gray-400 font-bold uppercase text-[9px] tracking-wider mb-0.5">Humidity</span>
+                    <span className="font-extrabold text-gray-800">{weather.current.humidity}%</span>
+                  </div>
+                  <div>
+                    <span className="block text-gray-400 font-bold uppercase text-[9px] tracking-wider mb-0.5">Wind Speed</span>
+                    <span className="font-extrabold text-gray-800">{weather.current.wind_kph} km/h</span>
+                  </div>
+                </div>
+
+                <div className="bg-[#edf4e2] text-[#4A6D2F] border border-[#d2dfc2] rounded-xl p-3 text-xs leading-relaxed font-medium">
+                  💡 <span className="font-bold">Agri Tip:</span> {getDynamicTip(weather.current)}
+                </div>
+              </>
+            ) : (
+              <div className="text-xs font-semibold text-red-500">
+                Weather forecast unavailable
+              </div>
+            )}
+          </Link>
 
           {/* Marketplace Status */}
           <div className="bg-white border border-[#e4e6df] rounded-2xl p-5 shadow-sm">

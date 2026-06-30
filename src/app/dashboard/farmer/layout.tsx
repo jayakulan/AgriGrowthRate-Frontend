@@ -18,7 +18,8 @@ import {
   Search,
   Bell,
   Settings,
-  HelpCircle
+  HelpCircle,
+  CloudSun
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DashboardHeader from '@/components/DashboardHeader';
@@ -43,6 +44,7 @@ function FarmerLayoutContent({
     { name: t('menu.diseaseDetect'), icon: Activity, href: '/dashboard/farmer/disease-detect' },
     { name: t('menu.aiAssistant'), icon: Cpu, href: '/dashboard/farmer/ai' },
     { name: t('menu.profile'), icon: UserIcon, href: '/dashboard/farmer/profile' },
+    { name: t('menu.weather') || 'Weather', icon: CloudSun, href: '/dashboard/farmer/weather' },
   ];
 
   const handleLogout = async () => {

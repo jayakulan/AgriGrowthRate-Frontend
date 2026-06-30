@@ -19,6 +19,7 @@ const translations = {
     'menu.diseaseDetect': 'Crop Disease Detection',
     'menu.aiAssistant': 'AI Assistant',
     'menu.profile': 'Profile',
+    'menu.weather': 'Weather Forecast',
     'menu.logout': 'Logout',
     'menu.browseProducts': 'Browse Products',
     'menu.aiRecommendations': 'AI Recommendations',
@@ -36,6 +37,7 @@ const translations = {
     'dashboard.desc': 'Your central hub for overview and analytics.',
     'dashboard.hi': 'Hi, {name}.',
     'dashboard.weather': '24°C Sunny',
+    'dashboard.weatherAdvisory': 'Weather Advisory',
     'dashboard.totalProducts': 'Total Products',
     'dashboard.activeOrders': 'Active Orders',
     'dashboard.totalEarnings': 'Total Earnings',
@@ -58,6 +60,7 @@ const translations = {
 
     // Table
     'dashboard.table.orderId': 'Order ID',
+    'dashboard.table.consumerId': 'Consumer ID',
     'dashboard.table.customer': 'Customer Name',
     'dashboard.table.product': 'Product',
     'dashboard.table.quantity': 'Quantity',
@@ -206,6 +209,7 @@ const translations = {
     'menu.diseaseDetect': 'பயிர் நோய் கண்டறிதல்',
     'menu.aiAssistant': 'AI உதவியாளர்',
     'menu.profile': 'விவரக்குறிப்பு',
+    'menu.weather': 'வானிலை அறிக்கை',
     'menu.logout': 'வெளியேறு',
     'menu.browseProducts': 'தயாரிப்புகளை உலாவு',
     'menu.aiRecommendations': 'AI பரிந்துரைகள்',
@@ -223,6 +227,7 @@ const translations = {
     'dashboard.desc': 'கண்ணோட்டம் மற்றும் பகுப்பாய்வுகளுக்கான உங்கள் மைய மையம்.',
     'dashboard.hi': 'வணக்கம், {name}.',
     'dashboard.weather': '24°C வெயில்',
+    'dashboard.weatherAdvisory': 'வானிலை ஆலோசனைகள்',
     'dashboard.totalProducts': 'மொத்த தயாரிப்புகள்',
     'dashboard.activeOrders': 'செயலில் உள்ள கட்டளைகள்',
     'dashboard.totalEarnings': 'மொத்த வருவாய்',
@@ -245,6 +250,7 @@ const translations = {
 
     // Table
     'dashboard.table.orderId': 'கட்டளை எண்',
+    'dashboard.table.consumerId': 'நுகர்வோர் ஐடி',
     'dashboard.table.customer': 'வாடிக்கையாளர் பெயர்',
     'dashboard.table.product': 'தயாரிப்பு',
     'dashboard.table.quantity': 'அளவு',
@@ -393,6 +399,7 @@ const translations = {
     'menu.diseaseDetect': 'බෝග රෝග හඳුනා ගැනීම',
     'menu.aiAssistant': 'AI සහායකයා',
     'menu.profile': 'ප්‍රෝෆයිල්',
+    'menu.weather': 'කාලගුණ අනාවැකිය',
     'menu.logout': 'නික්ම යන්න',
     'menu.browseProducts': 'නිෂ්පාදන පිරික්සන්න',
     'menu.aiRecommendations': 'AI නිර්දේශ',
@@ -410,6 +417,7 @@ const translations = {
     'dashboard.desc': 'ඔබේ දළ විශ්ලේෂණය සහ විශ්ලේෂණ සඳහා මධ්‍යම කේන්ද්‍රස්ථානය.',
     'dashboard.hi': 'ආයුබෝවන්, {name}.',
     'dashboard.weather': '24°C අව්ව සහිතයි',
+    'dashboard.weatherAdvisory': 'කාලගුණ උපදේශනය',
     'dashboard.totalProducts': 'මුළු නිෂ්පාදන',
     'dashboard.activeOrders': 'සක්‍රිය ඇණවුම්',
     'dashboard.totalEarnings': 'මුළු උපයීම්',
@@ -432,6 +440,7 @@ const translations = {
 
     // Table
     'dashboard.table.orderId': 'ඇණවුම් අංකය',
+    'dashboard.table.consumerId': 'පාරිභෝගික හැඳුනුම්පත',
     'dashboard.table.customer': 'පාරිභෝගිකයාගේ නම',
     'dashboard.table.product': 'නිෂ්පාදනය',
     'dashboard.table.quantity': 'ප්‍රමාණය',

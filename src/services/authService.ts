@@ -36,7 +36,7 @@ export const authService = {
     const res = await api.post('/auth/send-otp', { phone, email });
     return res.data;
   },
-  googleLogin: async (payload: { credential?: string; accessToken?: string }) => {
+  googleLogin: async (payload: { credential?: string; accessToken?: string; role?: string }) => {
     const res = await api.post('/auth/google', payload);
     if (typeof window !== 'undefined') {
       localStorage.setItem('token', res.data.accessToken);
