@@ -58,6 +58,7 @@ const translations = {
 
     // Table
     'dashboard.table.orderId': 'Order ID',
+    'dashboard.table.consumerId': 'Consumer ID',
     'dashboard.table.customer': 'Customer Name',
     'dashboard.table.product': 'Product',
     'dashboard.table.quantity': 'Quantity',
@@ -245,6 +246,7 @@ const translations = {
 
     // Table
     'dashboard.table.orderId': 'கட்டளை எண்',
+    'dashboard.table.consumerId': 'நுகர்வோர் ஐடி',
     'dashboard.table.customer': 'வாடிக்கையாளர் பெயர்',
     'dashboard.table.product': 'தயாரிப்பு',
     'dashboard.table.quantity': 'அளவு',
@@ -432,6 +434,7 @@ const translations = {
 
     // Table
     'dashboard.table.orderId': 'ඇණවුම් අංකය',
+    'dashboard.table.consumerId': 'පාරිභෝගික හැඳුනුම්පත',
     'dashboard.table.customer': 'පාරිභෝගිකයාගේ නම',
     'dashboard.table.product': 'නිෂ්පාදනය',
     'dashboard.table.quantity': 'ප්‍රමාණය',

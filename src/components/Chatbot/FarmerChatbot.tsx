@@ -9,6 +9,8 @@ import 'jspdf-autotable';
 import toast from 'react-hot-toast';
 import SubscriptionModal from './SubscriptionModal';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
+
 
 interface Message {
   _id?: string;
@@ -56,10 +58,30 @@ const validateSelection = (input: string, options: string[]) => {
 
 export default function FarmerChatbot() {
   const { user } = useAuth();
+  const langCtx = useLanguage();
+  const currentLang = langCtx?.language || 'en';
+
   const [chats, setChats] = useState<ChatHistory[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
+  const [isListening, setIsListening] = useState(false);
+  const [showSpeechLangPopup, setShowSpeechLangPopup] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const speechLangRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutsideSpeech = (event: MouseEvent) => {
+      if (speechLangRef.current && !speechLangRef.current.contains(event.target as Node)) {
+        setShowSpeechLangPopup(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutsideSpeech);
+    return () => document.removeEventListener('mousedown', handleClickOutsideSpeech);
+  }, []);
+
+
+
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -76,7 +98,90 @@ export default function FarmerChatbot() {
   // File Upload Reference
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Speech Recognition integration
+  const startListening = (langCode: string) => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      toast.error("Speech Recognition is not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = langCode;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      if (langCode === 'ta-LK') {
+        toast.success("கேட்கிறது... பேசவும்");
+      } else if (langCode === 'si-LK') {
+        toast.success("ඇහුම්කන් දෙනවා... කතා කරන්න");
+      } else {
+        toast.success("Listening... Speak now");
+      }
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Speech recognition error", event.error);
+      setIsListening(false);
+      
+      let userFriendlyMsg = `Error: ${event.error}`;
+      if (event.error === 'service-not-allowed') {
+        userFriendlyMsg = "Speech service is not allowed. Make sure you are using localhost (http://localhost:3000) or HTTPS, as browsers restrict speech features on insecure IP connections.";
+      } else if (event.error === 'not-allowed') {
+        userFriendlyMsg = "Microphone access blocked. Please enable microphone permissions in your browser settings.";
+      } else if (event.error === 'no-speech') {
+        userFriendlyMsg = "No speech detected. Please speak clearly into your microphone.";
+      } else if (event.error === 'network') {
+        userFriendlyMsg = "Network error. Speech recognition requires an active internet connection on this browser.";
+      }
+      
+      toast.error(userFriendlyMsg, { duration: 5000 });
+    };
+
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setInput((prev) => prev + (prev ? ' ' : '') + transcript);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
+  };
+
+  const handleMicClick = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      setShowSpeechLangPopup(prev => !prev);
+    }
+  };
+
+
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
   // Workflow State
+
   const [workflowState, setWorkflowState] = useState<'initial' | 'district' | 'soil' | 'land' | 'water' | 'experience' | 'crop_selection' | 'plan_generation' | 'pdf_prompt' | 'general'>('initial');
   const [farmerDetails, setFarmerDetails] = useState({ district: '', soilType: '', landSize: '', waterAvailability: '', currentSeason: '', farmingExperience: '' });
   const [selectedCrop, setSelectedCrop] = useState('');
@@ -563,10 +668,60 @@ export default function FarmerChatbot() {
               className="flex-1 bg-transparent border-none py-3 px-3 outline-none text-gray-700 text-base"
               disabled={loading}
             />
+            {showSpeechLangPopup && (
+              <div 
+                ref={speechLangRef}
+                className="absolute bottom-full right-12 mb-3 bg-white border border-gray-200 rounded-2xl shadow-xl p-3 z-50 min-w-[200px] animate-in fade-in slide-in-from-bottom-2 duration-200"
+              >
+                <div className="text-xs font-bold text-gray-500 mb-2 px-2 uppercase tracking-wider">Select Speech Language</div>
+                <div className="flex flex-col gap-1">
+                  <button
+                    onClick={() => {
+                      setShowSpeechLangPopup(false);
+                      startListening('en-US');
+                    }}
+                    className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-xl transition-colors text-left font-semibold w-full cursor-pointer"
+                  >
+                    <span className="text-base">🇬🇧</span>
+                    <span>English (US)</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowSpeechLangPopup(false);
+                      startListening('ta-LK');
+                    }}
+                    className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-xl transition-colors text-left font-semibold w-full cursor-pointer"
+                  >
+                    <span className="text-base">🇱🇰</span>
+                    <span>தமிழ் (Tamil)</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowSpeechLangPopup(false);
+                      startListening('si-LK');
+                    }}
+                    className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-xl transition-colors text-left font-semibold w-full cursor-pointer"
+                  >
+                    <span className="text-base">🇱🇰</span>
+                    <span>සිංහල (Sinhala)</span>
+                  </button>
+                </div>
+              </div>
+            )}
             <div className="flex items-center gap-2">
-              <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors hidden sm:block">
+
+              <button 
+                onClick={handleMicClick}
+                className={`p-2 rounded-full transition-all focus:outline-none cursor-pointer hidden sm:block ${
+                  isListening 
+                    ? 'text-red-500 bg-red-50 animate-pulse border border-red-200' 
+                    : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                }`}
+                title={`Speech-to-Text (${currentLang === 'ta' ? 'Tamil' : currentLang === 'si' ? 'Sinhala' : 'English'})`}
+              >
                 <Mic className="w-5 h-5" />
               </button>
+
               <button
                 onClick={() => handleSendMessage()}
                 disabled={loading || (!input.trim() && workflowState !== 'crop_selection')}
