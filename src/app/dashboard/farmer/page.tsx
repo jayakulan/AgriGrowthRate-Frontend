@@ -26,6 +26,7 @@ import {
   Plus,
   Scan,
   Compass,
+  Loader2,
 } from 'lucide-react';
 
 export default function FarmerDashboardPage() {
@@ -40,6 +41,33 @@ export default function FarmerDashboardPage() {
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [activities, setActivities] = useState<any[]>([]);
+  const [weather, setWeather] = useState<any>(null);
+  const [weatherLoading, setWeatherLoading] = useState(true);
+
+  // Dynamic tip generator
+  const getDynamicTip = (current: any) => {
+    if (!current) return 'Optimizing field conditions...';
+
+    const humidity = current.humidity;
+    const wind = current.wind_kph;
+    const textLower = current.condition.text.toLowerCase();
+    const isRaining = textLower.includes('rain') || textLower.includes('drizzle') || textLower.includes('shower');
+    const temp = current.temp_c;
+
+    if (isRaining) {
+      return '🌧️ Rain Alert: Avoid irrigation, check drainage paths, and delay any chemical sprays to prevent runoff.';
+    }
+    if (humidity > 85) {
+      return '💧 High Humidity Alert: Increased risk of fungal diseases. Inspect leaves for powdery mildew and improve airflow.';
+    }
+    if (wind > 20) {
+      return '💨 High Wind Alert: Postpone pesticide spraying to avoid drift, and secure delicate nursery plants.';
+    }
+    if (temp > 32) {
+      return '☀️ Heat Alert: High temp. Irrigate crops in early morning or evening hours to reduce water evaporation loss.';
+    }
+    return '🌱 Weather conditions are optimal. Ideal time for planting, weeding, and compost application.';
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -106,12 +134,27 @@ export default function FarmerDashboardPage() {
         // Sort by date (newest first) and limit to top 5
         combinedActivities.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
         setActivities(combinedActivities.slice(0, 5));
+
+        // Fetch Weather
+        const query = user?.address || user?.location || 'Colombo';
+        const apiKey = process.env.NEXT_PUBLIC_WEATHER_API_KEY || '47ad32d93de6480e64413263006';
+        const weatherRes = await fetch(
+          `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${encodeURIComponent(query)}&days=1&aqi=no`
+        );
+        if (weatherRes.ok) {
+          const wData = await weatherRes.json();
+          setWeather(wData);
+        }
       } catch (err) {
         console.error('Error fetching dashboard statistics:', err);
+      } finally {
+        setWeatherLoading(false);
       }
     };
-    fetchData();
-  }, []);
+    if (user) {
+      fetchData();
+    }
+  }, [user]);
 
   return (
     <div className="p-8">
@@ -282,6 +325,60 @@ export default function FarmerDashboardPage() {
 
             </div>
           </div>
+
+          {/* Weather Advisory Card */}
+          <Link href="/dashboard/farmer/weather" className="block bg-white border border-[#e4e6df] rounded-2xl p-5 shadow-sm space-y-4 hover:shadow-md transition-shadow cursor-pointer">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-bold text-gray-900">{t('dashboard.weatherAdvisory') || 'Weather Advisory'}</h4>
+              <span className="text-[10px] font-extrabold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100 uppercase tracking-wider">Live</span>
+            </div>
+
+            {weatherLoading ? (
+              <div className="flex items-center justify-center py-4 gap-2 text-xs font-semibold text-gray-400">
+                <Loader2 className="w-4 h-4 animate-spin text-[#1e4d1e]" />
+                <span>Loading advisory...</span>
+              </div>
+            ) : weather ? (
+              <>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-500">
+                    <img
+                      src={`https:${weather.current.condition.icon}`}
+                      alt={weather.current.condition.text}
+                      className="w-8 h-8 object-contain"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-extrabold text-gray-900 leading-none">
+                      {weather.current.temp_c}°C
+                    </h3>
+                    <p className="text-xs font-semibold text-gray-500 mt-1">
+                      {weather.current.condition.text} • {weather.location.name}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 border-t border-[#f4f5f0] pt-3 text-[11px] text-gray-500">
+                  <div>
+                    <span className="block text-gray-400 font-bold uppercase text-[9px] tracking-wider mb-0.5">Humidity</span>
+                    <span className="font-extrabold text-gray-800">{weather.current.humidity}%</span>
+                  </div>
+                  <div>
+                    <span className="block text-gray-400 font-bold uppercase text-[9px] tracking-wider mb-0.5">Wind Speed</span>
+                    <span className="font-extrabold text-gray-800">{weather.current.wind_kph} km/h</span>
+                  </div>
+                </div>
+
+                <div className="bg-[#edf4e2] text-[#4A6D2F] border border-[#d2dfc2] rounded-xl p-3 text-xs leading-relaxed font-medium">
+                  💡 <span className="font-bold">Agri Tip:</span> {getDynamicTip(weather.current)}
+                </div>
+              </>
+            ) : (
+              <div className="text-xs font-semibold text-red-500">
+                Weather forecast unavailable
+              </div>
+            )}
+          </Link>
 
           {/* Marketplace Status */}
           <div className="bg-white border border-[#e4e6df] rounded-2xl p-5 shadow-sm">
