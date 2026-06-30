@@ -267,6 +267,59 @@ body {
   .animate-pulse-subtle {
     animation: pulse-subtle 3s ease-in-out infinite;
   }
+
+  /* Thin dark green border with shining/shimmer effect */
+  .shiny-card {
+    position: relative;
+    border: 1px solid rgba(30, 77, 30, 0.25) !important;
+    overflow: hidden;
+  }
+  
+  .shiny-card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -60%;
+    width: 20%;
+    height: 200%;
+    background: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.35) 30%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    transform: rotate(30deg);
+    animation: shiny-sweep 5s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  @keyframes shiny-sweep {
+    0% {
+      left: -60%;
+    }
+    25% {
+      left: 140%;
+    }
+    100% {
+      left: 140%;
+    }
+  }
+
+  /* Thin dark green axis line with shining/glow effect */
+  @keyframes axis-glow {
+    0%, 100% {
+      stroke: rgba(30, 77, 30, 0.3);
+      filter: drop-shadow(0 0 1px rgba(30,77,30,0.1));
+    }
+    50% {
+      stroke: rgba(30, 77, 30, 0.9);
+      filter: drop-shadow(0 0 4px rgba(30,77,30,0.7));
+    }
+  }
+
+  .chart-axis-shine {
+    animation: axis-glow 4s ease-in-out infinite;
+  }
 }
 
 /* Hide number input spinners globally */
