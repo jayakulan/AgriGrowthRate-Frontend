@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { productService } from '@/services/productService';
+import { orderService } from '@/services/orderService';
 import {
   Sprout,
   LayoutDashboard,
@@ -32,38 +34,84 @@ export default function FarmerDashboardPage() {
   const t = langCtx ? langCtx.t : (k: string) => k;
   const userName = user?.name || 'Thomas';
 
-  const activities = [
-    {
-      id: 1,
-      type: 'harvest',
-      image: 'https://images.unsplash.com/photo-1622206193988-72439c2794eb?w=80&h=80&fit=crop',
-      title: t('dashboard.activity.harvest'),
-      details: t('dashboard.activity.harvestDesc'),
-      time: '2 hours ago',
-      badge: 'SUCCESS',
-      badgeClass: 'bg-[#edf4e2] text-[#4A6D2F]',
-    },
-    {
-      id: 2,
-      type: 'order',
-      icon: Truck,
-      title: t('dashboard.activity.order'),
-      details: t('dashboard.activity.orderDesc'),
-      time: '5 hours ago',
-      badge: 'NEW',
-      badgeClass: 'bg-[#edf4e2] text-[#4A6D2F]',
-    },
-    {
-      id: 3,
-      type: 'diagnostic',
-      image: 'https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?w=80&h=80&fit=crop',
-      title: t('dashboard.activity.soil'),
-      details: t('dashboard.activity.soilDesc'),
-      time: 'Yesterday',
-      badge: 'ACTION',
-      badgeClass: 'bg-red-50 text-red-600',
-    },
-  ];
+  // Real statistics states
+  const [productsCount, setProductsCount] = useState(0);
+  const [activeOrdersCount, setActiveOrdersCount] = useState(0);
+  const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
+  const [totalEarnings, setTotalEarnings] = useState(0);
+  const [activities, setActivities] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const combinedActivities: any[] = [];
+
+        const prodRes = await productService.getMyProducts();
+        if (prodRes && prodRes.data) {
+          setProductsCount(prodRes.data.length);
+          // Add products to activities list
+          prodRes.data.forEach((p: any) => {
+            combinedActivities.push({
+              id: `prod-${p._id}`,
+              type: 'product',
+              title: `Product Listed: ${p.name}`,
+              details: `Stock: ${p.stock} ${p.unit || 'units'} | Price: SLR ${p.price.toFixed(2)}`,
+              createdAt: new Date(p.createdAt),
+              badge: p.isAvailable ? 'ACTIVE' : 'DRAFT',
+              badgeClass: p.isAvailable ? 'bg-[#edf4e2] text-[#4A6D2F]' : 'bg-gray-100 text-gray-500',
+              icon: Package,
+            });
+          });
+        }
+
+        const ordRes = await orderService.getFarmerOrders();
+        if (ordRes && ordRes.success && ordRes.data) {
+          const orders = ordRes.data;
+
+          const pending = orders.filter((o: any) => o.status === 'pending').length;
+          setPendingOrdersCount(pending);
+
+          const active = orders.filter((o: any) => o.status !== 'delivered' && o.status !== 'cancelled').length;
+          setActiveOrdersCount(active);
+
+          const earnings = orders
+            .filter((o: any) => o.status === 'delivered')
+            .reduce((sum: number, o: any) => sum + (o.totalAmount || 0), 0);
+          setTotalEarnings(earnings);
+
+          // Add orders to activities list
+          orders.forEach((o: any) => {
+            const firstItem = o.items?.[0];
+            const pName = firstItem?.product?.name || 'Produce';
+            const customerName = o.consumer?.name || 'Guest';
+
+            let statusClass = 'bg-blue-50 text-blue-600';
+            if (o.status === 'pending') statusClass = 'bg-amber-50 text-amber-600';
+            else if (o.status === 'delivered') statusClass = 'bg-[#edf4e2] text-[#4A6D2F]';
+            else if (o.status === 'cancelled') statusClass = 'bg-red-50 text-red-600';
+
+            combinedActivities.push({
+              id: `order-${o._id}`,
+              type: 'order',
+              title: `New Order: ${pName}`,
+              details: `Ordered by ${customerName}. Amount: SLR ${o.totalAmount.toFixed(2)}`,
+              createdAt: new Date(o.createdAt),
+              badge: o.status.toUpperCase(),
+              badgeClass: statusClass,
+              icon: Truck,
+            });
+          });
+        }
+
+        // Sort by date (newest first) and limit to top 5
+        combinedActivities.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+        setActivities(combinedActivities.slice(0, 5));
+      } catch (err) {
+        console.error('Error fetching dashboard statistics:', err);
+      }
+    };
+    fetchData();
+  }, []);
 
   return (
     <div className="p-8">
@@ -95,7 +143,7 @@ export default function FarmerDashboardPage() {
             <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-md">+4% this week</span>
           </div>
           <div className="mt-4">
-            <span className="text-4xl font-extrabold text-gray-900">24</span>
+            <span className="text-4xl font-extrabold text-gray-900">{productsCount}</span>
             <p className="text-xs font-semibold text-gray-400 mt-1">{t('dashboard.totalProducts')}</p>
           </div>
           {/* Subtle graphic background node */}
@@ -110,10 +158,10 @@ export default function FarmerDashboardPage() {
             <div className="w-10 h-10 rounded-xl bg-[#edf4e2] flex items-center justify-center text-[#1e4d1e]">
               <ShoppingBag className="w-5 h-5" />
             </div>
-            <span className="text-xs font-bold text-gray-500 bg-gray-50 px-2 py-0.5 rounded-md">8 pending</span>
+            <span className="text-xs font-bold text-gray-500 bg-gray-50 px-2 py-0.5 rounded-md">{pendingOrdersCount} pending</span>
           </div>
           <div className="mt-4">
-            <span className="text-4xl font-extrabold text-gray-900">12</span>
+            <span className="text-4xl font-extrabold text-gray-900">{activeOrdersCount}</span>
             <p className="text-xs font-semibold text-gray-400 mt-1">{t('dashboard.activeOrders')}</p>
           </div>
           {/* Subtle graphic background node */}
@@ -131,7 +179,9 @@ export default function FarmerDashboardPage() {
             <Link href="#" className="text-xs font-bold text-[#1e4d1e] hover:underline">{t('dashboard.table.complete')} report</Link>
           </div>
           <div className="mt-4">
-            <span className="text-4xl font-extrabold text-gray-900">Rs 4,250.00</span>
+            <span className="text-4xl font-extrabold text-gray-900">
+              Rs {totalEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
             <p className="text-xs font-semibold text-gray-400 mt-1">{t('dashboard.totalEarnings')}</p>
           </div>
           {/* Subtle graphic background node */}
@@ -180,7 +230,14 @@ export default function FarmerDashboardPage() {
                   <span className={`text-[9px] font-extrabold px-2 py-1 rounded-md tracking-wider ${act.badgeClass}`}>
                     {act.badge}
                   </span>
-                  <p className="text-[10px] text-gray-400 mt-2 font-medium">{act.time}</p>
+                  <p className="text-[10px] text-gray-400 mt-2 font-medium">
+                    {act.createdAt.toLocaleDateString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
                 </div>
               </div>
             ))}

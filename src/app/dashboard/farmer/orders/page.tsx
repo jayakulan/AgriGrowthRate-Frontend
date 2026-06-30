@@ -214,7 +214,7 @@ export default function OrdersManagementPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[#f4f5f0]/50 border-b border-[#e4e6df] text-xs font-bold text-gray-500">
-                  <th className="py-4 px-6">{t('dashboard.table.orderId')}</th>
+                  <th className="py-4 px-6">{t('dashboard.table.consumerId')}</th>
                   <th className="py-4 px-6">{t('dashboard.table.customer')}</th>
                   <th className="py-4 px-6">{t('dashboard.table.product')}</th>
                   <th className="py-4 px-6">{t('dashboard.table.quantity')}</th>
@@ -228,11 +228,11 @@ export default function OrdersManagementPage() {
                 {orders
                   .filter(ord => {
                     const customerName = ord.consumer?.name || 'Guest';
-                    const orderNo = ord.orderConfirmationNumber || '';
+                    const consumerId = ord.consumer?._id || '';
                     const pName = ord.items?.[0]?.product?.name || '';
                     return (
                       customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                      orderNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      consumerId.toLowerCase().includes(searchQuery.toLowerCase()) ||
                       pName.toLowerCase().includes(searchQuery.toLowerCase())
                     );
                   })
@@ -257,9 +257,9 @@ export default function OrdersManagementPage() {
 
                     return (
                       <tr key={ord._id} className="text-xs text-gray-700 hover:bg-[#f9f9f6]/40 transition-colors">
-                        {/* Order ID */}
-                        <td className="py-4 px-6 font-bold font-mono text-[#1e4d1e]">
-                          {ord.orderConfirmationNumber || `#ORD-${ord._id.slice(-6).toUpperCase()}`}
+                        {/* Consumer ID */}
+                        <td className="py-4 px-6 font-bold font-mono text-[#1e4d1e]" title={ord.consumer?._id}>
+                          {ord.consumer?._id || 'N/A'}
                         </td>
 
                         {/* Customer */}
