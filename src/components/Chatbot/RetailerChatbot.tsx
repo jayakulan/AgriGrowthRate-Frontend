@@ -140,6 +140,9 @@ export default function RetailerChatbot() {
     if (response.data.success) {
       setActiveChatId(response.data.data.chatId);
       fetchChats();
+      if (response.data.remainingChats === 0) {
+        setShowSubscriptionModal(true);
+      }
       return response.data.data.reply;
     }
     throw new Error('Failed');

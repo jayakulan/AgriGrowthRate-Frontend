@@ -41,6 +41,14 @@ interface AIData {
   recentActivity: Array<any>;
 }
 
+interface KnowledgeBaseDoc {
+  _id: string;
+  originalName: string;
+  fileSize: number;
+  status: string;
+  createdAt: string;
+}
+
 export default function AIManagementPage() {
   const [data, setData] = useState<AIData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,10 +62,26 @@ export default function AIManagementPage() {
   const [priority, setPriority] = useState<'Precision' | 'Performance'>('Precision');
   const [contextVal, setContextVal] = useState(70); // slider percent
   const [creativityVal, setCreativityVal] = useState(40); // slider percent
+  const [knowledgeDocs, setKnowledgeDocs] = useState<KnowledgeBaseDoc[]>([]);
 
   useEffect(() => {
     fetchAIData();
+    fetchKnowledgeBase();
   }, []);
+
+  const fetchKnowledgeBase = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://localhost:5001/api/ai/knowledge', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.data.success) {
+        setKnowledgeDocs(response.data.data);
+      }
+    } catch (error) {
+      console.warn('Failed to fetch knowledge base documents', error);
+    }
+  };
 
   const fetchAIData = async () => {
     try {
@@ -108,6 +132,7 @@ export default function AIManagementPage() {
         setShowAddModal(false);
         setDatasetName('');
         setDatasetFile(null);
+        fetchKnowledgeBase();
       } else {
         toast.error(response.data.message || 'Upload failed');
       }
@@ -142,7 +167,7 @@ export default function AIManagementPage() {
               </div>
 
               <span className="px-3 py-1 bg-gray-50 border border-gray-100 rounded-full text-[10px] font-bold text-gray-400">
-                4 Active Sources
+                {knowledgeDocs.length} Active Sources
               </span>
             </div>
 
@@ -160,77 +185,38 @@ export default function AIManagementPage() {
                 </thead>
 
                 <tbody className="divide-y divide-[#f4f5f0]">
-                  {/* Row 1 */}
-                  <tr>
-                    <td className="px-4 py-3 text-xs font-bold text-gray-800 flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-gray-400 shrink-0" />
-                      <span>Soil Composition Metrics 2024</span>
-                    </td>
-                    <td className="px-4 py-3 text-xs font-semibold text-gray-500">42.5 GB</td>
-                    <td className="px-4 py-3 text-[10px] font-semibold text-gray-400">2h ago</td>
-                    <td className="px-4 py-3">
-                      <span className="px-2.5 py-0.5 rounded-full bg-[#e3f7ed] text-[#2e7d32] border border-[#c8e6c9] text-[9px] font-bold">Trained</span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button className="text-[10px] font-bold text-[#1e4d1e] hover:underline cursor-pointer">Edit</button>
-                    </td>
-                  </tr>
-
-                  {/* Row 2: Progress bar */}
-                  <tr>
-                    <td className="px-4 py-3 text-xs font-bold text-gray-800 flex items-center gap-2">
-                      <CloudLightning className="w-4 h-4 text-gray-400 shrink-0" />
-                      <span>Satellite Multi-Spectral Imagery</span>
-                    </td>
-                    <td className="px-4 py-3 text-xs font-semibold text-gray-500">1.2 TB</td>
-                    <td className="px-4 py-3 text-[10px] font-semibold text-gray-400">14m ago</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-[#1e4d1e] rounded-full" style={{ width: '65%' }}></div>
-                        </div>
-                        <span className="text-[9px] font-bold text-gray-500">65%</span>
-                        <button className="p-0.5 text-gray-400 hover:text-gray-700 cursor-pointer">
-                          <Pause className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {/* empty action */}
-                    </td>
-                  </tr>
-
-                  {/* Row 3 */}
-                  <tr>
-                    <td className="px-4 py-3 text-xs font-bold text-gray-800 flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-gray-400 shrink-0" />
-                      <span>Historical Crop Yields (10yr)</span>
-                    </td>
-                    <td className="px-4 py-3 text-xs font-semibold text-gray-500">850 MB</td>
-                    <td className="px-4 py-3 text-[10px] font-semibold text-gray-400">Oct 24, 2023</td>
-                    <td className="px-4 py-3">
-                      <span className="px-2.5 py-0.5 rounded-full bg-[#e3f7ed] text-[#2e7d32] border border-[#c8e6c9] text-[9px] font-bold">Trained</span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button className="text-[10px] font-bold text-[#1e4d1e] hover:underline cursor-pointer">Edit</button>
-                    </td>
-                  </tr>
-
-                  {/* Row 4 */}
-                  <tr>
-                    <td className="px-4 py-3 text-xs font-bold text-gray-800 flex items-center gap-2">
-                      <Wifi className="w-4 h-4 text-gray-400 shrink-0" />
-                      <span>Real-time IoT Sensor Stream</span>
-                    </td>
-                    <td className="px-4 py-3 text-xs font-semibold text-gray-500">Streaming Live</td>
-                    <td className="px-4 py-3 text-[10px] font-bold text-green-600">Live</td>
-                    <td className="px-4 py-3">
-                      <span className="px-2.5 py-0.5 rounded-full bg-gray-50 text-gray-600 border border-gray-150 text-[9px] font-bold">Syncing</span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button className="text-[10px] font-bold text-gray-400 hover:underline cursor-pointer">Config</button>
-                    </td>
-                  </tr>
+                  {knowledgeDocs.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-8 text-center text-xs text-gray-400">
+                        No active data sources found. Add a PDF to get started.
+                      </td>
+                    </tr>
+                  ) : (
+                    knowledgeDocs.map((doc) => (
+                      <tr key={doc._id}>
+                        <td className="px-4 py-3 text-xs font-bold text-gray-800 flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-gray-400 shrink-0" />
+                          <span className="truncate max-w-[200px]">{doc.originalName}</span>
+                        </td>
+                        <td className="px-4 py-3 text-xs font-semibold text-gray-500">{(doc.fileSize / (1024 * 1024)).toFixed(2)} MB</td>
+                        <td className="px-4 py-3 text-[10px] font-semibold text-gray-400">
+                          {new Date(doc.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3">
+                          {doc.status === 'active' || doc.status === 'trained' ? (
+                            <span className="px-2.5 py-0.5 rounded-full bg-[#e3f7ed] text-[#2e7d32] border border-[#c8e6c9] text-[9px] font-bold">Active</span>
+                          ) : doc.status === 'processing' ? (
+                            <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100 text-[9px] font-bold">Processing</span>
+                          ) : (
+                            <span className="px-2.5 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-100 text-[9px] font-bold">Failed</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <button className="text-[10px] font-bold text-[#1e4d1e] hover:underline cursor-pointer">Config</button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
 
               </table>

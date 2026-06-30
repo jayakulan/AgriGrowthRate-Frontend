@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
@@ -20,6 +20,7 @@ import toast from 'react-hot-toast';
 export default function AdminProfilePage() {
   const { user, updateUser } = useAuth();
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Profile states
   const [name, setName] = useState('');
@@ -130,23 +131,36 @@ export default function AdminProfilePage() {
     }
   };
 
-  const handleChangeAvatar = async () => {
-    const newAvatarUrl = prompt('Enter Image URL for profile avatar:', avatar);
-    if (newAvatarUrl) {
-      setAvatar(newAvatarUrl);
-      try {
-        const response = await api.put('/admin/profile', { name, phone, address, avatar: newAvatarUrl }).catch(() => null);
-        if (response && response.data && response.data.success) {
-          updateUser(response.data.data);
-          toast.success('Avatar updated!');
-        } else {
-          updateUser({ name, phone, address, avatar: newAvatarUrl });
+  const handleChangeAvatar = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error('Image must be less than 2MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const newAvatarUrl = reader.result as string;
+        setAvatar(newAvatarUrl);
+        try {
+          const response = await api.put('/admin/profile', { name, phone, address, avatar: newAvatarUrl }).catch(() => null);
+          if (response && response.data && response.data.success) {
+            updateUser(response.data.data);
+            toast.success('Avatar updated!');
+          } else {
+            updateUser({ name, phone, address, avatar: newAvatarUrl });
+            toast.success('Avatar updated (locally)!');
+          }
+        } catch (error) {
+          console.error(error);
           toast.success('Avatar updated (locally)!');
         }
-      } catch (error) {
-        console.error(error);
-        toast.success('Avatar updated (locally)!');
-      }
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -161,6 +175,7 @@ export default function AdminProfilePage() {
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-[#f9f9f6] p-8 font-sans">
+      <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
       <div className="max-w-4xl mx-auto space-y-6">
 
         {/* TOP HEADER CARD */}

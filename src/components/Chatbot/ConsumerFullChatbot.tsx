@@ -56,7 +56,13 @@ export default function ConsumerFullChatbot() {
 
   useEffect(() => {
     fetchChats();
-    startNewChat();
+    const pendingChatId = localStorage.getItem('pendingSubscriptionChatId');
+    if (pendingChatId) {
+      loadChat(pendingChatId);
+      localStorage.removeItem('pendingSubscriptionChatId');
+    } else {
+      startNewChat();
+    }
   }, []);
 
   useEffect(() => {
@@ -180,6 +186,9 @@ export default function ConsumerFullChatbot() {
     if (response.data.success) {
       setActiveChatId(response.data.data.chatId);
       fetchChats();
+      if (response.data.remainingChats === 0) {
+        setShowSubscriptionModal(true);
+      }
       return response.data.data.reply;
     }
     throw new Error('Failed');
@@ -466,7 +475,7 @@ export default function ConsumerFullChatbot() {
         </div>
       </div>
 
-      <SubscriptionModal isOpen={showSubscriptionModal} onClose={() => setShowSubscriptionModal(false)} />
+      <SubscriptionModal isOpen={showSubscriptionModal} onClose={() => setShowSubscriptionModal(false)} activeChatId={activeChatId} />
 
       {/* Modals */}
       {renameModalOpen && (
