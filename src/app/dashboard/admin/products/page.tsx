@@ -446,13 +446,15 @@ export default function ManageProductsPage() {
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           onClick={() => handleApprove(product._id)}
-                          className="py-2 px-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white text-xs font-bold rounded-xl transition-all cursor-pointer text-center"
+                          disabled={product.status === 'Approved'}
+                          className="py-2 px-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white text-xs font-bold rounded-xl transition-all cursor-pointer text-center disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none disabled:blur-[0.5px]"
                         >
                           Approve
                         </button>
                         <button
                           onClick={() => handleReject(product._id)}
-                          className="py-2 px-3 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-xl transition-all cursor-pointer border border-red-100 text-center"
+                          disabled={product.status === 'Rejected'}
+                          className="py-2 px-3 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-xl transition-all cursor-pointer border border-red-100 text-center disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none disabled:blur-[0.5px]"
                         >
                           Reject
                         </button>

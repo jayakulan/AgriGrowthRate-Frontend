@@ -29,6 +29,8 @@ import {
   Loader2,
   CircleAlert,
   Star,
+  Trash2,
+  X,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { orderService } from '@/services/orderService';
@@ -52,6 +54,30 @@ export default function OrdersManagementPage() {
   const [rating, setRating] = useState<number>(5);
   const [feedbackComment, setFeedbackComment] = useState<string>('');
   const [submittingFeedback, setSubmittingFeedback] = useState<boolean>(false);
+
+  // Cancellation states
+  const [orderToCancel, setOrderToCancel] = useState<any | null>(null);
+  const [cancellingOrder, setCancellingOrder] = useState<boolean>(false);
+
+  const handleCancelOrder = async () => {
+    if (!orderToCancel) return;
+    try {
+      setCancellingOrder(true);
+      const res = await orderService.cancel(orderToCancel._id);
+      if (res && res.success) {
+        toast.success('Order cancelled successfully! Stock updated.');
+        setOrderToCancel(null);
+        fetchOrders();
+      } else {
+        toast.error(res.message || 'Failed to cancel order');
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to cancel order');
+    } finally {
+      setCancellingOrder(false);
+    }
+  };
 
   const langCtx = useLanguage();
   const t = langCtx ? langCtx.t : (k: string) => k;
@@ -228,11 +254,11 @@ export default function OrdersManagementPage() {
                 {orders
                   .filter(ord => {
                     const customerName = ord.consumer?.name || 'Guest';
-                    const consumerId = ord.consumer?._id || '';
+                    const orderId = ord._id || '';
                     const pName = ord.items?.[0]?.product?.name || '';
                     return (
                       customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                      consumerId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      orderId.toLowerCase().includes(searchQuery.toLowerCase()) ||
                       pName.toLowerCase().includes(searchQuery.toLowerCase())
                     );
                   })
@@ -257,9 +283,9 @@ export default function OrdersManagementPage() {
 
                     return (
                       <tr key={ord._id} className="text-xs text-gray-700 hover:bg-[#f9f9f6]/40 transition-colors">
-                        {/* Consumer ID */}
-                        <td className="py-4 px-6 font-bold font-mono text-[#1e4d1e]" title={ord.consumer?._id}>
-                          {ord.consumer?._id || 'N/A'}
+                        {/* Order ID */}
+                        <td className="py-4 px-6 font-bold font-mono text-[#1e4d1e]" title={ord._id}>
+                          {ord._id}
                         </td>
 
                         {/* Customer */}
@@ -312,21 +338,36 @@ export default function OrdersManagementPage() {
 
                         {/* Action Button */}
                         <td className="py-4 px-6">
-                          {ord.status === 'delivered' ? (
-                            <span className="text-[#1e4d1e] font-extrabold text-xs">{t('dashboard.table.completed')}</span>
-                          ) : (
-                            <button
-                              disabled={updatingId === ord._id}
-                              onClick={() => {
-                                setConfirmingOrder(ord);
-                                setUserInputRef('');
-                                setValidationError(null);
-                              }}
-                              className="bg-[#1e4d1e] hover:bg-[#163d16] text-white text-[11px] font-extrabold px-3.5 py-1.5 rounded-lg transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
-                            >
-                              {t('dashboard.table.complete')}
-                            </button>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {ord.status === 'delivered' ? (
+                              <span className="text-[#1e4d1e] font-extrabold text-xs">{t('dashboard.table.completed')}</span>
+                            ) : ord.status === 'cancelled' ? (
+                              <span className="text-red-500 font-extrabold text-xs">Cancelled</span>
+                            ) : (
+                              <>
+                                <button
+                                  disabled={updatingId === ord._id}
+                                  onClick={() => {
+                                    setConfirmingOrder(ord);
+                                    setUserInputRef('');
+                                    setValidationError(null);
+                                  }}
+                                  className="bg-[#1e4d1e] hover:bg-[#163d16] text-white text-[11px] font-extrabold px-3.5 py-1.5 rounded-lg transition-colors shadow-sm disabled:opacity-50 cursor-pointer whitespace-nowrap"
+                                >
+                                  {t('dashboard.table.complete')}
+                                </button>
+                                
+                                {ord.status === 'pending' && (
+                                  <button
+                                    onClick={() => setOrderToCancel(ord)}
+                                    className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[11px] font-extrabold px-3.5 py-1.5 rounded-lg transition-colors shadow-sm cursor-pointer whitespace-nowrap"
+                                  >
+                                    Cancel
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -546,6 +587,61 @@ export default function OrdersManagementPage() {
                 className="flex-1 bg-[#1e4d1e] hover:bg-[#163d16] text-white px-4 py-3 rounded-xl text-xs font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {submittingFeedback ? <Loader2 className="w-4 h-4 animate-spin" /> : t('dashboard.rateModal.submit')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ── Cancel Confirmation Popup Modal ────────────────────── */}
+      {orderToCancel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
+          <div className="bg-white border border-[#e4e6df] rounded-[2rem] max-w-md w-full p-6 shadow-xl relative animate-scale-up">
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-[#f4f5f0] mb-5">
+              <div className="flex items-center gap-2">
+                <img src="/logo.png" alt="Logo" className="h-6 w-auto object-contain" />
+                <h3 className="text-base font-extrabold text-gray-900">Cancel Order</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOrderToCancel(null)}
+                className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="text-left mb-6">
+              <p className="text-sm font-medium text-gray-600 leading-relaxed">
+                Are you sure you want to cancel order <span className="font-extrabold text-gray-900">#{orderToCancel.orderConfirmationNumber || orderToCancel._id.slice(-6).toUpperCase()}</span>? This action will release the reserved stock back to the marketplace.
+              </p>
+            </div>
+
+            {/* Modal Footer Buttons */}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setOrderToCancel(null)}
+                className="flex-1 bg-[#f4f5f0] hover:bg-gray-200 text-gray-800 font-bold py-3 rounded-2xl text-[13px] transition-colors cursor-pointer text-center"
+              >
+                No, Keep Order
+              </button>
+              <button
+                type="button"
+                disabled={cancellingOrder}
+                onClick={handleCancelOrder}
+                className="flex-1 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold py-3 rounded-2xl text-[13px] transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {cancellingOrder ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>Yes, Cancel Order</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
