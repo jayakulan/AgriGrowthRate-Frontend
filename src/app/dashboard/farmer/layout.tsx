@@ -45,6 +45,7 @@ function FarmerLayoutContent({
     { name: t('menu.aiAssistant'), icon: Cpu, href: '/dashboard/farmer/ai' },
     { name: t('menu.weather') || 'Weather', icon: CloudSun, href: '/dashboard/farmer/weather' },
     { name: t('menu.profile'), icon: UserIcon, href: '/dashboard/farmer/profile' },
+    { name: t('menu.weather') || 'Weather', icon: CloudSun, href: '/dashboard/farmer/weather' },
   ];
 
   const handleLogout = async () => {

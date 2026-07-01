@@ -240,7 +240,7 @@ export default function OrdersManagementPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[#f4f5f0]/50 border-b border-[#e4e6df] text-xs font-bold text-gray-500">
-                  <th className="py-4 px-6">{t('dashboard.table.orderId')}</th>
+                  <th className="py-4 px-6">{t('dashboard.table.consumerId')}</th>
                   <th className="py-4 px-6">{t('dashboard.table.customer')}</th>
                   <th className="py-4 px-6">{t('dashboard.table.product')}</th>
                   <th className="py-4 px-6">{t('dashboard.table.quantity')}</th>
