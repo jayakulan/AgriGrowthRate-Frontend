@@ -13,7 +13,8 @@ import {
   Shield,
   ChevronRight,
   X,
-  Loader2
+  Loader2,
+  Smartphone
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -39,6 +40,41 @@ export default function ConsumerProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [changingPassword, setChangingPassword] = useState(false);
 
+  // OTP Modal
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
+  const [otpTimer, setOtpTimer] = useState(0);
+
+  useEffect(() => {
+    if (otpTimer > 0) {
+      const id = setInterval(() => setOtpTimer((t) => t - 1), 1000);
+      return () => clearInterval(id);
+    }
+  }, [otpTimer]);
+
+  const handleOtpChange = (index: number, value: string) => {
+    if (isNaN(Number(value))) return;
+    const newDigits = [...otpDigits];
+    newDigits[index] = value.slice(-1);
+    setOtpDigits(newDigits);
+
+    if (value && index < 5) {
+      const nextInput = document.getElementById(`profile-otp-${index + 1}`);
+      if (nextInput) (nextInput as HTMLInputElement).focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      const prevInput = document.getElementById(`profile-otp-${index - 1}`);
+      if (prevInput) {
+        (prevInput as HTMLInputElement).focus();
+        const newDigits = [...otpDigits];
+        newDigits[index - 1] = '';
+        setOtpDigits(newDigits);
+      }
+    }
+  };
   // Notification states
   const [priceAlerts, setPriceAlerts] = useState(true);
   const [orderMessages, setOrderMessages] = useState(true);
@@ -122,9 +158,37 @@ export default function ConsumerProfilePage() {
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Normalize phone numbers for comparison
+    let currentFormatted = user?.phone || '';
+    let newFormatted = phone.trim().replace(/[\s\-\+\(\)]/g, '');
+    if (newFormatted.startsWith('0')) newFormatted = '94' + newFormatted.slice(1);
+    else if (!newFormatted.startsWith('94') && newFormatted.length === 9) newFormatted = '94' + newFormatted;
+    
+    if (newFormatted !== currentFormatted && currentFormatted) {
+      setSaving(true);
+      try {
+        await api.post('/auth/send-otp', { phone: newFormatted });
+        setShowOtpModal(true);
+        setOtpTimer(60);
+      } catch (err: any) {
+        toast.error(err.response?.data?.message || 'Failed to send OTP to new number');
+      } finally {
+        setSaving(false);
+      }
+      return; // Stop here and wait for OTP
+    }
+    
+    submitProfileUpdate();
+  };
+
+  const submitProfileUpdate = async (otp?: string) => {
     setSaving(true);
     try {
-      const response = await api.put('/auth/profile', { name, phone, address, avatar }).catch(() => null);
+      const payload: any = { name, phone, address, avatar };
+      if (otp) payload.otp = otp;
+      
+      const response = await api.put('/auth/profile', payload);
       if (response && response.data && response.data.success) {
         updateUser(response.data.data);
         toast.success('Profile updated successfully!');
@@ -133,23 +197,38 @@ export default function ConsumerProfilePage() {
         toast.success('Profile updated (simulated)!');
       }
       setIsEditModalOpen(false);
-    } catch (error) {
-      toast.error('Failed to update profile');
+      setShowOtpModal(false);
+      setOtpDigits(['', '', '', '', '', '']);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to update profile');
     } finally {
       setSaving(false);
     }
   };
 
   const handleChangeAvatar = () => {
-    const newAvatarUrl = prompt("Enter Image URL for profile avatar:", avatar);
-    if (newAvatarUrl) {
-      setAvatar(newAvatarUrl);
-      toast.success("Avatar updated!");
+    fileInputRef.current?.click();
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error('Image must be less than 2MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatar(reader.result as string);
+        toast.success("Avatar updated!");
+      };
+      reader.readAsDataURL(file);
     }
   };
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-[#f9f9f6] p-8 font-sans">
+      <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
       <div className="max-w-4xl mx-auto space-y-6">
 
         {/* TOP HEADER CARD */}
@@ -453,6 +532,59 @@ export default function ConsumerProfilePage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* OTP Modal */}
+      {showOtpModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="relative w-full max-w-md bg-white rounded-[24px] shadow-xl overflow-hidden p-8 flex flex-col items-center text-center">
+            <button onClick={() => setShowOtpModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
+              <X className="w-5 h-5" />
+            </button>
+            <div className="w-16 h-16 bg-[#1e4d1e]/10 rounded-full flex items-center justify-center mb-6">
+              <Smartphone className="w-8 h-8 text-[#1e4d1e]" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Verify New Phone</h3>
+            <p className="text-gray-500 text-sm mb-8">We've sent a 6-digit code to <span className="font-bold text-gray-800">{phone}</span></p>
+
+            <div className="flex gap-2 justify-center mb-8">
+              {otpDigits.map((digit, index) => (
+                <input
+                  key={index}
+                  id={`profile-otp-${index}`}
+                  type="text"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleOtpChange(index, e.target.value)}
+                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                  className="w-12 h-14 text-center text-xl font-bold rounded-xl border-2 border-gray-100 focus:border-[#1e4d1e] focus:bg-[#1e4d1e]/5 outline-none transition-all"
+                />
+              ))}
+            </div>
+
+            <button
+              onClick={() => submitProfileUpdate(otpDigits.join(''))}
+              disabled={otpDigits.some(d => !d) || saving}
+              className="w-full py-4 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-4"
+            >
+              {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Verify & Save'}
+            </button>
+            
+            <button
+              disabled={otpTimer > 0 || saving}
+              onClick={async () => {
+                let newFormatted = phone.trim().replace(/[\s\-\+\(\)]/g, '');
+                if (newFormatted.startsWith('0')) newFormatted = '94' + newFormatted.slice(1);
+                else if (!newFormatted.startsWith('94') && newFormatted.length === 9) newFormatted = '94' + newFormatted;
+                await api.post('/auth/send-otp', { phone: newFormatted });
+                setOtpTimer(60);
+                toast.success('New OTP sent');
+              }}
+              className="text-sm font-semibold text-[#1e4d1e] hover:underline disabled:opacity-50 disabled:no-underline"
+            >
+              {otpTimer > 0 ? `Resend Code in ${otpTimer}s` : 'Resend Code'}
+            </button>
           </div>
         </div>
       )}

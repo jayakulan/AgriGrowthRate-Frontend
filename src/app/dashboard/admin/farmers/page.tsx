@@ -281,7 +281,7 @@ export default function ManageFarmersPage() {
                 <thead className="bg-[#fcfdfa]/80 border-b border-[#e4e6df]">
                   <tr>
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Name</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Farmer ID</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Farmer Card Number</th>
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Email</th>
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Contact No</th>
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Address</th>
@@ -317,7 +317,7 @@ export default function ManageFarmersPage() {
                         </div>
                       </td>
 
-                      {/* Farmer ID */}
+                      {/* Farmer Card Number */}
                       <td className="px-6 py-4 text-xs font-semibold text-gray-800">
                         {user.farmerCardNo || 'N/A'}
                       </td>

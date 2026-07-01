@@ -8,9 +8,10 @@ import { Eye, EyeOff, Loader2, Mail, Lock, User, Phone, MapPin, ShieldCheck, X, 
 import toast from 'react-hot-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 import Footer from '@/components/Footer';
+import { useGoogleLogin } from '@react-oauth/google';
 
 export default function RegisterPage() {
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
   const router = useRouter();
 
   const [form, setForm] = useState({
@@ -25,7 +26,30 @@ export default function RegisterPage() {
   });
 
   const [showPwd, setShowPwd] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setGoogleLoading(true);
+      try {
+        const loggedInUser = await loginWithGoogle(undefined, tokenResponse.access_token, form.role);
+        toast.success('Registration successful! Welcome.');
+        if (loggedInUser.role === 'admin') {
+          router.push('/dashboard/admin');
+        } else {
+          router.push(`/dashboard/${loggedInUser.role}`);
+        }
+      } catch (err: any) {
+        toast.error(err.response?.data?.message || 'Google registration failed');
+      } finally {
+        setGoogleLoading(false);
+      }
+    },
+    onError: () => toast.error('Google registration failed'),
+  });
 
   // SMS OTP Verification States
   const [showOtpModal, setShowOtpModal] = useState(false);
@@ -40,8 +64,12 @@ export default function RegisterPage() {
     }
   }, [otpTimer]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    if (errors[e.target.name]) {
+      setErrors({ ...errors, [e.target.name]: '' });
+    }
+  };
 
   // OTP input logic
   const handleOtpChange = (index: number, value: string) => {
@@ -71,26 +99,39 @@ export default function RegisterPage() {
   // Submit flow triggers SMS OTP
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.password || !form.confirm) {
-      return toast.error('Please fill in all required fields');
-    }
-    if (!form.phone) {
-      return toast.error('Phone number is required for SMS verification');
-    }
+    const newErrors: { [key: string]: string } = {};
+
+    if (!form.name.trim()) newErrors.name = 'Full Name is required';
+    if (!form.email.trim()) newErrors.email = 'Email Address is required';
+    else if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(form.email)) newErrors.email = 'Invalid email format';
+
+    if (!form.phone.trim()) newErrors.phone = 'Phone number is required for SMS verification';
+    if (!form.address.trim()) newErrors.address = 'Address is required';
+
     if (form.role === 'farmer') {
-      if (!form.farmerCardNo) {
-        return toast.error('Farmer Card Number is required for registration');
-      }
-      const farmerCardRegex = /^FSN\d{7}$/;
-      if (!farmerCardRegex.test(form.farmerCardNo)) {
-        return toast.error('Invalid Farmer Card Number Format');
+      if (!form.farmerCardNo.trim()) {
+        newErrors.farmerCardNo = 'Farmer Card Number is required for registration';
+      } else if (!/^FSN\d{7}$/.test(form.farmerCardNo)) {
+        newErrors.farmerCardNo = 'Invalid Farmer Card Number Format (e.g. FSN1234567)';
       }
     }
-    if (form.password !== form.confirm) {
-      return toast.error('Passwords do not match');
+
+    if (!form.password) {
+      newErrors.password = 'Password is required';
+    } else {
+      const pwdRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$/;
+      if (!pwdRegex.test(form.password)) {
+        newErrors.password = 'Must be at least 8 characters, include uppercase, lowercase, number & special character';
+      }
     }
-    if (form.password.length < 6) {
-      return toast.error('Password must be at least 6 characters');
+
+    if (!form.confirm) newErrors.confirm = 'Confirm Password is required';
+    else if (form.password !== form.confirm) newErrors.confirm = 'Passwords do not match';
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      return toast.error('Please fix the errors in the form');
     }
 
     setLoading(true);
@@ -249,8 +290,9 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       placeholder="Full Name"
                       className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 text-sm text-gray-800 placeholder-gray-400"
-                      required
+                      
                     />
+                    {errors.name && <span className="text-red-500 text-[10px] md:text-xs mt-1 block font-semibold">{errors.name}</span>}
                   </div>
 
                   <div className="relative group">
@@ -262,8 +304,9 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       placeholder="Email Address"
                       className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 text-sm text-gray-800 placeholder-gray-400"
-                      required
+                      
                     />
+                    {errors.email && <span className="text-red-500 text-[10px] md:text-xs mt-1 block font-semibold">{errors.email}</span>}
                   </div>
                 </div>
 
@@ -278,8 +321,9 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       placeholder="Phone Number (SMS OTP)"
                       className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 text-sm text-gray-800 placeholder-gray-400"
-                      required
+                      
                     />
+                    {errors.phone && <span className="text-red-500 text-[10px] md:text-xs mt-1 block font-semibold">{errors.phone}</span>}
                   </div>
 
                   <div className="relative group">
@@ -291,8 +335,9 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       placeholder="Address (City, Country)"
                       className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 text-sm text-gray-800 placeholder-gray-400"
-                      required
+                      
                     />
+                    {errors.address && <span className="text-red-500 text-[10px] md:text-xs mt-1 block font-semibold">{errors.address}</span>}
                   </div>
                 </div>
 
@@ -315,8 +360,9 @@ export default function RegisterPage() {
                           onChange={handleChange}
                           placeholder="Farmer Card Number (e.g. FSN0000000)"
                           className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 text-sm text-gray-800 placeholder-gray-400 font-semibold tracking-wide"
-                          required={form.role === 'farmer'}
+                          
                         />
+                        {errors.farmerCardNo && <span className="text-red-500 text-[10px] md:text-xs mt-1 block font-semibold">{errors.farmerCardNo}</span>}
                         <span className="text-[10px] text-[#4A6D2F] font-bold mt-1.5 block">
                           * Required to verify registered agricultural producer status.
                         </span>
@@ -336,7 +382,7 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       placeholder="Password"
                       className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-8 text-sm text-gray-800 placeholder-gray-400"
-                      required
+                      
                     />
                     <button
                       type="button"
@@ -345,19 +391,28 @@ export default function RegisterPage() {
                     >
                       {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
+                    {errors.password && <span className="text-red-500 text-[10px] md:text-xs mt-1 block font-semibold">{errors.password}</span>}
                   </div>
 
                   <div className="relative group">
                     <Lock className="absolute left-1 top-2.5 w-4 h-4 text-gray-400 group-focus-within:text-[#1e4d1e] transition-colors" />
                     <input
                       name="confirm"
-                      type="password"
+                      type={showConfirmPwd ? 'text' : 'password'}
                       value={form.confirm}
                       onChange={handleChange}
                       placeholder="Confirm Password"
-                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 text-sm text-gray-800 placeholder-gray-400"
-                      required
+                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-8 text-sm text-gray-800 placeholder-gray-400"
+                      
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPwd(!showConfirmPwd)}
+                      className="absolute right-1 top-2.5 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      {showConfirmPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                    {errors.confirm && <span className="text-red-500 text-[10px] md:text-xs mt-1 block font-semibold">{errors.confirm}</span>}
                   </div>
                 </div>
 
@@ -389,16 +444,21 @@ export default function RegisterPage() {
               {/* Bottom Google Sign-In Button */}
               <button
                 type="button"
-                onClick={() => toast('Google sign-up coming soon!')}
-                className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 mb-4 bg-white border border-[#e4e6df] hover:border-gray-300 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm cursor-pointer"
+                onClick={() => handleGoogleLogin()}
+                disabled={googleLoading}
+                className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 mb-4 bg-white border border-[#e4e6df] hover:border-gray-300 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm cursor-pointer disabled:opacity-50"
               >
-                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                </svg>
-                <span>Sign up with Google</span>
+                {googleLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
+                ) : (
+                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                  </svg>
+                )}
+                <span>{googleLoading ? 'Signing up...' : 'Sign up with Google'}</span>
               </button>
 
               {/* Login redirection footer link in Forest Green */}

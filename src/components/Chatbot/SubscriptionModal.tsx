@@ -5,7 +5,7 @@ import axios from 'axios';
 import { X, CreditCard, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-export default function SubscriptionModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+export default function SubscriptionModal({ isOpen, onClose, activeChatId }: { isOpen: boolean, onClose: () => void, activeChatId?: string | null }) {
   const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
@@ -13,6 +13,10 @@ export default function SubscriptionModal({ isOpen, onClose }: { isOpen: boolean
   const handleCheckout = async () => {
     setLoading(true);
     const token = localStorage.getItem('token');
+    
+    if (activeChatId) {
+      localStorage.setItem('pendingSubscriptionChatId', activeChatId);
+    }
     
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';

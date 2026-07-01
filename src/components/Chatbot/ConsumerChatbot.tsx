@@ -36,6 +36,9 @@ export default function ConsumerChatbot() {
 
       if (response.data.success) {
         setMessages([...newMessages, { role: 'assistant', content: response.data.reply }]);
+        if (response.data.remainingChats === 0) {
+          setShowSubscriptionModal(true);
+        }
       }
     } catch (error: any) {
       if (error.response?.status === 402 || error.response?.data?.requiresPayment) {
