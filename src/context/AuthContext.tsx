@@ -45,7 +45,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkSession = async () => {
       const savedUser = localStorage.getItem('agri_user');
-      if (!savedUser || savedUser === 'undefined') {
+      const token = localStorage.getItem('token');
+      if (!savedUser || savedUser === 'undefined' || !token || token === 'undefined') {
+        localStorage.removeItem('agri_user');
+        localStorage.removeItem('token');
+        setUser(null);
         setLoading(false);
         return;
       }
@@ -57,11 +61,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.setItem('agri_user', JSON.stringify(response.data));
         } else {
           localStorage.removeItem('agri_user');
+          localStorage.removeItem('token');
           setUser(null);
         }
       } catch (error) {
-        console.error('Session validation failed on startup:', error);
+        console.warn('Session validation failed on startup (user not logged in or session expired)');
         localStorage.removeItem('agri_user');
+        localStorage.removeItem('token');
         setUser(null);
       } finally {
         setLoading(false);
