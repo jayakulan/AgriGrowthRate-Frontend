@@ -25,10 +25,10 @@ interface ChatHistory {
 }
 
 const DISTRICTS = [
-  'Colombo', 'Gampaha', 'Kalutara', 'Kandy', 'Matale', 'Nuwara Eliya', 
-  'Galle', 'Matara', 'Hambantota', 'Jaffna', 'Kilinochchi', 'Mullaitivu', 
-  'Vavuniya', 'Mannar', 'Batticaloa', 'Ampara', 'Trincomalee', 'Kurunegala', 
-  'Puttalam', 'Anuradhapura', 'Polonnaruwa', 'Badulla', 'Monaragala', 
+  'Colombo', 'Gampaha', 'Kalutara', 'Kandy', 'Matale', 'Nuwara Eliya',
+  'Galle', 'Matara', 'Hambantota', 'Jaffna', 'Kilinochchi', 'Mullaitivu',
+  'Vavuniya', 'Mannar', 'Batticaloa', 'Ampara', 'Trincomalee', 'Kurunegala',
+  'Puttalam', 'Anuradhapura', 'Polonnaruwa', 'Badulla', 'Monaragala',
   'Ratnapura', 'Kegalle'
 ];
 
@@ -94,7 +94,7 @@ export default function FarmerChatbot() {
   const [chatToRename, setChatToRename] = useState<{ id: string, title: string } | null>(null);
   const [chatToDelete, setChatToDelete] = useState<string | null>(null);
   const [newChatTitle, setNewChatTitle] = useState('');
-  
+
   // File Upload Reference
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -131,7 +131,7 @@ export default function FarmerChatbot() {
     recognition.onerror = (event: any) => {
       console.error("Speech recognition error", event.error);
       setIsListening(false);
-      
+
       let userFriendlyMsg = `Error: ${event.error}`;
       if (event.error === 'service-not-allowed') {
         userFriendlyMsg = "Speech service is not allowed. Make sure you are using localhost (http://localhost:3000) or HTTPS, as browsers restrict speech features on insecure IP connections.";
@@ -142,7 +142,7 @@ export default function FarmerChatbot() {
       } else if (event.error === 'network') {
         userFriendlyMsg = "Network error. Speech recognition requires an active internet connection on this browser.";
       }
-      
+
       toast.error(userFriendlyMsg, { duration: 5000 });
     };
 
@@ -300,7 +300,7 @@ export default function FarmerChatbot() {
     doc.setFontSize(20);
     doc.setTextColor(30, 77, 30);
     doc.text('AgriGrowthRate', 105, 20, { align: 'center' });
-    
+
     doc.setFontSize(14);
     doc.setTextColor(0, 0, 0);
     doc.text('Crop Cultivation Plan', 105, 30, { align: 'center' });
@@ -319,7 +319,7 @@ export default function FarmerChatbot() {
     // Add plan content
     doc.setFontSize(10);
     const splitText = doc.splitTextToSize(cultivationPlan, 170);
-    
+
     let yPos = 115;
     splitText.forEach((line: string) => {
       if (yPos > 280) {
@@ -336,8 +336,8 @@ export default function FarmerChatbot() {
   const sendMessageToAPI = async (messageText: string, contextOverride?: string) => {
     const token = localStorage.getItem('token');
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
-    
-    const response = await axios.post(`${apiUrl}/chat/message`, { 
+
+    const response = await axios.post(`${apiUrl}/chat/message`, {
       message: messageText,
       chatId: activeChatId,
       context: contextOverride || 'general'
@@ -375,14 +375,14 @@ export default function FarmerChatbot() {
         } else {
           setMessages([...updatedMessages, { role: 'assistant', content: 'Please enter 1 or 2.' }]);
         }
-      } 
+      }
       else if (workflowState === 'district') {
         const selection = validateSelection(userMsg, DISTRICTS);
         if (!selection) {
           setMessages([...updatedMessages, { role: 'assistant', content: 'Please enter a valid number from the list.' }]);
           return;
         }
-        setFarmerDetails({...farmerDetails, district: selection});
+        setFarmerDetails({ ...farmerDetails, district: selection });
         setWorkflowState('soil');
         setMessages([...updatedMessages, { role: 'assistant', content: `Please select your soil type:\n\n${formatOptions(SOIL_TYPES)}` }]);
       }
@@ -392,7 +392,7 @@ export default function FarmerChatbot() {
           setMessages([...updatedMessages, { role: 'assistant', content: 'Please enter a valid number from the list.' }]);
           return;
         }
-        setFarmerDetails({...farmerDetails, soilType: selection});
+        setFarmerDetails({ ...farmerDetails, soilType: selection });
         setWorkflowState('land');
         setMessages([...updatedMessages, { role: 'assistant', content: `Please select your land size:\n\n${formatOptions(LAND_SIZES)}` }]);
       }
@@ -402,7 +402,7 @@ export default function FarmerChatbot() {
           setMessages([...updatedMessages, { role: 'assistant', content: 'Please enter a valid number from the list.' }]);
           return;
         }
-        setFarmerDetails({...farmerDetails, landSize: selection});
+        setFarmerDetails({ ...farmerDetails, landSize: selection });
         setWorkflowState('water');
         setMessages([...updatedMessages, { role: 'assistant', content: `Please select your available water source:\n\n${formatOptions(WATER_SOURCES)}` }]);
       }
@@ -412,7 +412,7 @@ export default function FarmerChatbot() {
           setMessages([...updatedMessages, { role: 'assistant', content: 'Please enter a valid number from the list.' }]);
           return;
         }
-        setFarmerDetails({...farmerDetails, waterAvailability: selection});
+        setFarmerDetails({ ...farmerDetails, waterAvailability: selection });
         setWorkflowState('experience');
         setMessages([...updatedMessages, { role: 'assistant', content: `Please select your farming experience:\n\n${formatOptions(EXPERIENCE_LEVELS)}` }]);
       }
@@ -422,35 +422,35 @@ export default function FarmerChatbot() {
           setMessages([...updatedMessages, { role: 'assistant', content: 'Please enter a valid number from the list.' }]);
           return;
         }
-        
+
         // Auto-detect season
         const currentMonth = new Date().getMonth(); // 0-11
         // April (3) to September (8) -> Yala, October (9) to March (2) -> Maha
         const detectedSeason = (currentMonth >= 3 && currentMonth <= 8) ? 'Yala Season' : 'Maha Season';
 
-        const finalDetails = {...farmerDetails, farmingExperience: selection, currentSeason: detectedSeason};
+        const finalDetails = { ...farmerDetails, farmingExperience: selection, currentSeason: detectedSeason };
         setFarmerDetails(finalDetails);
-        
+
         const prompt = `Recommend suitable crops for a farmer with: District: ${finalDetails.district}, Soil: ${finalDetails.soilType}, Land Size: ${finalDetails.landSize}, Water: ${finalDetails.waterAvailability}, Season: ${finalDetails.currentSeason}, Experience: ${finalDetails.farmingExperience}. Provide recommendations as a numbered list.`;
-        
+
         const reply = await sendMessageToAPI(prompt);
         setWorkflowState('crop_selection');
         setMessages([
-          ...updatedMessages, 
+          ...updatedMessages,
           { role: 'assistant', content: reply },
           { role: 'assistant', content: 'Please select a crop from the recommended options by typing its number or name.' }
         ]);
       }
       else if (workflowState === 'crop_selection') {
         let actualCropName = userMsg;
-        
+
         // If user entered a number, try to extract the crop name from the AI's recommendation list
         if (/^\d+$/.test(userMsg.trim())) {
           // The AI's recommendation was the message right before the system prompted "Please select a crop..."
           const recMessage = messages[messages.length - 2]?.content || '';
           const lines = recMessage.split('\n');
           const line = lines.find((l: string) => l.trim().startsWith(userMsg.trim() + '.'));
-          
+
           if (line) {
             // Remove "1. ", remove any bold asterisks, and grab everything up to the colon
             actualCropName = line.replace(/^\s*\d+\.\s*/, '').split(':')[0].replace(/\*\*/g, '').trim();
@@ -502,11 +502,11 @@ export default function FarmerChatbot() {
 
   return (
     <div className="flex h-full w-full bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative">
-      
+
       {/* Sidebar */}
       <AnimatePresence>
         {(sidebarOpen || window.innerWidth >= 768) && (
-          <motion.div 
+          <motion.div
             initial={{ x: -300 }}
             animate={{ x: 0 }}
             exit={{ x: -300 }}
@@ -520,13 +520,13 @@ export default function FarmerChatbot() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="p-4 border-b border-gray-200 bg-white">
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
-                <input 
-                  type="text" 
-                  placeholder="Search chats..." 
+                <input
+                  type="text"
+                  placeholder="Search chats..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full bg-[#f4f5f0] text-sm pl-9 pr-4 py-2 rounded-lg outline-none focus:border-[#1e4d1e] border border-transparent transition-colors"
@@ -578,14 +578,14 @@ export default function FarmerChatbot() {
                 <Monitor className="w-8 h-8 text-white" />
               </div>
               <h1 className="text-4xl md:text-5xl font-bold text-[#1e4d1e] text-center mb-4 tracking-tight leading-tight">
-                Welcome to<br/>AgriGrowthRate AI<br/>Assistant
+                Welcome to<br />AgriGrowthRate AI<br />Assistant
               </h1>
               <p className="text-gray-500 text-center max-w-2xl mb-12 text-lg">
                 Get real-time insights, crop recommendations, and detailed cultivation roadmaps powered by agricultural intelligence.
               </p>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
-                <button 
+                <button
                   onClick={() => handleSendMessage('1')}
                   className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow rounded-3xl p-8 text-left group flex flex-col items-start focus:outline-none focus:ring-2 focus:ring-[#1e4d1e] focus:ring-opacity-50"
                 >
@@ -597,8 +597,8 @@ export default function FarmerChatbot() {
                     Find the best crops for your specific soil type, district, and weather patterns.
                   </p>
                 </button>
-                
-                <button 
+
+                <button
                   onClick={() => handleSendMessage('2')}
                   className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow rounded-3xl p-8 text-left group flex flex-col items-start focus:outline-none focus:ring-2 focus:ring-[#1e4d1e] focus:ring-opacity-50"
                 >
@@ -615,21 +615,19 @@ export default function FarmerChatbot() {
           ) : (
             <div className="flex-1 p-4 md:p-6 space-y-6 max-w-4xl mx-auto w-full">
               {messages.map((msg, idx) => (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  key={idx} 
+                  key={idx}
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div className={`flex items-start max-w-[85%] md:max-w-[75%] gap-3 md:gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                    <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm ${
-                      msg.role === 'user' ? 'bg-[#1e4d1e] text-white' : 'bg-gray-100 border border-gray-200'
-                    }`}>
+                    <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm ${msg.role === 'user' ? 'bg-[#1e4d1e] text-white' : 'bg-gray-100 border border-gray-200'
+                      }`}>
                       {msg.role === 'user' ? <User className="w-4 h-4 md:w-5 md:h-5" /> : <img src="/logo.png" alt="Logo" className="w-5 h-5 md:w-6 md:h-6 object-contain p-0.5" />}
                     </div>
-                    <div className={`px-5 py-4 rounded-2xl text-[15px] leading-relaxed whitespace-pre-wrap shadow-sm ${
-                      msg.role === 'user' ? 'bg-[#1e4d1e] text-white rounded-tr-none' : 'bg-white border border-gray-200 text-gray-800 rounded-tl-none'
-                    }`}>
+                    <div className={`px-5 py-4 rounded-2xl text-[15px] leading-relaxed whitespace-pre-wrap shadow-sm ${msg.role === 'user' ? 'bg-[#1e4d1e] text-white rounded-tr-none' : 'bg-white border border-gray-200 text-gray-800 rounded-tl-none'
+                      }`}>
                       {msg.content}
                     </div>
                   </div>
@@ -656,17 +654,17 @@ export default function FarmerChatbot() {
 
         <div className="p-4 bg-white">
           <div className="max-w-4xl mx-auto relative flex items-center bg-white border border-gray-200 shadow-sm rounded-full px-4 py-2 transition-shadow focus-within:shadow-md focus-within:border-[#1e4d1e]">
-            <button 
+            <button
               onClick={() => fileInputRef.current?.click()}
               className="p-2 text-gray-400 hover:text-gray-600 transition-colors hidden sm:block"
             >
               <Paperclip className="w-5 h-5" />
             </button>
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              onChange={handleFileChange} 
-              className="hidden" 
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="hidden"
             />
             <input
               type="text"
@@ -678,7 +676,7 @@ export default function FarmerChatbot() {
               disabled={loading}
             />
             {showSpeechLangPopup && (
-              <div 
+              <div
                 ref={speechLangRef}
                 className="absolute bottom-full right-12 mb-3 bg-white border border-gray-200 rounded-2xl shadow-xl p-3 z-50 min-w-[200px] animate-in fade-in slide-in-from-bottom-2 duration-200"
               >
@@ -719,13 +717,12 @@ export default function FarmerChatbot() {
             )}
             <div className="flex items-center gap-2">
 
-              <button 
+              <button
                 onClick={handleMicClick}
-                className={`p-2 rounded-full transition-all focus:outline-none cursor-pointer hidden sm:block ${
-                  isListening 
-                    ? 'text-red-500 bg-red-50 animate-pulse border border-red-200' 
+                className={`p-2 rounded-full transition-all focus:outline-none cursor-pointer hidden sm:block ${isListening
+                    ? 'text-red-500 bg-red-50 animate-pulse border border-red-200'
                     : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
-                }`}
+                  }`}
                 title={`Speech-to-Text (${currentLang === 'ta' ? 'Tamil' : currentLang === 'si' ? 'Sinhala' : 'English'})`}
               >
                 <Mic className="w-5 h-5" />
@@ -760,8 +757,8 @@ export default function FarmerChatbot() {
               </button>
             </div>
             <div className="p-6">
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={newChatTitle}
                 onChange={(e) => setNewChatTitle(e.target.value)}
                 className="w-full bg-[#f4f6ee] border border-[#e4e6df] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#1e4d1e] mb-6"
