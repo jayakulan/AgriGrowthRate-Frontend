@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Eye, EyeOff, Loader2, ArrowUpRight } from 'lucide-react';
+import { Eye, EyeOff, Loader2, ArrowUpRight, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import Footer from '@/components/Footer';
@@ -138,34 +138,46 @@ export default function LoginPage() {
               <form onSubmit={handleSubmit} className="space-y-4">
 
                 {/* Email bottom-only line */}
-                <div className="text-left">
+                <div className="text-left relative group flex items-center">
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Email Address"
-                    className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2 text-sm text-gray-800 placeholder-gray-400"
+                    className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2 pr-8 text-sm text-gray-800 placeholder-gray-400"
                     required
                   />
+                  {email && isEmailValid(email) && (
+                    <div className="absolute right-1 bottom-2 transition-all duration-300">
+                      <Check className="w-4 h-4 text-green-600 animate-scaleIn" />
+                    </div>
+                  )}
                 </div>
 
                 {/* Password bottom-only line */}
-                <div className="text-left relative">
+                <div className="text-left relative group">
                   <input
                     type={showPwd ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Password"
-                    className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2 pr-10 text-sm text-gray-800 placeholder-gray-400"
+                    className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2 pr-16 text-sm text-gray-800 placeholder-gray-400"
                     required
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPwd(!showPwd)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
+                  <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                    {password && password.length >= 6 && (
+                      <span className="transition-all duration-300">
+                        <Check className="w-4 h-4 text-green-600 animate-scaleIn" />
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowPwd(!showPwd)}
+                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Submit CTA button in signature Forest Green */}

@@ -4,11 +4,19 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Eye, EyeOff, Loader2, Mail, Lock, User, Phone, MapPin, ShieldCheck, X, RefreshCw, ArrowUpRight, CreditCard, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Mail, Lock, User, Phone, MapPin, ShieldCheck, X, RefreshCw, ArrowUpRight, CreditCard, Sparkles, CircleAlert, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 import Footer from '@/components/Footer';
 import { useGoogleLogin } from '@react-oauth/google';
+
+const sriLankanDistricts = [
+  'Colombo', 'Gampaha', 'Kalutara', 'Kandy', 'Matale', 'Nuwara Eliya',
+  'Galle', 'Matara', 'Hambantota', 'Jaffna', 'Kilinochchi', 'Mannar',
+  'Vavuniya', 'Mullaitivu', 'Batticaloa', 'Ampara', 'Trincomalee',
+  'Kurunegala', 'Puttalam', 'Anuradhapura', 'Polonnaruwa', 'Badulla',
+  'Moneragala', 'Ratnapura', 'Kegalle'
+];
 
 export default function RegisterPage() {
   const { register, loginWithGoogle } = useAuth();
@@ -64,10 +72,16 @@ export default function RegisterPage() {
     }
   }, [otpTimer]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    if (errors[e.target.name]) {
-      setErrors({ ...errors, [e.target.name]: '' });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    if (name === 'name') {
+      if (value !== '' && !/^[A-Za-z\s]+$/.test(value)) {
+        return;
+      }
+    }
+    setForm({ ...form, [name]: value });
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: '' });
     }
   };
 
@@ -101,12 +115,31 @@ export default function RegisterPage() {
     e.preventDefault();
     const newErrors: { [key: string]: string } = {};
 
-    if (!form.name.trim()) newErrors.name = 'Full Name is required';
-    if (!form.email.trim()) newErrors.email = 'Email Address is required';
-    else if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(form.email)) newErrors.email = 'Invalid email format';
+    if (!form.name.trim()) {
+      newErrors.name = 'Full Name is required';
+    } else if (!/^[A-Za-z\s]+$/.test(form.name.trim())) {
+      newErrors.name = 'Full Name must contain only letters and spaces';
+    } else if (form.name.trim().length < 3) {
+      newErrors.name = 'Full Name must be at least 3 characters long';
+    }
 
-    if (!form.phone.trim()) newErrors.phone = 'Phone number is required for SMS verification';
-    if (!form.address.trim()) newErrors.address = 'Address is required';
+    if (!form.email.trim()) {
+      newErrors.email = 'Email Address is required';
+    } else if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(form.email)) {
+      newErrors.email = 'Invalid email format';
+    }
+
+    if (!form.phone.trim()) {
+      newErrors.phone = 'Phone number is required for SMS verification';
+    } else if (!/^(?:\+94|0)?7[0-9]{8}$/.test(form.phone.trim().replace(/[\s\-]/g, ''))) {
+      newErrors.phone = 'Invalid Sri Lankan phone number format (e.g. 077XXXXXXXX)';
+    }
+
+    if (!form.address.trim()) {
+      newErrors.address = 'Address is required';
+    } else if (!sriLankanDistricts.includes(form.address)) {
+      newErrors.address = 'Please select a valid Sri Lankan district';
+    }
 
     if (form.role === 'farmer') {
       if (!form.farmerCardNo.trim()) {
@@ -289,10 +322,19 @@ export default function RegisterPage() {
                       value={form.name}
                       onChange={handleChange}
                       placeholder="Full Name"
-                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 text-sm text-gray-800 placeholder-gray-400"
-                      
+                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-12 text-sm text-gray-800 placeholder-gray-400"
                     />
-                    {errors.name && <span className="text-red-500 text-[10px] md:text-xs mt-1 block font-semibold">{errors.name}</span>}
+                    {form.name && form.name.trim().length >= 3 && /^[A-Za-z\s]+$/.test(form.name.trim()) && (
+                      <div className="absolute right-1 top-2.5 transition-all duration-300">
+                        <Check className="w-4 h-4 text-green-600 animate-scaleIn" />
+                      </div>
+                    )}
+                    {errors.name && (
+                      <div className="flex items-center gap-1.5 mt-1.5 bg-red-50/50 border border-red-200/40 rounded-lg px-2.5 py-1 text-[10px] md:text-xs text-red-600 font-medium animate-fadeIn">
+                        <CircleAlert className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errors.name}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="relative group">
@@ -303,10 +345,19 @@ export default function RegisterPage() {
                       value={form.email}
                       onChange={handleChange}
                       placeholder="Email Address"
-                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 text-sm text-gray-800 placeholder-gray-400"
-                      
+                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-12 text-sm text-gray-800 placeholder-gray-400"
                     />
-                    {errors.email && <span className="text-red-500 text-[10px] md:text-xs mt-1 block font-semibold">{errors.email}</span>}
+                    {form.email && /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(form.email) && (
+                      <div className="absolute right-1 top-2.5 transition-all duration-300">
+                        <Check className="w-4 h-4 text-green-600 animate-scaleIn" />
+                      </div>
+                    )}
+                    {errors.email && (
+                      <div className="flex items-center gap-1.5 mt-1.5 bg-red-50/50 border border-red-200/40 rounded-lg px-2.5 py-1 text-[10px] md:text-xs text-red-600 font-medium animate-fadeIn">
+                        <CircleAlert className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errors.email}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -320,24 +371,51 @@ export default function RegisterPage() {
                       value={form.phone}
                       onChange={handleChange}
                       placeholder="Phone Number (SMS OTP)"
-                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 text-sm text-gray-800 placeholder-gray-400"
-                      
+                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-12 text-sm text-gray-800 placeholder-gray-400"
                     />
-                    {errors.phone && <span className="text-red-500 text-[10px] md:text-xs mt-1 block font-semibold">{errors.phone}</span>}
+                    {form.phone && /^(?:\+94|0)?7[0-9]{8}$/.test(form.phone.trim().replace(/[\s\-]/g, '')) && (
+                      <div className="absolute right-1 top-2.5 transition-all duration-300">
+                        <Check className="w-4 h-4 text-green-600 animate-scaleIn" />
+                      </div>
+                    )}
+                    {errors.phone && (
+                      <div className="flex items-center gap-1.5 mt-1.5 bg-red-50/50 border border-red-200/40 rounded-lg px-2.5 py-1 text-[10px] md:text-xs text-red-600 font-medium animate-fadeIn">
+                        <CircleAlert className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errors.phone}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="relative group">
-                    <MapPin className="absolute left-1 top-2.5 w-4 h-4 text-gray-400 group-focus-within:text-[#1e4d1e] transition-colors" />
-                    <input
+                    <MapPin className="absolute left-1 top-2.5 w-4 h-4 text-gray-400 group-focus-within:text-[#1e4d1e] transition-colors z-10" />
+                    <select
                       name="address"
-                      type="text"
                       value={form.address}
                       onChange={handleChange}
-                      placeholder="Address (City, Country)"
-                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 text-sm text-gray-800 placeholder-gray-400"
-                      
-                    />
-                    {errors.address && <span className="text-red-500 text-[10px] md:text-xs mt-1 block font-semibold">{errors.address}</span>}
+                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-8 text-sm text-gray-800 placeholder-gray-400 cursor-pointer appearance-none"
+                    >
+                      <option value="" disabled className="text-gray-400">Select Sri Lankan District</option>
+                      {sriLankanDistricts.map((district) => (
+                        <option key={district} value={district} className="text-gray-800 bg-white">
+                          {district}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute right-1 top-2.5 flex items-center gap-1.5 pointer-events-none transition-all duration-300">
+                      {form.address && sriLankanDistricts.includes(form.address) ? (
+                        <Check className="w-4 h-4 text-green-600 animate-scaleIn pointer-events-auto" />
+                      ) : (
+                        <svg className="fill-current h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                          <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                        </svg>
+                      )}
+                    </div>
+                    {errors.address && (
+                      <div className="flex items-center gap-1.5 mt-1.5 bg-red-50/50 border border-red-200/40 rounded-lg px-2.5 py-1 text-[10px] md:text-xs text-red-600 font-medium animate-fadeIn">
+                        <CircleAlert className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errors.address}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -359,10 +437,19 @@ export default function RegisterPage() {
                           value={form.farmerCardNo}
                           onChange={handleChange}
                           placeholder="Farmer Card Number (e.g. FSN0000000)"
-                          className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 text-sm text-gray-800 placeholder-gray-400 font-semibold tracking-wide"
-                          
+                          className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-12 text-sm text-gray-800 placeholder-gray-400 font-semibold tracking-wide"
                         />
-                        {errors.farmerCardNo && <span className="text-red-500 text-[10px] md:text-xs mt-1 block font-semibold">{errors.farmerCardNo}</span>}
+                        {form.farmerCardNo && /^FSN\d{7}$/.test(form.farmerCardNo.trim()) && (
+                          <div className="absolute right-1 top-2.5 transition-all duration-300">
+                            <Check className="w-4 h-4 text-green-600 animate-scaleIn" />
+                          </div>
+                        )}
+                        {errors.farmerCardNo && (
+                          <div className="flex items-center gap-1.5 mt-1.5 bg-red-50/50 border border-red-200/40 rounded-lg px-2.5 py-1 text-[10px] md:text-xs text-red-600 font-medium animate-fadeIn">
+                            <CircleAlert className="w-3.5 h-3.5 shrink-0" />
+                            <span>{errors.farmerCardNo}</span>
+                          </div>
+                        )}
                         <span className="text-[10px] text-[#4A6D2F] font-bold mt-1.5 block">
                           * Required to verify registered agricultural producer status.
                         </span>
@@ -381,8 +468,7 @@ export default function RegisterPage() {
                       value={form.password}
                       onChange={handleChange}
                       placeholder="Password"
-                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-8 text-sm text-gray-800 placeholder-gray-400"
-                      
+                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-16 text-sm text-gray-800 placeholder-gray-400"
                     />
                     <button
                       type="button"
@@ -391,7 +477,36 @@ export default function RegisterPage() {
                     >
                       {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
-                    {errors.password && <span className="text-red-500 text-[10px] md:text-xs mt-1 block font-semibold">{errors.password}</span>}
+                    {errors.password && (
+                      <div className="flex items-center gap-1.5 mt-1.5 bg-red-50/50 border border-red-200/40 rounded-lg px-2.5 py-1 text-[10px] md:text-xs text-red-600 font-medium animate-fadeIn">
+                        <CircleAlert className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errors.password}</span>
+                      </div>
+                    )}
+                    {/* Live Password Checklist */}
+                    {form.password && (
+                      <div className="mt-3 p-3 bg-gray-50/80 rounded-xl border border-gray-100/50 space-y-1.5 text-[10px] md:text-xs text-gray-500 animate-fadeIn">
+                        <p className="font-bold text-[9px] uppercase text-[#1e4d1e] tracking-wider mb-1">Password Rules Check</p>
+                        <div className="grid grid-cols-2 gap-x-2 gap-y-1.5">
+                          <div className="flex items-center gap-1">
+                            <Check className={`w-3.5 h-3.5 transition-colors ${form.password.length >= 8 ? 'text-green-600 font-bold' : 'text-gray-300'}`} />
+                            <span className={form.password.length >= 8 ? 'text-green-700 font-semibold' : ''}>8+ Characters</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Check className={`w-3.5 h-3.5 transition-colors ${/[a-z]/.test(form.password) && /[A-Z]/.test(form.password) ? 'text-green-600 font-bold' : 'text-gray-300'}`} />
+                            <span className={/[a-z]/.test(form.password) && /[A-Z]/.test(form.password) ? 'text-green-700 font-semibold' : ''}>Mixed Case</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Check className={`w-3.5 h-3.5 transition-colors ${/\d/.test(form.password) ? 'text-green-600 font-bold' : 'text-gray-300'}`} />
+                            <span className={/\d/.test(form.password) ? 'text-green-700 font-semibold' : ''}>Has Number</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Check className={`w-3.5 h-3.5 transition-colors ${/[^a-zA-Z\d]/.test(form.password) ? 'text-green-600 font-bold' : 'text-gray-300'}`} />
+                            <span className={/[^a-zA-Z\d]/.test(form.password) ? 'text-green-700 font-semibold' : ''}>Special Char</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="relative group">
@@ -402,17 +517,28 @@ export default function RegisterPage() {
                       value={form.confirm}
                       onChange={handleChange}
                       placeholder="Confirm Password"
-                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-8 text-sm text-gray-800 placeholder-gray-400"
-                      
+                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-16 text-sm text-gray-800 placeholder-gray-400"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPwd(!showConfirmPwd)}
-                      className="absolute right-1 top-2.5 text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      {showConfirmPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                    {errors.confirm && <span className="text-red-500 text-[10px] md:text-xs mt-1 block font-semibold">{errors.confirm}</span>}
+                    <div className="absolute right-1 top-2.5 flex items-center gap-2">
+                      {form.confirm && form.password === form.confirm && (
+                        <span>
+                          <Check className="w-4 h-4 text-green-600 animate-scaleIn" />
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPwd(!showConfirmPwd)}
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        {showConfirmPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    {errors.confirm && (
+                      <div className="flex items-center gap-1.5 mt-1.5 bg-red-50/50 border border-red-200/40 rounded-lg px-2.5 py-1 text-[10px] md:text-xs text-red-600 font-medium animate-fadeIn">
+                        <CircleAlert className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errors.confirm}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
