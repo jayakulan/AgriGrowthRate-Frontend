@@ -15,7 +15,7 @@ import {
   Pie, 
   Cell 
 } from 'recharts';
-import axios from 'axios';
+import api from '@/lib/axios';
 import { 
   Download, 
   SlidersHorizontal, 
@@ -49,6 +49,12 @@ export default function ReportsAnalyticsPage() {
   const [data, setData] = useState<ReportsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState('Last 30 Days');
+  const [stats, setStats] = useState({
+    activeUsers: 0,
+    productsSold: 0,
+    totalOrdersCount: 0,
+    totalRevenue: 0,
+  });
 
   // Old Reports states & ref
   const [oldReportsOpen, setOldReportsOpen] = useState(false);
@@ -105,13 +111,13 @@ export default function ReportsAnalyticsPage() {
   const fetchReports = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5001/api/admin/reports', {
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch(() => null);
+      const response = await api.get('/admin/reports').catch(() => null);
 
       if (response && response.data && response.data.data) {
         setData(response.data.data);
+        if (response.data.data.stats) {
+          setStats(response.data.data.stats);
+        }
       }
     } catch (error) {
       console.warn('Reports backend unreachable, rendering curated mockup visualizations:', error);
@@ -247,22 +253,21 @@ export default function ReportsAnalyticsPage() {
               </div>
             )}
           </div>
-
         </div>
 
         {/* ── METRICS ROW (4 Cards Redesigned) ── */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           
-          {/* Card 1: Active Customers */}
+          {/* Card 1: Active Users */}
           <div className="bg-white border border-[#e4e6df] rounded-2xl p-5 shadow-sm flex items-center justify-between h-36 select-none">
             <div className="w-[60%] flex flex-col justify-between h-full text-left">
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5 text-gray-400">
                   <Users className="w-4 h-4 text-gray-400" />
-                  <span className="text-[9px] font-bold uppercase tracking-wider">Active Customers</span>
+                  <span className="text-[9px] font-bold uppercase tracking-wider">Active Users</span>
                 </div>
                 <h3 className="text-2xl font-black text-gray-900 leading-none mt-2">
-                  1,240
+                  {loading ? '...' : stats.activeUsers.toLocaleString()}
                 </h3>
               </div>
               <p className="text-[10px] font-bold text-green-600 flex items-center gap-1 mt-2">
@@ -284,7 +289,7 @@ export default function ReportsAnalyticsPage() {
             </div>
           </div>
 
-          {/* Card 2: Inventory Performance */}
+          {/* Card 2: Products Sold */}
           <div className="bg-white border border-[#e4e6df] rounded-2xl p-5 shadow-sm flex items-center justify-between h-36 select-none">
             <div className="w-[60%] flex flex-col justify-between h-full text-left">
               <div className="space-y-1.5">
@@ -293,7 +298,7 @@ export default function ReportsAnalyticsPage() {
                   <span className="text-[9px] font-bold uppercase tracking-wider">Products Sold</span>
                 </div>
                 <h3 className="text-2xl font-black text-gray-900 leading-none mt-2">
-                  1,820
+                  {loading ? '...' : stats.productsSold.toLocaleString()}
                 </h3>
               </div>
               <p className="text-[10px] font-bold text-gray-400 flex items-center gap-1 mt-2">
@@ -314,7 +319,7 @@ export default function ReportsAnalyticsPage() {
             </div>
           </div>
 
-          {/* Card 3: Operations */}
+          {/* Card 3: Total Orders */}
           <div className="bg-white border border-[#e4e6df] rounded-2xl p-5 shadow-sm flex items-center justify-between h-36 select-none">
             <div className="w-[60%] flex flex-col justify-between h-full text-left">
               <div className="space-y-1.5">
@@ -323,7 +328,7 @@ export default function ReportsAnalyticsPage() {
                   <span className="text-[9px] font-bold uppercase tracking-wider">Total Orders</span>
                 </div>
                 <h3 className="text-2xl font-black text-gray-900 leading-none mt-2">
-                  315
+                  {loading ? '...' : stats.totalOrdersCount.toLocaleString()}
                 </h3>
               </div>
               <p className="text-[10px] font-bold text-green-600 flex items-center gap-1 mt-2">
@@ -344,7 +349,7 @@ export default function ReportsAnalyticsPage() {
             </div>
           </div>
 
-          {/* Card 4: Financial Health */}
+          {/* Card 4: Total Revenue */}
           <div className="bg-white border border-[#e4e6df] rounded-2xl p-5 shadow-sm flex items-center justify-between h-36 select-none">
             <div className="w-[60%] flex flex-col justify-between h-full text-left">
               <div className="space-y-1.5">
@@ -353,7 +358,7 @@ export default function ReportsAnalyticsPage() {
                   <span className="text-[9px] font-bold uppercase tracking-wider">Total Revenue</span>
                 </div>
                 <h3 className="text-2xl font-black text-gray-900 leading-none mt-2">
-                  $58,430.00
+                  {loading ? '...' : `LKR ${stats.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 </h3>
               </div>
               <p className="text-[10px] font-bold text-green-600 flex items-center gap-1 mt-2">

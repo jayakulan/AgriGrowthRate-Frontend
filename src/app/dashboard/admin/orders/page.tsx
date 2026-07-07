@@ -38,8 +38,14 @@ interface Order {
 export default function OrdersMonitoringPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<'All' | 'Pending' | 'Shipping' | 'Delivered'>('All');
+  const [statusFilter, setStatusFilter] = useState<'All' | 'Shipping' | 'Delivered' | 'Cancelled'>('All');
   const [currentPage, setCurrentPage] = useState(1);
+  const [stats, setStats] = useState({
+    delivered: 0,
+    shipping: 0,
+    cancelled: 0,
+    revenue: 0,
+  });
 
   // Status Change Dialog states
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -81,7 +87,7 @@ export default function OrdersMonitoringPage() {
       farmerName: 'Sustainable Roots',
       dateStr: 'Oct 31, 2023, 09:12',
       totalAmount: 2100.25,
-      status: 'Pending'
+      status: 'Shipping'
     },
     {
       _id: 'ord-4',
@@ -125,14 +131,10 @@ export default function OrdersMonitoringPage() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       const params: any = { page: currentPage, limit: 10 };
       if (statusFilter !== 'All') params.status = statusFilter;
 
-      const response = await axios.get('http://localhost:5001/api/admin/orders', {
-        headers: { Authorization: `Bearer ${token}` },
-        params,
-      }).catch(() => null);
+      const response = await api.get('/admin/orders', { params }).catch(() => null);
 
       if (response && response.data && response.data.data) {
         // Transform backend fields
@@ -142,18 +144,38 @@ export default function OrdersMonitoringPage() {
           customerName: item.consumer?.name || 'Unknown',
           customerInitials: (item.consumer?.name || 'UK').split(' ').map((n: string) => n[0]).join('').slice(0, 2),
           customerColor: 'bg-[#edf4e2] text-[#1e4d1e]',
-          farmerName: item.farmer?.name || 'Local Farms',
+          farmerName: item.items?.[0]?.product?.farmer?.name || 'Local Farms',
           dateStr: new Date(item.createdAt).toLocaleString(),
           totalAmount: item.totalAmount || 0,
-          status: item.status || 'Pending'
+          status: item.status && item.status.toLowerCase() === 'pending' ? 'Shipping' : (item.status || 'Shipping')
         }));
         setOrders(formatted);
+        if (response.data.counts) {
+          setStats({
+            delivered: response.data.counts.delivered || 0,
+            shipping: response.data.counts.shipping || 0,
+            cancelled: response.data.counts.cancelled || 0,
+            revenue: response.data.revenue || 0,
+          });
+        }
       } else {
         setOrders(mockOrders);
+        setStats({
+          delivered: mockOrders.filter(o => o.status === 'Delivered').length,
+          shipping: mockOrders.filter(o => o.status === 'Shipping').length,
+          cancelled: mockOrders.filter(o => o.status === 'Cancelled').length,
+          revenue: mockOrders.filter(o => o.status === 'Delivered').reduce((sum, o) => sum + o.totalAmount, 0),
+        });
       }
     } catch (error) {
       console.warn('Could not communicate with backend orders API, displaying mockup data:', error);
       setOrders(mockOrders);
+      setStats({
+        delivered: mockOrders.filter(o => o.status === 'Delivered').length,
+        shipping: mockOrders.filter(o => o.status === 'Shipping').length,
+        cancelled: mockOrders.filter(o => o.status === 'Cancelled').length,
+        revenue: mockOrders.filter(o => o.status === 'Delivered').reduce((sum, o) => sum + o.totalAmount, 0),
+      });
     } finally {
       setLoading(false);
     }
@@ -161,11 +183,9 @@ export default function OrdersMonitoringPage() {
 
   const handleUpdateStatus = async (orderId: string, newStatus: Order['status']) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.patch(
-        `http://localhost:5001/api/admin/orders/${orderId}/status`,
-        { status: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await api.patch(
+        `/admin/orders/${orderId}/status`,
+        { status: newStatus }
       ).catch(() => null);
 
       if (response) {
@@ -203,28 +223,7 @@ export default function OrdersMonitoringPage() {
         {/* ── KPI METRICS CARDS ROW ── */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-          {/* Card 1: Total Orders Today */}
-          <div className="bg-white border border-[#e4e6df] rounded-[20px] p-5 shadow-sm flex flex-col justify-between h-32 text-left">
-            <div className="flex items-start justify-between">
-              <div className="space-y-1">
-                <div className="p-2 bg-[#edf4e2] rounded-xl w-fit">
-                  <ShoppingBag className="w-4 h-4 text-[#1e4d1e]" />
-                </div>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-2.5">
-                  Total Orders Today
-                </p>
-                <h3 className="text-xl font-extrabold text-gray-900 leading-none">
-                  1,284
-                </h3>
-              </div>
-
-              <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100 shrink-0">
-                +12%
-              </span>
-            </div>
-          </div>
-
-          {/* Card 2: Daily Revenue */}
+          {/* Card 1: Revenue */}
           <div className="bg-white border border-[#e4e6df] rounded-[20px] p-5 shadow-sm flex flex-col justify-between h-32 text-left">
             <div className="flex items-start justify-between">
               <div className="space-y-1">
@@ -232,10 +231,10 @@ export default function OrdersMonitoringPage() {
                   <CreditCard className="w-4 h-4 text-gray-600" />
                 </div>
                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-2.5">
-                  Daily Revenue
+                  Revenue
                 </p>
                 <h3 className="text-xl font-extrabold text-gray-900 leading-none">
-                  $42,930
+                  {loading ? '...' : `LKR ${stats.revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 </h3>
               </div>
 
@@ -245,7 +244,28 @@ export default function OrdersMonitoringPage() {
             </div>
           </div>
 
-          {/* Card 3: In Transit (Highlighted border card) */}
+          {/* Card 2: Delivered */}
+          <div className="bg-white border border-[#e4e6df] rounded-[20px] p-5 shadow-sm flex flex-col justify-between h-32 text-left">
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                <div className="p-2 bg-[#edf4e2] rounded-xl w-fit">
+                  <ShoppingBag className="w-4 h-4 text-[#1e4d1e]" />
+                </div>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-2.5">
+                  Delivered
+                </p>
+                <h3 className="text-xl font-extrabold text-gray-900 leading-none">
+                  {loading ? '...' : stats.delivered.toLocaleString()}
+                </h3>
+              </div>
+
+              <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100 shrink-0">
+                +12%
+              </span>
+            </div>
+          </div>
+
+          {/* Card 3: In Transit */}
           <div className="bg-white border-2 border-[#1e4d1e] rounded-[20px] p-5 shadow-md flex flex-col justify-between h-32 text-left">
             <div className="flex items-start justify-between">
               <div className="space-y-1">
@@ -256,13 +276,13 @@ export default function OrdersMonitoringPage() {
                   In Transit
                 </p>
                 <h3 className="text-xl font-extrabold text-gray-900 leading-none">
-                  312
+                  {loading ? '...' : stats.shipping.toLocaleString()}
                 </h3>
               </div>
             </div>
           </div>
 
-          {/* Card 4: Failed/Cancelled */}
+          {/* Card 4: Cancelled */}
           <div className="bg-white border border-[#e4e6df] rounded-[20px] p-5 shadow-sm flex flex-col justify-between h-32 text-left">
             <div className="flex items-start justify-between">
               <div className="space-y-1">
@@ -270,10 +290,10 @@ export default function OrdersMonitoringPage() {
                   <AlertTriangle className="w-4 h-4 text-red-500" />
                 </div>
                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-2.5">
-                  Failed/Cancelled
+                  Cancelled
                 </p>
                 <h3 className="text-xl font-extrabold text-gray-900 leading-none">
-                  14
+                  {loading ? '...' : stats.cancelled.toLocaleString()}
                 </h3>
               </div>
 
@@ -290,14 +310,14 @@ export default function OrdersMonitoringPage() {
 
           {/* Table Header Filter bar */}
           <div className="px-6 py-4 border-b border-[#e4e6df] flex flex-col sm:flex-row items-center justify-between gap-4 select-none">
-            <div className="flex items-center gap-4">
-              <h3 className="text-sm font-extrabold text-gray-900 uppercase tracking-wider">
-                All Platform Orders
-              </h3>
+            <h3 className="text-sm font-extrabold text-gray-900 uppercase tracking-wider">
+              All Platform Orders
+            </h3>
 
+            <div className="flex items-center gap-3">
               {/* Horizontal Pill Filters */}
               <div className="flex items-center gap-1.5 bg-[#f4f5f0]/60 p-1 rounded-xl">
-                {['All', 'Pending', 'Shipping', 'Delivered'].map((tab) => (
+                {['All', 'Shipping', 'Delivered', 'Cancelled'].map((tab) => (
                   <button
                     key={tab}
                     onClick={() => { setStatusFilter(tab as any); setCurrentPage(1); }}
@@ -311,14 +331,6 @@ export default function OrdersMonitoringPage() {
                 ))}
               </div>
             </div>
-
-            {/* Filter slider cogs */}
-            <button
-              onClick={() => toast('Triggering advanced filters slider...')}
-              className="p-2 bg-[#f4f5f0] hover:bg-[#edf4e2]/60 hover:text-[#1e4d1e] text-gray-600 rounded-xl transition-all cursor-pointer"
-            >
-              <SlidersHorizontal className="w-4.5 h-4.5" />
-            </button>
           </div>
 
           {/* Table list */}
@@ -374,7 +386,7 @@ export default function OrdersMonitoringPage() {
 
                       {/* Total price */}
                       <td className="px-6 py-4 text-xs font-extrabold text-gray-900">
-                        ${ord.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        LKR {ord.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </td>
 
                       {/* Status badge pill */}
@@ -416,7 +428,7 @@ export default function OrdersMonitoringPage() {
           {/* Table pagination footer exactly matching mock image */}
           <div className="bg-[#fcfdfa]/80 border-t border-[#e4e6df] px-6 py-4 flex items-center justify-between select-none">
             <span className="text-[10px] font-bold text-gray-400">
-              Showing 1 to 6 of 1,284 orders
+              Showing 1 to {orders.length} of {orders.length} orders
             </span>
 
             <div className="inline-flex items-center gap-1.5">
@@ -501,7 +513,7 @@ export default function OrdersMonitoringPage() {
               </p>
 
               <div className="space-y-2 mb-6">
-                {['Pending', 'Shipping', 'Delivered', 'Cancelled'].map((status) => (
+                {['Shipping', 'Delivered', 'Cancelled'].map((status) => (
                   <button
                     key={status}
                     onClick={() => handleUpdateStatus(selectedOrder._id, status as any)}
