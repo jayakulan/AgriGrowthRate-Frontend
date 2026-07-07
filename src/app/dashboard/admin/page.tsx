@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BarChart,
   Bar,
@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import DailyLogisticsCard from '@/components/DailyLogisticsCard';
 import toast from 'react-hot-toast';
+import api from '@/lib/axios';
 
 import { useAuth } from '@/context/AuthContext';
 
@@ -30,6 +31,36 @@ export default function AdminDashboardPage() {
   const { user } = useAuth();
   const userName = user?.name || 'Thomas';
   const [range, setRange] = useState<'1M'|'6M'|'1Y'>('6M');
+  const [stats, setStats] = useState({
+    activeFarmers: 0,
+    activeRetailers: 0,
+    approvedProducts: 0,
+    deliveredOrders: 0,
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setStatsLoading(true);
+        const res = await api.get('/admin/analytics');
+        if (res.data && res.data.success) {
+          const { activeFarmers, activeRetailers, approvedProducts, deliveredOrders } = res.data.data;
+          setStats({
+            activeFarmers: activeFarmers || 0,
+            activeRetailers: activeRetailers || 0,
+            approvedProducts: approvedProducts || 0,
+            deliveredOrders: deliveredOrders || 0,
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching admin stats:', err);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
   // Revenue chart mock data matching mock overview months
   const revenueData = [
     { name: 'JAN', value: 2400 },
@@ -98,7 +129,7 @@ export default function AdminDashboardPage() {
                   Active Farmers
                 </p>
                 <h3 className="text-2xl font-extrabold text-gray-900 leading-none">
-                  14,282
+                  {statsLoading ? '...' : stats.activeFarmers.toLocaleString()}
                 </h3>
               </div>
 
@@ -126,7 +157,7 @@ export default function AdminDashboardPage() {
                   Active Retailers
                 </p>
                 <h3 className="text-2xl font-extrabold text-gray-900 leading-none">
-                  3,891
+                  {statsLoading ? '...' : stats.activeRetailers.toLocaleString()}
                 </h3>
               </div>
 
@@ -143,7 +174,7 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          {/* Card 3: Cataloged Products */}
+          {/* Card 3: Approved Products */}
           <div className="bg-white border border-[#e4e6df] rounded-[20px] p-6 shadow-sm flex flex-col justify-between h-36">
             <div className="flex items-start justify-between">
               <div className="space-y-1">
@@ -151,10 +182,10 @@ export default function AdminDashboardPage() {
                   <ShoppingCart className="w-5 h-5 text-[#1e4d1e]" />
                 </div>
                 <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mt-2">
-                  Cataloged Products
+                  Approved Products
                 </p>
                 <h3 className="text-2xl font-extrabold text-gray-900 leading-none">
-                  842
+                  {statsLoading ? '...' : stats.approvedProducts.toLocaleString()}
                 </h3>
               </div>
 
@@ -171,15 +202,17 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          {/* Card 4: Active Orders */}
+          {/* Card 4: Delivered Orders */}
           <div className="bg-white border border-[#e4e6df] rounded-[20px] p-6 shadow-sm flex flex-col justify-between h-36">
             <div className="flex items-start justify-between">
               <div className="space-y-1">
                 <div className="p-2.5 bg-[#edf4e2] rounded-xl w-fit">
                   <ShoppingBag className="w-5 h-5 text-[#1e4d1e]" />
                 </div>
-                <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mt-2">Active Orders</p>
-                <h3 className="text-2xl font-extrabold text-gray-900 leading-none">1,204</h3>
+                <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mt-2">Delivered Orders</p>
+                <h3 className="text-2xl font-extrabold text-gray-900 leading-none">
+                  {statsLoading ? '...' : stats.deliveredOrders.toLocaleString()}
+                </h3>
               </div>
 
               <div className="flex items-center gap-1 text-[11px] font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full border border-green-100">
