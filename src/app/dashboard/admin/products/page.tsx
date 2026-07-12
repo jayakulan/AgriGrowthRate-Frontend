@@ -185,10 +185,25 @@ export default function ManageProductsPage() {
     }
   };
 
-  const handleReject = async (productId: string) => {
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectProductId, setRejectProductId] = useState('');
+  const [rejectReason, setRejectReason] = useState('');
+
+  const handleRejectTrigger = (productId: string) => {
+    setRejectProductId(productId);
+    setRejectReason('');
+    setRejectModalOpen(true);
+  };
+
+  const submitRejection = async () => {
+    if (!rejectReason.trim()) {
+      toast.error('Please enter a reason for rejecting the product.');
+      return;
+    }
     try {
-      await api.patch(`/admin/products/${productId}/status`, { status: 'Rejected' });
-      toast.error('Product rejected.');
+      await api.patch(`/admin/products/${rejectProductId}/status`, { status: 'Rejected', reason: rejectReason });
+      toast.success('Product rejected.');
+      setRejectModalOpen(false);
       fetchProducts();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to reject product');
@@ -387,7 +402,7 @@ export default function ManageProductsPage() {
                       </h3>
                       <div className="text-right shrink-0 ml-2">
                         <span className="text-[14px] font-bold text-[#0f172a]">
-                          ₹{product.price.toLocaleString()}
+                          LKR {product.price.toLocaleString()}
                         </span>
                         <span className="text-[12px] font-bold text-[#0f172a]">/unit</span>
                       </div>
@@ -452,7 +467,7 @@ export default function ManageProductsPage() {
                           Approve
                         </button>
                         <button
-                          onClick={() => handleReject(product._id)}
+                          onClick={() => handleRejectTrigger(product._id)}
                           disabled={product.status === 'Rejected'}
                           className="py-2 px-3 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-xl transition-all cursor-pointer border border-red-100 text-center disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none disabled:blur-[0.5px]"
                         >
@@ -481,6 +496,39 @@ export default function ManageProductsPage() {
             ))}
             {/* Detail popup render */}
             <DetailPopup product={detailProduct} open={detailOpen} onClose={closeDetails} />
+
+            {/* Rejection Modal */}
+            {rejectModalOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+                <div className="absolute inset-0" onClick={() => setRejectModalOpen(false)} />
+                <div className="relative z-10 w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-[#e4e6df] animate-scale-up text-left">
+                  <h3 className="text-lg font-extrabold text-gray-900 mb-2">Reject Product</h3>
+                  <p className="text-xs font-semibold text-gray-500 mb-4">
+                    Enter the reason for rejecting the product:
+                  </p>
+                  <textarea
+                    className="w-full h-24 p-3 text-xs font-semibold text-gray-800 border border-[#e4e6df] rounded-xl focus:outline-none focus:ring-1 focus:ring-[#1e4d1e] bg-[#f9f9f6]"
+                    placeholder="e.g. Image quality is too low or invalid price."
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                  />
+                  <div className="flex gap-3 mt-5">
+                    <button
+                      onClick={() => setRejectModalOpen(false)}
+                      className="w-1/2 py-3 bg-gray-150 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-all cursor-pointer text-center"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={submitRejection}
+                      className="w-1/2 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white text-xs font-bold rounded-xl transition-all cursor-pointer text-center"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -549,7 +597,7 @@ function DetailPopup({ product, open, onClose }: { product: Product | null; open
               </div>
               <div className="grid grid-cols-3 items-center">
                 <span className="font-extrabold text-xs text-[#1e4d1e] tracking-wide uppercase">Price</span>
-                <span className="col-span-2 text-[#1e4d1e] font-black">₹{product.price} / unit</span>
+                <span className="col-span-2 text-[#1e4d1e] font-black">LKR {product.price} / unit</span>
               </div>
               <div className="grid grid-cols-3 items-center">
                 <span className="font-extrabold text-xs text-[#1e4d1e] tracking-wide uppercase">Quantity</span>

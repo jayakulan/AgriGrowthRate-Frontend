@@ -122,6 +122,17 @@ export default function FarmerProfilePage() {
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (name) {
+      if (/\d/.test(name)) {
+        toast.error('Name cannot contain numbers');
+        return;
+      }
+      if (!/^[a-zA-Z\s\.\-]+$/.test(name)) {
+        toast.error('Name can only contain alphabetic characters, spaces, dots, or hyphens');
+        return;
+      }
+    }
+    
     // Normalize phone numbers for comparison
     let currentFormatted = user?.phone || '';
     let newFormatted = phone.trim().replace(/[\s\-\+\(\)]/g, '');
@@ -364,9 +375,15 @@ export default function FarmerProfilePage() {
                   type="text"
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  className="w-full bg-[#f4f6ee] border border-[#e4e6df] rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#1e4d1e]"
+                  className={`w-full bg-[#f4f6ee] border rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#1e4d1e] ${name && (/\d/.test(name) || !/^[a-zA-Z\s\.\-]+$/.test(name)) ? 'border-red-500' : 'border-[#e4e6df]'}`}
                   required
                 />
+                {name && /\d/.test(name) && (
+                  <p className="text-red-500 text-xs font-semibold mt-1">Name cannot contain numbers</p>
+                )}
+                {name && !/\d/.test(name) && !/^[a-zA-Z\s\.\-]+$/.test(name) && (
+                  <p className="text-red-500 text-xs font-semibold mt-1">Name can only contain alphabetic characters, spaces, dots, or hyphens</p>
+                )}
               </div>
 
               <div>
@@ -400,8 +417,8 @@ export default function FarmerProfilePage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={saving}
-                  className="flex-1 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+                  disabled={saving || !!(name && (/\d/.test(name) || !/^[a-zA-Z\s\.\-]+$/.test(name)))}
+                  className="flex-1 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-75 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {saving && <Loader2 className="w-4 h-4 animate-spin" />}
                   Save Changes
