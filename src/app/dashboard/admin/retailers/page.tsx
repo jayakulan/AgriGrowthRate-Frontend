@@ -51,7 +51,7 @@ export default function ManageRetailersPage() {
   const [inviteForm, setInviteForm] = useState({
     name: '',
     email: '',
-    role: 'farmer'
+    role: 'consumer'
   });
   const [inviting, setInviting] = useState(false);
 
@@ -63,42 +63,57 @@ export default function ManageRetailersPage() {
   const [showDisableConfirmModal, setShowDisableConfirmModal] = useState(false);
   const [userToDisable, setUserToDisable] = useState<User | null>(null);
 
-  const lastMonthData = [
-    { month: 'Wk 1', value: 1900 },
-    { month: 'Wk 2', value: 2150 },
-    { month: 'Wk 3', value: 1980 },
-    { month: 'Wk 4', value: 2280 },
-  ];
-
-  const last6MonthsData = [
-    { month: 'Jan', value: 2100 },
-    { month: 'Feb', value: 2450 },
-    { month: 'Mar', value: 2300 },
-    { month: 'Apr', value: 2800 },
-    { month: 'May', value: 3200 },
-    { month: 'Jun', value: 3600 },
-  ];
-
-  const lastYearData = [
-    { month: 'Jan', value: 1800 },
-    { month: 'Feb', value: 2050 },
-    { month: 'Mar', value: 2200 },
-    { month: 'Apr', value: 2600 },
-    { month: 'May', value: 3000 },
-    { month: 'Jun', value: 3400 },
-    { month: 'Jul', value: 3600 },
-    { month: 'Aug', value: 3850 },
-    { month: 'Sep', value: 4000 },
-    { month: 'Oct', value: 4300 },
-    { month: 'Nov', value: 4500 },
-    { month: 'Dec', value: 4700 },
-  ];
-
-  const chartData = range === '1M' ? lastMonthData : range === '1Y' ? lastYearData : last6MonthsData;
+  // Dynamic system analytics
+  const [analytics, setAnalytics] = useState({
+    activeRetailers: 0,
+    totalRetailers: 0,
+  });
+  const [chartDataList, setChartDataList] = useState<Array<{ month: string; value: number }>>([]);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
 
   useEffect(() => {
     fetchUsers();
   }, [searchTerm, roleFilter, currentPage]);
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        setAnalyticsLoading(true);
+        const token = localStorage.getItem('token');
+        const res = await axios.get('http://localhost:5001/api/admin/analytics', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data && res.data.success) {
+          const { activeRetailers, users: usersSummary, retailerGrowthTrend } = res.data.data;
+          setAnalytics({
+            activeRetailers: activeRetailers || 0,
+            totalRetailers: usersSummary?.consumers || 0,
+          });
+
+          if (retailerGrowthTrend) {
+            const monthsOrder = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+            const formatted = Object.entries(retailerGrowthTrend).map(([month, value]) => ({
+              month: month.charAt(0) + month.slice(1).toLowerCase(), // e.g. "Jan"
+              value: value as number
+            })).sort((a, b) => monthsOrder.indexOf(a.month.toUpperCase()) - monthsOrder.indexOf(b.month.toUpperCase()));
+            setChartDataList(formatted);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching retailer analytics:', err);
+      } finally {
+        setAnalyticsLoading(false);
+      }
+    };
+    fetchAnalytics();
+  }, []);
+
+  const chartData = (() => {
+    if (chartDataList.length === 0) return [];
+    if (range === '1M') return [chartDataList[chartDataList.length - 1]];
+    if (range === '6M') return chartDataList.slice(-6);
+    return chartDataList;
+  })();
 
   const fetchUsers = async () => {
     try {
@@ -124,8 +139,6 @@ export default function ManageRetailersPage() {
       setLoading(false);
     }
   };
-
-
 
   const handleInviteUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -254,70 +267,78 @@ export default function ManageRetailersPage() {
                 </thead>
 
                 <tbody className="divide-y divide-[#f4f5f0]">
-                  {users.map((user) => (
-                    <tr key={user._id} className="hover:bg-[#f4f5f0]/20 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          {user.avatar ? (
-                            <img
-                              src={user.avatar}
-                              alt={user.name}
-                              className="w-9 h-9 rounded-full object-cover border border-[#edf4e2]"
-                            />
-                          ) : (
-                            <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold ${user.initialsBg || 'bg-[#edf4e2] text-[#1e4d1e]'}`}>
-                              {user.initials || user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
-                            </div>
-                          )}
-                          <div className="text-left space-y-0.5">
-                            <p className="text-xs font-bold text-gray-900 leading-snug">{user.name}</p>
-                            <p className="text-[10px] text-gray-400 font-semibold leading-none">
-                              {user.registeredDate || 'Registered ' + new Date(user.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="px-6 py-4 text-xs font-semibold text-gray-500">
-                        {user.email}
-                      </td>
-
-                      <td className="px-6 py-4 text-xs font-semibold text-gray-500">
-                        {user.contactNo || '+94 77 123 4567'}
-                      </td>
-
-                      <td className="px-6 py-4 text-xs font-semibold text-gray-500">
-                        {user.address || 'Colombo, Sri Lanka'}
-                      </td>
-
-                      <td className="px-6 py-4 text-xs font-semibold text-gray-500">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold ${user.isVerified ? 'bg-[#d8f6dc] text-[#166c2c]' : 'bg-[#f1f2f4] text-[#6b7280]'}`}>
-                          {user.isVerified ? 'Enabled' : 'Disabled'}
-                        </span>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="px-6 py-4 text-xs font-semibold text-gray-500">
-                        {user.isVerified ? (
-                          <button
-                            onClick={() => confirmAndDisableUser(user)}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors cursor-pointer"
-                            title="Disable User"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        ) : (
-                          <button
-                            disabled
-                            className="text-gray-300 p-2 cursor-not-allowed"
-                            title="Already Disabled"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
+                  {users.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-12 text-center text-xs font-bold text-gray-400">
+                        No retailers registered in database yet.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    users.map((user) => (
+                      <tr key={user._id} className="hover:bg-[#f4f5f0]/20 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            {user.avatar ? (
+                              <img
+                                src={user.avatar}
+                                alt={user.name}
+                                className="w-9 h-9 rounded-full object-cover border border-[#edf4e2]"
+                              />
+                            ) : (
+                              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold ${user.initialsBg || 'bg-[#edf4e2] text-[#1e4d1e]'}`}>
+                                {user.initials || user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
+                              </div>
+                            )}
+                            <div className="text-left space-y-0.5">
+                              <p className="text-xs font-bold text-gray-900 leading-snug">{user.name}</p>
+                              <p className="text-[10px] text-gray-400 font-semibold leading-none">
+                                {user.registeredDate || 'Registered ' + new Date(user.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="px-6 py-4 text-xs font-semibold text-gray-500">
+                          {user.email}
+                        </td>
+
+                        <td className="px-6 py-4 text-xs font-semibold text-gray-500">
+                          {user.contactNo || '+94 77 123 4567'}
+                        </td>
+
+                        <td className="px-6 py-4 text-xs font-semibold text-gray-500">
+                          {user.address || 'Colombo, Sri Lanka'}
+                        </td>
+
+                        <td className="px-6 py-4 text-xs font-semibold text-gray-500">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold ${user.isVerified ? 'bg-[#d8f6dc] text-[#166c2c]' : 'bg-[#f1f2f4] text-[#6b7280]'}`}>
+                            {user.isVerified ? 'Enabled' : 'Disabled'}
+                          </span>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="px-6 py-4 text-xs font-semibold text-gray-500">
+                          {user.isVerified ? (
+                            <button
+                              onClick={() => confirmAndDisableUser(user)}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors cursor-pointer"
+                              title="Disable User"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          ) : (
+                            <button
+                              disabled
+                              className="text-gray-300 p-2 cursor-not-allowed"
+                              title="Already Disabled"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
 
               </table>
@@ -371,26 +392,36 @@ export default function ManageRetailersPage() {
             </div>
 
             <div className="mt-8 w-full h-[320px] flex-1">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 16, right: 24, left: -12, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="retailerGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#1e4d1e" stopOpacity={0.22} />
-                      <stop offset="100%" stopColor="#1e4d1e" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#edf4e2" />
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12, fontWeight: 700 }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12, fontWeight: 700 }} />
-                  <Tooltip
-                    contentStyle={{ background: '#1e4d1e', border: 'none', borderRadius: '16px', color: '#fff', fontSize: 12, padding: '10px' }}
-                    itemStyle={{ color: '#fff' }}
-                    labelStyle={{ color: '#fff', fontWeight: 700 }}
-                    cursor={{ stroke: '#1e4d1e', strokeWidth: 2, opacity: 0.12 }}
-                  />
-                  <Area type="monotone" dataKey="value" stroke="#1e4d1e" strokeWidth={3} fill="url(#retailerGradient)" fillOpacity={1} activeDot={{ r: 6, stroke: '#ffffff', strokeWidth: 3, fill: '#1e4d1e' }} />
-                </AreaChart>
-              </ResponsiveContainer>
+              {analyticsLoading ? (
+                <div className="h-full flex items-center justify-center">
+                  <Loader2 className="w-8 h-8 text-[#1e4d1e] animate-spin" />
+                </div>
+              ) : chartData.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-xs font-bold text-gray-400">
+                  No registration growth data in system.
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData} margin={{ top: 16, right: 24, left: -12, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="retailerGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#1e4d1e" stopOpacity={0.22} />
+                        <stop offset="100%" stopColor="#1e4d1e" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#edf4e2" />
+                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12, fontWeight: 700 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12, fontWeight: 700 }} />
+                    <Tooltip
+                      contentStyle={{ background: '#1e4d1e', border: 'none', borderRadius: '16px', color: '#fff', fontSize: 12, padding: '10px' }}
+                      itemStyle={{ color: '#fff' }}
+                      labelStyle={{ color: '#fff', fontWeight: 700 }}
+                      cursor={{ stroke: '#1e4d1e', strokeWidth: 2, opacity: 0.12 }}
+                    />
+                    <Area type="monotone" dataKey="value" stroke="#1e4d1e" strokeWidth={3} fill="url(#retailerGradient)" fillOpacity={1} activeDot={{ r: 6, stroke: '#ffffff', strokeWidth: 3, fill: '#1e4d1e' }} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
 
@@ -398,8 +429,10 @@ export default function ManageRetailersPage() {
             <DailyLogisticsCard
               className="w-full rounded-[24px] p-6 shadow-sm flex flex-col justify-between"
               label="RETAILER MANAGEMENT"
-              headline="92% of Retailers Verified"
-              description="Out of today's scheduled network onboarding, 312 retailers have signed in and verified their inventory readiness."
+              headline={analytics.totalRetailers > 0 ? `${Math.round((analytics.activeRetailers / analytics.totalRetailers) * 100)}% of Retailers Verified` : '100% Retailers Verified'}
+              description={analytics.totalRetailers > 0
+                ? `Out of ${analytics.totalRetailers} total registered consumers and retailers on AgriGrowthRate, ${analytics.activeRetailers} have active, enabled profiles.`
+                : "No registered consumers or retailers recorded in database yet."}
             />
           </div>
 

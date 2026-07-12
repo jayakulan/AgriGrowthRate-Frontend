@@ -1,128 +1,81 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '@/lib/axios';
 import {
   ShoppingBag,
   CreditCard,
   Truck,
   AlertTriangle,
-  SlidersHorizontal,
   MoreVertical,
   ChevronLeft,
   ChevronRight,
-  Calendar,
-  Download,
-  Plus,
   X,
-  CheckCircle,
+  Loader2,
+  PackageCheck,
   Clock,
-  Trash2,
-  ChevronDown
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { AnimatePresence, motion } from 'framer-motion';
+
+// All valid statuses from the backend
+const ALL_STATUSES = ['Pending', 'Delivered', 'Cancelled'] as const;
+type OrderStatus = typeof ALL_STATUSES[number];
 
 interface Order {
   _id: string;
   orderNumber: string;
   customerName: string;
   customerInitials: string;
-  customerColor: string;
   farmerName: string;
   dateStr: string;
   totalAmount: number;
-  status: 'Delivered' | 'Shipping' | 'Pending' | 'Cancelled';
+  status: string;
+}
+
+interface Stats {
+  delivered: number;
+  cancelled: number;
+  pending: number;
+  revenue: number;
+}
+
+function initials(name: string) {
+  return name
+    .split(' ')
+    .map((n) => n[0] || '')
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function statusColor(status: string) {
+  const s = status.toLowerCase();
+  if (s === 'delivered') return 'bg-[#e3f7ed] text-[#2e7d32] border-[#c8e6c9]';
+  if (s === 'cancelled') return 'bg-red-50 text-red-700 border-red-100';
+  if (s === 'pending') return 'bg-amber-50 text-amber-700 border-amber-100';
+  return 'bg-gray-50 text-gray-600 border-gray-200';
 }
 
 export default function OrdersMonitoringPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<'All' | 'Shipping' | 'Delivered' | 'Cancelled'>('All');
+  const [statusFilter, setStatusFilter] = useState<string>('All');
   const [currentPage, setCurrentPage] = useState(1);
-  const [stats, setStats] = useState({
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [stats, setStats] = useState<Stats>({
     delivered: 0,
-    shipping: 0,
     cancelled: 0,
+    pending: 0,
     revenue: 0,
   });
 
-  // Status Change Dialog states
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showStatusModal, setShowStatusModal] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
-  // New Report Modal states
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [reportTitle, setReportTitle] = useState('');
-
-  const mockOrders: Order[] = [
-    {
-      _id: 'ord-1',
-      orderNumber: '#AGR-10293',
-      customerName: 'Eleanor Jackson',
-      customerInitials: 'EJ',
-      customerColor: 'bg-[#edf4e2] text-[#1e4d1e]',
-      farmerName: 'Green Valley Farms',
-      dateStr: 'Oct 30, 2023, 14:22',
-      totalAmount: 1240.50,
-      status: 'Delivered'
-    },
-    {
-      _id: 'ord-2',
-      orderNumber: '#AGR-10294',
-      customerName: 'Marcus Smith',
-      customerInitials: 'MS',
-      customerColor: 'bg-gray-100 text-gray-700',
-      farmerName: 'Oak Ridge Orchards',
-      dateStr: 'Oct 30, 2023, 15:05',
-      totalAmount: 450.00,
-      status: 'Shipping'
-    },
-    {
-      _id: 'ord-3',
-      orderNumber: '#AGR-10295',
-      customerName: 'Linda White',
-      customerInitials: 'LW',
-      customerColor: 'bg-gray-100 text-gray-700',
-      farmerName: 'Sustainable Roots',
-      dateStr: 'Oct 31, 2023, 09:12',
-      totalAmount: 2100.25,
-      status: 'Shipping'
-    },
-    {
-      _id: 'ord-4',
-      orderNumber: '#AGR-10296',
-      customerName: 'Robert King',
-      customerInitials: 'RK',
-      customerColor: 'bg-red-50 text-red-700',
-      farmerName: 'Prairie Gold Co-op',
-      dateStr: 'Oct 31, 2023, 10:45',
-      totalAmount: 125.00,
-      status: 'Cancelled'
-    },
-    {
-      _id: 'ord-5',
-      orderNumber: '#AGR-10297',
-      customerName: 'Sarah Parker',
-      customerInitials: 'SP',
-      customerColor: 'bg-[#edf4e2] text-[#1e4d1e]',
-      farmerName: 'Blue Sky Poultry',
-      dateStr: 'Oct 31, 2023, 11:30',
-      totalAmount: 3420.00,
-      status: 'Delivered'
-    },
-    {
-      _id: 'ord-6',
-      orderNumber: '#AGR-10298',
-      customerName: 'Tom Collins',
-      customerInitials: 'TC',
-      customerColor: 'bg-[#edf4e2] text-[#1e4d1e]',
-      farmerName: 'Harvest Moon Veggies',
-      dateStr: 'Oct 31, 2023, 13:10',
-      totalAmount: 78.90,
-      status: 'Shipping'
-    }
-  ];
+  const ITEMS_PER_PAGE = 10;
 
   useEffect(() => {
     fetchOrders();
@@ -131,218 +84,195 @@ export default function OrdersMonitoringPage() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const params: any = { page: currentPage, limit: 10 };
+      const params: any = { page: currentPage, limit: ITEMS_PER_PAGE };
       if (statusFilter !== 'All') params.status = statusFilter;
 
-      const response = await api.get('/admin/orders', { params }).catch(() => null);
+      const response = await api.get('/admin/orders', { params });
 
-      if (response && response.data && response.data.data) {
-        // Transform backend fields
-        const formatted = response.data.data.map((item: any) => ({
+      if (response.data && response.data.data) {
+        const raw = response.data.data;
+
+        const formatted: Order[] = raw.map((item: any) => ({
           _id: item._id,
-          orderNumber: `#AGR-${item._id.slice(-5).toUpperCase()}`,
-          customerName: item.consumer?.name || 'Unknown',
-          customerInitials: (item.consumer?.name || 'UK').split(' ').map((n: string) => n[0]).join('').slice(0, 2),
-          customerColor: 'bg-[#edf4e2] text-[#1e4d1e]',
-          farmerName: item.items?.[0]?.product?.farmer?.name || 'Local Farms',
-          dateStr: new Date(item.createdAt).toLocaleString(),
+          orderNumber: `#AGR-${String(item._id).slice(-6).toUpperCase()}`,
+          customerName: item.consumer?.name || item.buyerName || 'Unknown Customer',
+          customerInitials: initials(item.consumer?.name || item.buyerName || 'UK'),
+          farmerName:
+            item.items?.[0]?.product?.farmer?.name ||
+            item.farmerName ||
+            'Local Farm',
+          dateStr: new Date(item.createdAt).toLocaleString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
           totalAmount: item.totalAmount || 0,
-          status: item.status && item.status.toLowerCase() === 'pending' ? 'Shipping' : (item.status || 'Shipping')
+          status: item.status || 'Pending',
         }));
+
         setOrders(formatted);
-        if (response.data.counts) {
-          setStats({
-            delivered: response.data.counts.delivered || 0,
-            shipping: response.data.counts.shipping || 0,
-            cancelled: response.data.counts.cancelled || 0,
-            revenue: response.data.revenue || 0,
-          });
+
+        // Pagination
+        const pagination = response.data.pagination;
+        if (pagination) {
+          setTotalPages(pagination.pages || 1);
+          setTotalOrders(pagination.total || formatted.length);
         }
-      } else {
-        setOrders(mockOrders);
+
+        // Stats cards
+        const counts = response.data.counts || {};
         setStats({
-          delivered: mockOrders.filter(o => o.status === 'Delivered').length,
-          shipping: mockOrders.filter(o => o.status === 'Shipping').length,
-          cancelled: mockOrders.filter(o => o.status === 'Cancelled').length,
-          revenue: mockOrders.filter(o => o.status === 'Delivered').reduce((sum, o) => sum + o.totalAmount, 0),
+          delivered: counts.delivered || 0,
+          cancelled: counts.cancelled || 0,
+          pending: counts.pending || 0,
+          revenue: response.data.revenue || 0,
         });
       }
-    } catch (error) {
-      console.warn('Could not communicate with backend orders API, displaying mockup data:', error);
-      setOrders(mockOrders);
-      setStats({
-        delivered: mockOrders.filter(o => o.status === 'Delivered').length,
-        shipping: mockOrders.filter(o => o.status === 'Shipping').length,
-        cancelled: mockOrders.filter(o => o.status === 'Cancelled').length,
-        revenue: mockOrders.filter(o => o.status === 'Delivered').reduce((sum, o) => sum + o.totalAmount, 0),
-      });
+    } catch (error: any) {
+      console.error('Error fetching orders:', error);
+      toast.error('Failed to load orders');
+      setOrders([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUpdateStatus = async (orderId: string, newStatus: Order['status']) => {
+  const handleUpdateStatus = async (orderId: string, newStatus: string) => {
     try {
-      const response = await api.patch(
-        `/admin/orders/${orderId}/status`,
-        { status: newStatus }
-      ).catch(() => null);
-
-      if (response) {
-        toast.success(`Order status updated to ${newStatus}`);
-      } else {
-        toast.success(`Order state rotated to ${newStatus}! 🌳`);
-      }
+      setUpdatingStatus(true);
+      await api.patch(`/admin/orders/${orderId}/status`, { status: newStatus });
+      toast.success(`Order updated to "${newStatus}"`);
       setShowStatusModal(false);
+      setSelectedOrder(null);
       fetchOrders();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error('Failed to change order state');
+      toast.error(error?.response?.data?.message || 'Failed to update order status');
+    } finally {
+      setUpdatingStatus(false);
     }
   };
 
-  const handleExportCSV = () => {
-    toast.success('Live transactions exported successfully! (CSV format) 📊');
-  };
+  const filterTabs = ['All', ...ALL_STATUSES];
 
-  const handleCreateReport = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!reportTitle) return toast.error('Please name your audit report');
-    toast.success(`Audit report "${reportTitle}" compiled & cataloged successfully! 🌳`);
-    setShowReportModal(false);
-    setReportTitle('');
-  };
+  const startItem = (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const endItem = Math.min(currentPage * ITEMS_PER_PAGE, totalOrders);
 
   return (
     <>
       <div className="p-8 bg-[#f9f9f6] min-h-screen space-y-8 max-w-7xl mx-auto relative select-none">
 
-
-
-
         {/* ── KPI METRICS CARDS ROW ── */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-          {/* Card 1: Revenue */}
+          {/* Revenue */}
           <div className="bg-white border border-[#e4e6df] rounded-[20px] p-5 shadow-sm flex flex-col justify-between h-32 text-left">
             <div className="flex items-start justify-between">
               <div className="space-y-1">
                 <div className="p-2 bg-gray-100 rounded-xl w-fit">
                   <CreditCard className="w-4 h-4 text-gray-600" />
                 </div>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-2.5">
-                  Revenue
-                </p>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-2.5">Revenue</p>
                 <h3 className="text-xl font-extrabold text-gray-900 leading-none">
-                  {loading ? '...' : `LKR ${stats.revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                  {loading ? '...' : `₹${stats.revenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 </h3>
               </div>
-
-              <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100 shrink-0">
-                +5.4%
-              </span>
+              <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100 shrink-0">Live</span>
             </div>
           </div>
 
-          {/* Card 2: Delivered */}
+          {/* Delivered */}
           <div className="bg-white border border-[#e4e6df] rounded-[20px] p-5 shadow-sm flex flex-col justify-between h-32 text-left">
             <div className="flex items-start justify-between">
               <div className="space-y-1">
                 <div className="p-2 bg-[#edf4e2] rounded-xl w-fit">
                   <ShoppingBag className="w-4 h-4 text-[#1e4d1e]" />
                 </div>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-2.5">
-                  Delivered
-                </p>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-2.5">Delivered</p>
                 <h3 className="text-xl font-extrabold text-gray-900 leading-none">
                   {loading ? '...' : stats.delivered.toLocaleString()}
                 </h3>
               </div>
-
-              <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100 shrink-0">
-                +12%
-              </span>
             </div>
           </div>
 
-          {/* Card 3: In Transit */}
+          {/* Pending */}
           <div className="bg-white border-2 border-[#1e4d1e] rounded-[20px] p-5 shadow-md flex flex-col justify-between h-32 text-left">
             <div className="flex items-start justify-between">
               <div className="space-y-1">
                 <div className="p-2 bg-[#edf4e2] rounded-xl w-fit">
                   <Truck className="w-4 h-4 text-[#1e4d1e]" />
                 </div>
-                <p className="text-[10px] text-[#1e4d1e] font-extrabold uppercase tracking-wider mt-2.5">
-                  In Transit
-                </p>
+                <p className="text-[10px] text-[#1e4d1e] font-extrabold uppercase tracking-wider mt-2.5">Pending</p>
                 <h3 className="text-xl font-extrabold text-gray-900 leading-none">
-                  {loading ? '...' : stats.shipping.toLocaleString()}
+                  {loading ? '...' : stats.pending.toLocaleString()}
                 </h3>
               </div>
             </div>
           </div>
 
-          {/* Card 4: Cancelled */}
+          {/* Cancelled */}
           <div className="bg-white border border-[#e4e6df] rounded-[20px] p-5 shadow-sm flex flex-col justify-between h-32 text-left">
             <div className="flex items-start justify-between">
               <div className="space-y-1">
                 <div className="p-2 bg-red-50 rounded-xl w-fit">
                   <AlertTriangle className="w-4 h-4 text-red-500" />
                 </div>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-2.5">
-                  Cancelled
-                </p>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-2.5">Cancelled</p>
                 <h3 className="text-xl font-extrabold text-gray-900 leading-none">
                   {loading ? '...' : stats.cancelled.toLocaleString()}
                 </h3>
               </div>
-
-              <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-100 shrink-0">
-                -2%
-              </span>
             </div>
           </div>
 
         </div>
 
-        {/* ── TRANSACTION LIST TABLE CONTAINER ── */}
+        {/* ── ORDERS TABLE ── */}
         <div className="bg-white border border-[#e4e6df] rounded-[24px] overflow-hidden shadow-sm">
 
-          {/* Table Header Filter bar */}
-          <div className="px-6 py-4 border-b border-[#e4e6df] flex flex-col sm:flex-row items-center justify-between gap-4 select-none">
+          {/* Filter bar */}
+          <div className="px-6 py-4 border-b border-[#e4e6df] flex flex-col sm:flex-row items-center justify-between gap-4">
             <h3 className="text-sm font-extrabold text-gray-900 uppercase tracking-wider">
               All Platform Orders
             </h3>
 
-            <div className="flex items-center gap-3">
-              {/* Horizontal Pill Filters */}
-              <div className="flex items-center gap-1.5 bg-[#f4f5f0]/60 p-1 rounded-xl">
-                {['All', 'Shipping', 'Delivered', 'Cancelled'].map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => { setStatusFilter(tab as any); setCurrentPage(1); }}
-                    className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${statusFilter === tab
+            <div className="flex items-center gap-1.5 bg-[#f4f5f0]/60 p-1 rounded-xl flex-wrap">
+              {filterTabs.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => { setStatusFilter(tab); setCurrentPage(1); }}
+                  className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                    statusFilter === tab
                       ? 'bg-[#1e4d1e] text-white shadow-sm'
                       : 'text-gray-500 hover:text-gray-900'
-                      }`}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Table list */}
+          {/* Table */}
           {loading ? (
-            <div className="p-16 flex flex-col items-center justify-center">
-              <div className="w-6 h-6 border-2 border-[#1e4d1e] border-t-transparent rounded-full animate-spin mb-2" />
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Monitoring live pipelines...</span>
+            <div className="p-16 flex flex-col items-center justify-center gap-3">
+              <Loader2 className="w-6 h-6 text-[#1e4d1e] animate-spin" />
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Loading orders...</span>
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="p-16 flex flex-col items-center justify-center gap-3">
+              <PackageCheck className="w-10 h-10 text-gray-300" />
+              <p className="text-sm font-bold text-gray-400">No orders found</p>
+              <p className="text-xs text-gray-300">
+                {statusFilter !== 'All' ? `No "${statusFilter}" orders exist yet.` : 'No orders have been placed yet.'}
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[800px]">
-
                 <thead className="bg-[#fcfdfa]/80 border-b border-[#e4e6df]">
                   <tr>
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Order ID</th>
@@ -359,58 +289,37 @@ export default function OrdersMonitoringPage() {
                   {orders.map((ord) => (
                     <tr key={ord._id} className="hover:bg-[#f4f5f0]/20 transition-colors">
 
-                      {/* Bold Green Order ID */}
                       <td className="px-6 py-4 text-xs font-extrabold text-[#1e4d1e] tracking-tight">
                         {ord.orderNumber}
                       </td>
 
-                      {/* Customer info */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2.5">
-                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${ord.customerColor}`}>
+                          <div className="w-7 h-7 rounded-full bg-[#edf4e2] text-[#1e4d1e] flex items-center justify-center text-[9px] font-bold shrink-0">
                             {ord.customerInitials}
                           </div>
                           <span className="text-xs font-bold text-gray-800">{ord.customerName}</span>
                         </div>
                       </td>
 
-                      {/* Farmer source */}
-                      <td className="px-6 py-4 text-xs font-semibold text-gray-600">
-                        {ord.farmerName}
-                      </td>
+                      <td className="px-6 py-4 text-xs font-semibold text-gray-600">{ord.farmerName}</td>
 
-                      {/* Time */}
-                      <td className="px-6 py-4 text-[11px] font-semibold text-gray-400 leading-normal">
-                        {ord.dateStr}
-                      </td>
+                      <td className="px-6 py-4 text-[11px] font-semibold text-gray-400 leading-normal">{ord.dateStr}</td>
 
-                      {/* Total price */}
                       <td className="px-6 py-4 text-xs font-extrabold text-gray-900">
-                        LKR {ord.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        ₹{ord.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </td>
 
-                      {/* Status badge pill */}
                       <td className="px-6 py-4">
-                        <span className={`inline-flex px-3 py-1 rounded-full text-[9px] font-bold border capitalize ${ord.status === 'Delivered'
-                          ? 'bg-[#e3f7ed] text-[#2e7d32] border-[#c8e6c9]'
-                          : ord.status === 'Shipping'
-                            ? 'bg-[#edf4e2] text-[#1e4d1e] border-[#d2dfc2]'
-                            : ord.status === 'Cancelled'
-                              ? 'bg-red-50 text-red-700 border-red-100'
-                              : 'bg-gray-50 text-gray-600 border-gray-200'
-                          }`}>
+                        <span className={`inline-flex px-3 py-1 rounded-full text-[9px] font-bold border capitalize ${statusColor(ord.status)}`}>
                           {ord.status}
                         </span>
                       </td>
 
-                      {/* Vert dots actions */}
                       <td className="px-6 py-4 text-right">
                         <button
                           type="button"
-                          onClick={() => {
-                            setSelectedOrder(ord);
-                            setShowStatusModal(true);
-                          }}
+                          onClick={() => { setSelectedOrder(ord); setShowStatusModal(true); }}
                           className="p-1.5 text-gray-400 hover:text-gray-800 hover:bg-gray-50 rounded-lg cursor-pointer transition-all"
                         >
                           <MoreVertical className="w-4 h-4" />
@@ -420,55 +329,70 @@ export default function OrdersMonitoringPage() {
                     </tr>
                   ))}
                 </tbody>
-
               </table>
             </div>
           )}
 
-          {/* Table pagination footer exactly matching mock image */}
-          <div className="bg-[#fcfdfa]/80 border-t border-[#e4e6df] px-6 py-4 flex items-center justify-between select-none">
-            <span className="text-[10px] font-bold text-gray-400">
-              Showing 1 to {orders.length} of {orders.length} orders
-            </span>
+          {/* Pagination footer */}
+          {!loading && orders.length > 0 && (
+            <div className="bg-[#fcfdfa]/80 border-t border-[#e4e6df] px-6 py-4 flex items-center justify-between">
+              <span className="text-[10px] font-bold text-gray-400">
+                Showing {startItem}–{endItem} of {totalOrders} orders
+              </span>
 
-            <div className="inline-flex items-center gap-1.5">
-              <button className="p-2 bg-white border border-[#e4e6df] hover:bg-gray-50 rounded-xl text-gray-500 cursor-pointer">
-                <ChevronLeft className="w-4 h-4" />
-              </button>
+              <div className="inline-flex items-center gap-1.5">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 bg-white border border-[#e4e6df] hover:bg-gray-50 rounded-xl text-gray-500 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
 
-              <button className="w-8 h-8 bg-[#1e4d1e] text-white rounded-xl text-[10px] font-bold cursor-default flex items-center justify-center">
-                1
-              </button>
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                  const page = i + 1;
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 rounded-xl text-[10px] font-bold cursor-pointer flex items-center justify-center transition-all ${
+                        currentPage === page
+                          ? 'bg-[#1e4d1e] text-white shadow-sm'
+                          : 'bg-white border border-[#e4e6df] hover:bg-gray-50 text-gray-500'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
 
-              <button className="w-8 h-8 bg-white border border-[#e4e6df] hover:bg-gray-50 text-gray-500 rounded-xl text-[10px] font-bold cursor-pointer flex items-center justify-center transition-all">
-                2
-              </button>
+                {totalPages > 5 && (
+                  <>
+                    <span className="text-gray-400 text-xs font-bold px-1">...</span>
+                    <button
+                      onClick={() => setCurrentPage(totalPages)}
+                      className={`w-8 h-8 rounded-xl text-[10px] font-bold cursor-pointer flex items-center justify-center transition-all ${
+                        currentPage === totalPages
+                          ? 'bg-[#1e4d1e] text-white shadow-sm'
+                          : 'bg-white border border-[#e4e6df] hover:bg-gray-50 text-gray-500'
+                      }`}
+                    >
+                      {totalPages}
+                    </button>
+                  </>
+                )}
 
-              <button className="w-8 h-8 bg-white border border-[#e4e6df] hover:bg-gray-50 text-gray-500 rounded-xl text-[10px] font-bold cursor-pointer flex items-center justify-center transition-all">
-                3
-              </button>
-
-              <span className="text-gray-400 text-xs font-bold px-1 select-none">...</span>
-
-              <button className="w-8 h-8 bg-white border border-[#e4e6df] hover:bg-gray-50 text-gray-500 rounded-xl text-[10px] font-bold cursor-pointer flex items-center justify-center transition-all">
-                214
-              </button>
-
-              <button className="p-2 bg-white border border-[#e4e6df] hover:bg-gray-50 rounded-xl text-gray-500 cursor-pointer">
-                <ChevronRight className="w-4 h-4" />
-              </button>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 bg-white border border-[#e4e6df] hover:bg-gray-50 rounded-xl text-gray-500 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
-        </div>
-
-
-
-        {/* ── bottom legal copyright ── */}
-        <div className="pt-6 text-center">
-          <p className="text-[10px] text-gray-400 font-semibold">
-            © 2023 AgriGrowthRate Enterprise Management. All Rights Reserved.
-          </p>
         </div>
 
       </div>
@@ -477,17 +401,14 @@ export default function OrdersMonitoringPage() {
       <AnimatePresence>
         {showStatusModal && selectedOrder && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-
-            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setShowStatusModal(false)}
+              onClick={() => { setShowStatusModal(false); setSelectedOrder(null); }}
               className="absolute inset-0 bg-[#1e4d1e]/20 backdrop-blur-md cursor-pointer"
             />
 
-            {/* Modal Card */}
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -495,7 +416,7 @@ export default function OrdersMonitoringPage() {
               className="relative z-10 w-full max-w-sm bg-white border border-[#e4e6df] rounded-[24px] p-8 shadow-2xl text-center"
             >
               <button
-                onClick={() => setShowStatusModal(false)}
+                onClick={() => { setShowStatusModal(false); setSelectedOrder(null); }}
                 className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -505,116 +426,46 @@ export default function OrdersMonitoringPage() {
                 <Truck className="w-6 h-6 text-[#1e4d1e]" />
               </div>
 
-              <h4 className="text-base font-extrabold text-gray-900 mb-1">
-                Rotate Order Pipeline
-              </h4>
-              <p className="text-gray-500 text-[11px] leading-relaxed max-w-xs mx-auto mb-6">
-                Change shipment stage for transaction <span className="text-[#1e4d1e] font-bold">{selectedOrder.orderNumber}</span>.
+              <h4 className="text-base font-extrabold text-gray-900 mb-1">Update Order Status</h4>
+              <p className="text-gray-500 text-[11px] leading-relaxed max-w-xs mx-auto mb-2">
+                Order <span className="text-[#1e4d1e] font-bold">{selectedOrder.orderNumber}</span>
+              </p>
+              <p className="text-[10px] text-gray-400 font-semibold mb-6">
+                Current: <span className={`px-2 py-0.5 rounded-full border text-[9px] font-bold ${statusColor(selectedOrder.status)}`}>{selectedOrder.status}</span>
               </p>
 
               <div className="space-y-2 mb-6">
-                {['Shipping', 'Delivered', 'Cancelled'].map((status) => (
+                {ALL_STATUSES.map((status) => (
                   <button
                     key={status}
-                    onClick={() => handleUpdateStatus(selectedOrder._id, status as any)}
-                    className={`w-full py-3 rounded-xl transition text-xs font-bold uppercase tracking-wider cursor-pointer ${selectedOrder.status === status
-                      ? 'bg-[#1e4d1e] text-white shadow-md'
-                      : 'bg-[#f4f5f0] text-gray-600 hover:bg-[#edf4e2]/60 hover:text-[#1e4d1e]'
-                      }`}
+                    onClick={() => handleUpdateStatus(selectedOrder._id, status)}
+                    disabled={updatingStatus || selectedOrder.status === status}
+                    className={`w-full py-3 rounded-xl transition text-xs font-bold uppercase tracking-wider cursor-pointer disabled:cursor-not-allowed ${
+                      selectedOrder.status === status
+                        ? 'bg-[#1e4d1e] text-white shadow-md opacity-90'
+                        : 'bg-[#f4f5f0] text-gray-600 hover:bg-[#edf4e2]/60 hover:text-[#1e4d1e] disabled:opacity-50'
+                    }`}
                   >
-                    {status}
+                    {updatingStatus && selectedOrder.status !== status ? (
+                      <Loader2 className="w-3 h-3 animate-spin mx-auto" />
+                    ) : (
+                      status
+                    )}
                   </button>
                 ))}
               </div>
 
               <button
                 type="button"
-                onClick={() => setShowStatusModal(false)}
+                onClick={() => { setShowStatusModal(false); setSelectedOrder(null); }}
                 className="w-full py-3 border border-[#e4e6df] rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-50 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
             </motion.div>
-
           </div>
         )}
       </AnimatePresence>
-
-      {/* ── CREATE REPORT MODAL ── */}
-      <AnimatePresence>
-        {showReportModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowReportModal(false)}
-              className="absolute inset-0 bg-[#1e4d1e]/20 backdrop-blur-md cursor-pointer"
-            />
-
-            {/* Form Card */}
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="relative z-10 w-full max-w-md bg-white border border-[#e4e6df] rounded-[24px] p-8 shadow-2xl"
-            >
-              <button
-                onClick={() => setShowReportModal(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="text-center space-y-3 mb-6">
-                <div className="w-12 h-12 rounded-full bg-[#edf4e2] flex items-center justify-center mx-auto border border-[#d2dfc2]">
-                  <Plus className="w-6 h-6 text-[#1e4d1e]" />
-                </div>
-                <h4 className="text-lg font-extrabold text-gray-900">Create Order Report</h4>
-                <p className="text-gray-500 text-[11px] leading-relaxed">
-                  Compile real-time order statistics into a standalone audit document.
-                </p>
-              </div>
-
-              <form onSubmit={handleCreateReport} className="space-y-4 text-left">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
-                    Report Title
-                  </label>
-                  <input
-                    type="text"
-                    value={reportTitle}
-                    onChange={(e) => setReportTitle(e.target.value)}
-                    placeholder="e.g. October 2023 Stewardship Audit"
-                    className="w-full bg-[#f4f5f0]/50 border border-[#e4e6df] focus:border-[#1e4d1e] focus:bg-white rounded-xl py-3 px-4 text-xs font-bold text-gray-800 outline-none"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowReportModal(false)}
-                    className="py-3 bg-gray-50 hover:bg-gray-100 border border-[#e4e6df] text-gray-600 font-bold rounded-xl text-xs transition-colors cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl text-xs transition-all flex items-center justify-center cursor-pointer"
-                  >
-                    Compile Report
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-
-          </div>
-        )}
-      </AnimatePresence>
-
     </>
   );
 }

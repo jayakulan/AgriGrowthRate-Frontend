@@ -68,42 +68,57 @@ export default function ManageFarmersPage() {
   const [showDisableConfirmModal, setShowDisableConfirmModal] = useState(false);
   const [userToDisable, setUserToDisable] = useState<User | null>(null);
 
-  const lastMonthData = [
-    { month: 'Wk 1', value: 2200 },
-    { month: 'Wk 2', value: 2450 },
-    { month: 'Wk 3', value: 2350 },
-    { month: 'Wk 4', value: 2580 },
-  ];
-
-  const last6MonthsData = [
-    { month: 'Jan', value: 2600 },
-    { month: 'Feb', value: 2950 },
-    { month: 'Mar', value: 2750 },
-    { month: 'Apr', value: 4600 },
-    { month: 'May', value: 4300 },
-    { month: 'Jun', value: 5600 },
-  ];
-
-  const lastYearData = [
-    { month: 'Jan', value: 2500 },
-    { month: 'Feb', value: 2850 },
-    { month: 'Mar', value: 2700 },
-    { month: 'Apr', value: 4500 },
-    { month: 'May', value: 4300 },
-    { month: 'Jun', value: 5600 },
-    { month: 'Jul', value: 5800 },
-    { month: 'Aug', value: 6100 },
-    { month: 'Sep', value: 5950 },
-    { month: 'Oct', value: 6200 },
-    { month: 'Nov', value: 6400 },
-    { month: 'Dec', value: 6800 },
-  ];
-
-  const chartData = range === '1M' ? lastMonthData : range === '1Y' ? lastYearData : last6MonthsData;
+  // Dynamic system analytics
+  const [analytics, setAnalytics] = useState({
+    activeFarmers: 0,
+    totalFarmers: 0,
+  });
+  const [chartDataList, setChartDataList] = useState<Array<{ month: string; value: number }>>([]);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
 
   useEffect(() => {
     fetchUsers();
   }, [searchTerm, roleFilter, currentPage]);
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        setAnalyticsLoading(true);
+        const token = localStorage.getItem('token');
+        const res = await axios.get('http://localhost:5001/api/admin/analytics', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data && res.data.success) {
+          const { activeFarmers, users: usersSummary, farmerGrowthTrend } = res.data.data;
+          setAnalytics({
+            activeFarmers: activeFarmers || 0,
+            totalFarmers: usersSummary?.farmers || 0,
+          });
+
+          if (farmerGrowthTrend) {
+            const monthsOrder = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+            const formatted = Object.entries(farmerGrowthTrend).map(([month, value]) => ({
+              month: month.charAt(0) + month.slice(1).toLowerCase(), // e.g. "Jan"
+              value: value as number
+            })).sort((a, b) => monthsOrder.indexOf(a.month.toUpperCase()) - monthsOrder.indexOf(b.month.toUpperCase()));
+            setChartDataList(formatted);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching farmer analytics:', err);
+      } finally {
+        setAnalyticsLoading(false);
+      }
+    };
+    fetchAnalytics();
+  }, []);
+
+  const chartData = (() => {
+    if (chartDataList.length === 0) return [];
+    if (range === '1M') return [chartDataList[chartDataList.length - 1]];
+    if (range === '6M') return chartDataList.slice(-6);
+    return chartDataList;
+  })();
 
   const fetchUsers = async () => {
     try {
@@ -129,6 +144,7 @@ export default function ManageFarmersPage() {
       setLoading(false);
     }
   };
+
   const handleAddCardNumber = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!cardNumber) return toast.error('Please enter a card number');
@@ -291,82 +307,90 @@ export default function ManageFarmersPage() {
                 </thead>
 
                 <tbody className="divide-y divide-[#f4f5f0]">
-                  {users.map((user) => (
-                    <tr key={user._id} className="hover:bg-[#f4f5f0]/20 transition-colors">
-                      
-                      {/* Name col with avatar details */}
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          {user.avatar ? (
-                            <img
-                              src={user.avatar}
-                              alt={user.name}
-                              className="w-9 h-9 rounded-full object-cover border border-[#edf4e2]"
-                            />
-                          ) : (
-                            <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold ${user.initialsBg || 'bg-[#edf4e2] text-[#1e4d1e]'}`}>
-                              {user.initials || user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
-                            </div>
-                          )}
-                          <div className="text-left space-y-0.5">
-                            <p className="text-xs font-bold text-gray-900 leading-snug">{user.name}</p>
-                            <p className="text-[10px] text-gray-400 font-semibold leading-none">
-                              {user.registeredDate || 'Registered ' + new Date(user.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
+                  {users.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-12 text-center text-xs font-bold text-gray-400">
+                        No farmers registered in database yet.
                       </td>
-
-                      {/* Farmer Card Number */}
-                      <td className="px-6 py-4 text-xs font-semibold text-gray-800">
-                        {user.farmerCardNo || 'N/A'}
-                      </td>
-
-                      {/* Email address */}
-                      <td className="px-6 py-4 text-xs font-semibold text-gray-500">
-                        {user.email}
-                      </td>
-
-                      {/* Contact number */}
-                      <td className="px-6 py-4 text-xs font-semibold text-gray-500">
-                        {user.contactNo || '+94 77 123 4567'}
-                      </td>
-
-                      {/* Address */}
-                      <td className="px-6 py-4 text-xs font-semibold text-gray-500">
-                        {user.address || 'Galle, Sri Lanka'}
-                      </td>
-
-                      {/* Status with enable/disable option */}
-                      <td className="px-6 py-4 text-xs font-semibold text-gray-500">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold ${user.isVerified ? 'bg-[#d8f6dc] text-[#166c2c]' : 'bg-[#f1f2f4] text-[#6b7280]'}`}>
-                          {user.isVerified ? 'Enabled' : 'Disabled'}
-                        </span>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="px-6 py-4 text-xs font-semibold text-gray-500">
-                        {user.isVerified ? (
-                          <button
-                            onClick={() => confirmAndDisableUser(user)}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors cursor-pointer"
-                            title="Disable User"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        ) : (
-                          <button
-                            disabled
-                            className="text-gray-300 p-2 cursor-not-allowed"
-                            title="Already Disabled"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </td>
-
                     </tr>
-                  ))}
+                  ) : (
+                    users.map((user) => (
+                      <tr key={user._id} className="hover:bg-[#f4f5f0]/20 transition-colors">
+                        
+                        {/* Name col with avatar details */}
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            {user.avatar ? (
+                              <img
+                                src={user.avatar}
+                                alt={user.name}
+                                className="w-9 h-9 rounded-full object-cover border border-[#edf4e2]"
+                              />
+                            ) : (
+                              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold ${user.initialsBg || 'bg-[#edf4e2] text-[#1e4d1e]'}`}>
+                                {user.initials || user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
+                              </div>
+                            )}
+                            <div className="text-left space-y-0.5">
+                              <p className="text-xs font-bold text-gray-900 leading-snug">{user.name}</p>
+                              <p className="text-[10px] text-gray-400 font-semibold leading-none">
+                                {user.registeredDate || 'Registered ' + new Date(user.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Farmer Card Number */}
+                        <td className="px-6 py-4 text-xs font-semibold text-gray-800">
+                          {user.farmerCardNo || 'N/A'}
+                        </td>
+
+                        {/* Email address */}
+                        <td className="px-6 py-4 text-xs font-semibold text-gray-500">
+                          {user.email}
+                        </td>
+
+                        {/* Contact number */}
+                        <td className="px-6 py-4 text-xs font-semibold text-gray-500">
+                          {user.contactNo || '+94 77 123 4567'}
+                        </td>
+
+                        {/* Address */}
+                        <td className="px-6 py-4 text-xs font-semibold text-gray-500">
+                          {user.address || 'Galle, Sri Lanka'}
+                        </td>
+
+                        {/* Status with enable/disable option */}
+                        <td className="px-6 py-4 text-xs font-semibold text-gray-500">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold ${user.isVerified ? 'bg-[#d8f6dc] text-[#166c2c]' : 'bg-[#f1f2f4] text-[#6b7280]'}`}>
+                            {user.isVerified ? 'Enabled' : 'Disabled'}
+                          </span>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="px-6 py-4 text-xs font-semibold text-gray-500">
+                          {user.isVerified ? (
+                            <button
+                              onClick={() => confirmAndDisableUser(user)}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors cursor-pointer"
+                              title="Disable User"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          ) : (
+                            <button
+                              disabled
+                              className="text-gray-300 p-2 cursor-not-allowed"
+                              title="Already Disabled"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </td>
+
+                      </tr>
+                    ))
+                  )}
                 </tbody>
 
               </table>
@@ -420,26 +444,36 @@ export default function ManageFarmersPage() {
             </div>
 
             <div className="mt-8 w-full h-[320px] flex-1">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 20, right: 24, left: -12, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="farmerGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#1e4d1e" stopOpacity={0.22} />
-                      <stop offset="100%" stopColor="#1e4d1e" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#edf4e2" />
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12, fontWeight: 700 }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12, fontWeight: 700 }} />
-                  <Tooltip
-                    contentStyle={{ background: '#1e4d1e', border: 'none', borderRadius: '16px', color: '#fff', fontSize: 12, padding: '10px' }}
-                    itemStyle={{ color: '#fff' }}
-                    labelStyle={{ color: '#fff', fontWeight: 700 }}
-                    cursor={{ stroke: '#1e4d1e', strokeWidth: 2, opacity: 0.12 }}
-                  />
-                  <Area type="monotone" dataKey="value" stroke="#1e4d1e" strokeWidth={3} fill="url(#farmerGradient)" fillOpacity={1} activeDot={{ r: 6, stroke: '#ffffff', strokeWidth: 3, fill: '#1e4d1e' }} />
-                </AreaChart>
-              </ResponsiveContainer>
+              {analyticsLoading ? (
+                <div className="h-full flex items-center justify-center">
+                  <Loader2 className="w-8 h-8 text-[#1e4d1e] animate-spin" />
+                </div>
+              ) : chartData.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-xs font-bold text-gray-400">
+                  No registration growth data in system.
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData} margin={{ top: 20, right: 24, left: -12, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="farmerGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#1e4d1e" stopOpacity={0.22} />
+                        <stop offset="100%" stopColor="#1e4d1e" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#edf4e2" />
+                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12, fontWeight: 700 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12, fontWeight: 700 }} />
+                    <Tooltip
+                      contentStyle={{ background: '#1e4d1e', border: 'none', borderRadius: '16px', color: '#fff', fontSize: 12, padding: '10px' }}
+                      itemStyle={{ color: '#fff' }}
+                      labelStyle={{ color: '#fff', fontWeight: 700 }}
+                      cursor={{ stroke: '#1e4d1e', strokeWidth: 2, opacity: 0.12 }}
+                    />
+                    <Area type="monotone" dataKey="value" stroke="#1e4d1e" strokeWidth={3} fill="url(#farmerGradient)" fillOpacity={1} activeDot={{ r: 6, stroke: '#ffffff', strokeWidth: 3, fill: '#1e4d1e' }} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
 
@@ -447,8 +481,10 @@ export default function ManageFarmersPage() {
             <DailyLogisticsCard
               className="w-full rounded-[24px] p-6 shadow-sm flex flex-col justify-between"
               label="FARMER MANAGEMENT"
-              headline="92% of Farmers Checked In"
-              description="Out of today's scheduled cohort, 312 farmers have successfully signed in and confirmed their inventory readiness."
+              headline={analytics.totalFarmers > 0 ? `${Math.round((analytics.activeFarmers / analytics.totalFarmers) * 100)}% of Farmers Active` : '100% Farmers Active'}
+              description={analytics.totalFarmers > 0
+                ? `Out of ${analytics.totalFarmers} total registered farmers on AgriGrowthRate, ${analytics.activeFarmers} are verified and currently trading active crop inventories.`
+                : "No registered farmers recorded in database yet."}
             />
           </div>
 
