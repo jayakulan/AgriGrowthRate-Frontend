@@ -395,7 +395,7 @@ export default function OrdersManagementPage() {
 
           <div className="flex items-center gap-4 my-2">
             <div className="w-11 h-11 rounded-xl bg-[#edf4e2] border border-[#d2dfc2] flex items-center justify-center text-[#1e4d1e]">
-              <Sprout className="w-6 h-6" />
+              <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
             </div>
             <div>
               <h4 className="text-sm font-extrabold text-gray-900 leading-snug">Organic Alfalfa</h4>

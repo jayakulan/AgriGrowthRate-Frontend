@@ -94,6 +94,7 @@ export default function FarmerChatbot() {
   const [chatToRename, setChatToRename] = useState<{ id: string, title: string } | null>(null);
   const [chatToDelete, setChatToDelete] = useState<string | null>(null);
   const [newChatTitle, setNewChatTitle] = useState('');
+  const [showNewChatPrompt, setShowNewChatPrompt] = useState(false);
 
   // File Upload Reference
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -469,16 +470,27 @@ export default function FarmerChatbot() {
         ]);
       }
       else if (workflowState === 'pdf_prompt') {
+        let finalContent = '';
         if (userMsg === '1' || userMsg.toUpperCase() === 'YES') {
           generatePDF();
-          setMessages([...updatedMessages, { role: 'assistant', content: 'Your PDF is ready. It should download automatically.' }]);
+          finalContent = 'Your PDF is ready. It should download automatically.\n\n';
         } else {
-          setMessages([...updatedMessages, { role: 'assistant', content: 'Okay! Let me know if you have any other questions.' }]);
+          finalContent = 'Okay! ';
         }
+        
+        finalContent += 'You can continue asking general agriculture questions here. \n\nIf you want a recommendation for a **different crop**, please click the **"+ New Chat"** button on the left sidebar to start a new process.';
+        
+        setMessages([...updatedMessages, { role: 'assistant', content: finalContent }]);
         setWorkflowState('general');
       }
       else {
         // General Chat
+        if (/^\d+$/.test(userMsg.trim())) {
+          setMessages(messages); // revert
+          setShowNewChatPrompt(true);
+          setLoading(false);
+          return;
+        }
         const reply = await sendMessageToAPI(userMsg);
         setMessages([...updatedMessages, { role: 'assistant', content: reply }]);
       }
@@ -791,6 +803,31 @@ export default function FarmerChatbot() {
                 <button onClick={() => setDeleteModalOpen(false)} className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-sm transition-colors">Cancel</button>
                 <button onClick={handleDeleteSubmit} className="flex-1 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2">
                   <Trash2 className="w-4 h-4" /> Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showNewChatPrompt && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-[24px] w-full max-w-md shadow-xl overflow-hidden relative">
+            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
+                <h3 className="text-lg font-bold text-gray-900">Start New Crop Recommendation?</h3>
+              </div>
+              <button onClick={() => setShowNewChatPrompt(false)} className="text-gray-400 hover:text-gray-700">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-gray-600 mb-6">It looks like you are trying to select a crop. To get a fresh 6-month plan, please start a new chat. Do you want to start a new chat now?</p>
+              <div className="flex gap-3">
+                <button onClick={() => setShowNewChatPrompt(false)} className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-sm transition-colors">Cancel</button>
+                <button onClick={() => { setShowNewChatPrompt(false); startNewChat(); }} className="flex-1 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2">
+                  <Plus className="w-4 h-4" /> New Chat
                 </button>
               </div>
             </div>

@@ -55,18 +55,18 @@ export default function FarmerDashboardPage() {
     const temp = current.temp_c;
 
     if (isRaining) {
-      return '🌧️ Rain Alert: Avoid irrigation, check drainage paths, and delay any chemical sprays to prevent runoff.';
+      return 'Rain Alert: Avoid irrigation, check drainage paths, and delay any chemical sprays to prevent runoff.';
     }
     if (humidity > 85) {
-      return '💧 High Humidity Alert: Increased risk of fungal diseases. Inspect leaves for powdery mildew and improve airflow.';
+      return 'High Humidity Alert: Increased risk of fungal diseases. Inspect leaves for powdery mildew and improve airflow.';
     }
     if (wind > 20) {
-      return '💨 High Wind Alert: Postpone pesticide spraying to avoid drift, and secure delicate nursery plants.';
+      return 'High Wind Alert: Postpone pesticide spraying to avoid drift, and secure delicate nursery plants.';
     }
     if (temp > 32) {
-      return '☀️ Heat Alert: High temp. Irrigate crops in early morning or evening hours to reduce water evaporation loss.';
+      return 'Heat Alert: High temp. Irrigate crops in early morning or evening hours to reduce water evaporation loss.';
     }
-    return '🌱 Weather conditions are optimal. Ideal time for planting, weeding, and compost application.';
+    return 'Weather conditions are optimal. Ideal time for planting, weeding, and compost application.';
   };
 
   useEffect(() => {
@@ -330,7 +330,7 @@ export default function FarmerDashboardPage() {
           <Link href="/dashboard/farmer/weather" className="block bg-white border border-[#e4e6df] rounded-2xl p-5 shadow-sm space-y-4 hover:shadow-md transition-shadow cursor-pointer">
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-bold text-gray-900">{t('dashboard.weatherAdvisory') || 'Weather Advisory'}</h4>
-              <span className="text-[10px] font-extrabold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100 uppercase tracking-wider">Live</span>
+              <span className="text-[10px] font-extrabold text-[#1e4d1e] bg-[#edf4e2] px-2 py-0.5 rounded-full border border-[#d2dfc2] uppercase tracking-wider">Live</span>
             </div>
 
             {weatherLoading ? (
@@ -341,11 +341,12 @@ export default function FarmerDashboardPage() {
             ) : weather ? (
               <>
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-500">
+                  <div className="w-12 h-12 rounded-xl bg-[#edf4e2] border border-[#d2dfc2] flex items-center justify-center text-[#1e4d1e]">
                     <img
                       src={`https:${weather.current.condition.icon}`}
                       alt={weather.current.condition.text}
                       className="w-8 h-8 object-contain"
+                      style={{ filter: weather.current.is_day === 0 ? 'hue-rotate(-120deg)' : 'none' }}
                     />
                   </div>
                   <div>
@@ -369,8 +370,11 @@ export default function FarmerDashboardPage() {
                   </div>
                 </div>
 
-                <div className="bg-[#edf4e2] text-[#4A6D2F] border border-[#d2dfc2] rounded-xl p-3 text-xs leading-relaxed font-medium">
-                  💡 <span className="font-bold">Agri Tip:</span> {getDynamicTip(weather.current)}
+                <div className="bg-[#edf4e2] text-[#4A6D2F] border border-[#d2dfc2] rounded-xl p-3 text-xs leading-relaxed font-medium flex items-center gap-3">
+                  <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain shrink-0" />
+                  <div>
+                    <span className="font-bold">Agri Tip:</span> {getDynamicTip(weather.current)}
+                  </div>
                 </div>
               </>
             ) : (

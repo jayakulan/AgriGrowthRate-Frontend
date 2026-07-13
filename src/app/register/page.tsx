@@ -199,7 +199,8 @@ export default function RegisterPage() {
         form.role,
         form.phone,
         otpCode,
-        form.farmerCardNo
+        form.farmerCardNo,
+        form.address
       );
 
       toast.success('Verification complete! Account created 🌱');
