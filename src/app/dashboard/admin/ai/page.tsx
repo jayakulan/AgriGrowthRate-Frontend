@@ -31,6 +31,15 @@ import {
 import toast from 'react-hot-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 
+interface ModelHealth {
+  cpuUsage: number;
+  stability: number;
+  requestQueueStatus: string;
+  queuePercentage: number;
+  uptimeHours: string;
+  primaryModel: string;
+}
+
 interface AIData {
   totalQueries: number;
   avgResponseTime: number;
@@ -39,6 +48,7 @@ interface AIData {
   neutralReactions: number;
   sentimentAnalysis: Record<string, number>;
   recentActivity: Array<any>;
+  modelHealth?: ModelHealth;
 }
 
 interface KnowledgeBaseDoc {
@@ -336,11 +346,11 @@ export default function AIManagementPage() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs font-bold text-gray-800">
                   <span className="text-[10px] text-gray-400 uppercase tracking-wider">Inference Engine v4.2</span>
-                  <span className="text-[#1e4d1e]">78% CPU</span>
+                  <span className="text-[#1e4d1e]">{data?.modelHealth?.cpuUsage ?? 78}% CPU</span>
                 </div>
 
                 <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-[#1e4d1e] rounded-full" style={{ width: '78%' }} />
+                  <div className="h-full bg-[#1e4d1e] rounded-full" style={{ width: `${data?.modelHealth?.cpuUsage ?? 78}%` }} />
                 </div>
               </div>
 
@@ -348,11 +358,11 @@ export default function AIManagementPage() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs font-bold text-gray-800">
                   <span className="text-[10px] text-gray-400 uppercase tracking-wider">Vector DB Connectivity</span>
-                  <span className="text-[#1e4d1e]">90% Stability</span>
+                  <span className="text-[#1e4d1e]">{data?.modelHealth?.stability ?? 90}% Stability</span>
                 </div>
 
                 <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-[#1e4d1e] rounded-full" style={{ width: '90%' }} />
+                  <div className="h-full bg-[#1e4d1e] rounded-full" style={{ width: `${data?.modelHealth?.stability ?? 90}%` }} />
                 </div>
               </div>
 
@@ -360,18 +370,18 @@ export default function AIManagementPage() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs font-bold text-gray-800">
                   <span className="text-[10px] text-gray-400 uppercase tracking-wider">Request Queue</span>
-                  <span className="text-gray-400 font-bold text-[10px]">Idle</span>
+                  <span className="text-gray-400 font-bold text-[10px]">{data?.modelHealth?.requestQueueStatus ?? 'Idle'}</span>
                 </div>
 
                 <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-[#1e4d1e] rounded-full" style={{ width: '5%' }} />
+                  <div className="h-full bg-[#1e4d1e] rounded-full" style={{ width: `${data?.modelHealth?.queuePercentage ?? 5}%` }} />
                 </div>
               </div>
 
               {/* Primary Model metadata row */}
               <div className="pt-2 border-t border-[#f4f5f0] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[10px] text-gray-400 font-bold">
-                <span>Primary Model: <span className="text-gray-700">Agri-Sage-LLM-Large</span></span>
-                <span>Uptime: <span className="text-gray-700">1,422 Hours (99.99%)</span></span>
+                <span>Primary Model: <span className="text-gray-700">{data?.modelHealth?.primaryModel ?? 'Agri-Sage-LLM-Large'}</span></span>
+                <span>Uptime: <span className="text-gray-700">{data?.modelHealth?.uptimeHours ? `${data.modelHealth.uptimeHours} Hours` : '1,422 Hours'}</span></span>
               </div>
 
             </div>
