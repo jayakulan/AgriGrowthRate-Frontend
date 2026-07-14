@@ -147,11 +147,6 @@ export default function LoginPage() {
                     className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2 pr-8 text-sm text-gray-800 placeholder-gray-400"
                     required
                   />
-                  {email && isEmailValid(email) && (
-                    <div className="absolute right-1 bottom-2 transition-all duration-300">
-                      <Check className="w-4 h-4 text-green-600 animate-scaleIn" />
-                    </div>
-                  )}
                 </div>
 
                 {/* Password bottom-only line */}
@@ -165,11 +160,6 @@ export default function LoginPage() {
                     required
                   />
                   <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                    {password && password.length >= 6 && (
-                      <span className="transition-all duration-300">
-                        <Check className="w-4 h-4 text-green-600 animate-scaleIn" />
-                      </span>
-                    )}
                     <button
                       type="button"
                       onClick={() => setShowPwd(!showPwd)}

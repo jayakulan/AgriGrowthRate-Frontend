@@ -325,11 +325,6 @@ export default function RegisterPage() {
                       placeholder="Full Name"
                       className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-12 text-sm text-gray-800 placeholder-gray-400"
                     />
-                    {form.name && form.name.trim().length >= 3 && /^[A-Za-z\s]+$/.test(form.name.trim()) && (
-                      <div className="absolute right-1 top-2.5 transition-all duration-300">
-                        <Check className="w-4 h-4 text-green-600 animate-scaleIn" />
-                      </div>
-                    )}
                     {errors.name && (
                       <div className="flex items-center gap-1.5 mt-1.5 bg-red-50/50 border border-red-200/40 rounded-lg px-2.5 py-1 text-[10px] md:text-xs text-red-600 font-medium animate-fadeIn">
                         <CircleAlert className="w-3.5 h-3.5 shrink-0" />
@@ -348,11 +343,6 @@ export default function RegisterPage() {
                       placeholder="Email Address"
                       className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-12 text-sm text-gray-800 placeholder-gray-400"
                     />
-                    {form.email && /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(form.email) && (
-                      <div className="absolute right-1 top-2.5 transition-all duration-300">
-                        <Check className="w-4 h-4 text-green-600 animate-scaleIn" />
-                      </div>
-                    )}
                     {errors.email && (
                       <div className="flex items-center gap-1.5 mt-1.5 bg-red-50/50 border border-red-200/40 rounded-lg px-2.5 py-1 text-[10px] md:text-xs text-red-600 font-medium animate-fadeIn">
                         <CircleAlert className="w-3.5 h-3.5 shrink-0" />
@@ -374,11 +364,6 @@ export default function RegisterPage() {
                       placeholder="Phone Number (SMS OTP)"
                       className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-12 text-sm text-gray-800 placeholder-gray-400"
                     />
-                    {form.phone && /^(?:\+94|0)?7[0-9]{8}$/.test(form.phone.trim().replace(/[\s\-]/g, '')) && (
-                      <div className="absolute right-1 top-2.5 transition-all duration-300">
-                        <Check className="w-4 h-4 text-green-600 animate-scaleIn" />
-                      </div>
-                    )}
                     {errors.phone && (
                       <div className="flex items-center gap-1.5 mt-1.5 bg-red-50/50 border border-red-200/40 rounded-lg px-2.5 py-1 text-[10px] md:text-xs text-red-600 font-medium animate-fadeIn">
                         <CircleAlert className="w-3.5 h-3.5 shrink-0" />
@@ -403,13 +388,9 @@ export default function RegisterPage() {
                       ))}
                     </select>
                     <div className="absolute right-1 top-2.5 flex items-center gap-1.5 pointer-events-none transition-all duration-300">
-                      {form.address && sriLankanDistricts.includes(form.address) ? (
-                        <Check className="w-4 h-4 text-green-600 animate-scaleIn pointer-events-auto" />
-                      ) : (
-                        <svg className="fill-current h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                          <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                        </svg>
-                      )}
+                      <svg className="fill-current h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                      </svg>
                     </div>
                     {errors.address && (
                       <div className="flex items-center gap-1.5 mt-1.5 bg-red-50/50 border border-red-200/40 rounded-lg px-2.5 py-1 text-[10px] md:text-xs text-red-600 font-medium animate-fadeIn">
@@ -440,11 +421,6 @@ export default function RegisterPage() {
                           placeholder="Farmer Card Number (e.g. FSN0000000)"
                           className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-12 text-sm text-gray-800 placeholder-gray-400 font-semibold tracking-wide"
                         />
-                        {form.farmerCardNo && /^FSN\d{7}$/.test(form.farmerCardNo.trim()) && (
-                          <div className="absolute right-1 top-2.5 transition-all duration-300">
-                            <Check className="w-4 h-4 text-green-600 animate-scaleIn" />
-                          </div>
-                        )}
                         {errors.farmerCardNo && (
                           <div className="flex items-center gap-1.5 mt-1.5 bg-red-50/50 border border-red-200/40 rounded-lg px-2.5 py-1 text-[10px] md:text-xs text-red-600 font-medium animate-fadeIn">
                             <CircleAlert className="w-3.5 h-3.5 shrink-0" />
@@ -484,28 +460,10 @@ export default function RegisterPage() {
                         <span>{errors.password}</span>
                       </div>
                     )}
-                    {/* Live Password Checklist */}
-                    {form.password && (
-                      <div className="mt-3 p-3 bg-gray-50/80 rounded-xl border border-gray-100/50 space-y-1.5 text-[10px] md:text-xs text-gray-500 animate-fadeIn">
-                        <p className="font-bold text-[9px] uppercase text-[#1e4d1e] tracking-wider mb-1">Password Rules Check</p>
-                        <div className="grid grid-cols-2 gap-x-2 gap-y-1.5">
-                          <div className="flex items-center gap-1">
-                            <Check className={`w-3.5 h-3.5 transition-colors ${form.password.length >= 8 ? 'text-green-600 font-bold' : 'text-gray-300'}`} />
-                            <span className={form.password.length >= 8 ? 'text-green-700 font-semibold' : ''}>8+ Characters</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Check className={`w-3.5 h-3.5 transition-colors ${/[a-z]/.test(form.password) && /[A-Z]/.test(form.password) ? 'text-green-600 font-bold' : 'text-gray-300'}`} />
-                            <span className={/[a-z]/.test(form.password) && /[A-Z]/.test(form.password) ? 'text-green-700 font-semibold' : ''}>Mixed Case</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Check className={`w-3.5 h-3.5 transition-colors ${/\d/.test(form.password) ? 'text-green-600 font-bold' : 'text-gray-300'}`} />
-                            <span className={/\d/.test(form.password) ? 'text-green-700 font-semibold' : ''}>Has Number</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Check className={`w-3.5 h-3.5 transition-colors ${/[^a-zA-Z\d]/.test(form.password) ? 'text-green-600 font-bold' : 'text-gray-300'}`} />
-                            <span className={/[^a-zA-Z\d]/.test(form.password) ? 'text-green-700 font-semibold' : ''}>Special Char</span>
-                          </div>
-                        </div>
+                    {form.password && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$/.test(form.password) && !errors.password && (
+                      <div className="flex items-center gap-1.5 mt-1.5 bg-red-50/50 border border-red-200/40 rounded-lg px-2.5 py-1 text-[10px] md:text-xs text-red-600 font-medium animate-fadeIn">
+                        <CircleAlert className="w-3.5 h-3.5 shrink-0" />
+                        <span>Must be at least 8 characters, include uppercase, lowercase, number & special character</span>
                       </div>
                     )}
                   </div>
@@ -521,11 +479,6 @@ export default function RegisterPage() {
                       className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-16 text-sm text-gray-800 placeholder-gray-400"
                     />
                     <div className="absolute right-1 top-2.5 flex items-center gap-2">
-                      {form.confirm && form.password === form.confirm && (
-                        <span>
-                          <Check className="w-4 h-4 text-green-600 animate-scaleIn" />
-                        </span>
-                      )}
                       <button
                         type="button"
                         onClick={() => setShowConfirmPwd(!showConfirmPwd)}

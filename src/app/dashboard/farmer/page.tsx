@@ -44,6 +44,11 @@ export default function FarmerDashboardPage() {
   const [weather, setWeather] = useState<any>(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
 
+  // Additional stats
+  const [productsThisWeek, setProductsThisWeek] = useState(0);
+  const [activeProductsPercent, setActiveProductsPercent] = useState(0);
+  const [activeProductsCount, setActiveProductsCount] = useState(0);
+
   // Dynamic tip generator
   const getDynamicTip = (current: any) => {
     if (!current) return 'Optimizing field conditions...';
@@ -76,7 +81,18 @@ export default function FarmerDashboardPage() {
 
         const prodRes = await productService.getMyProducts();
         if (prodRes && prodRes.data) {
-          setProductsCount(prodRes.data.length);
+          const totalProds = prodRes.data.length;
+          setProductsCount(totalProds);
+          
+          const now = new Date();
+          const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          const recentProds = prodRes.data.filter((p: any) => new Date(p.createdAt) >= sevenDaysAgo).length;
+          setProductsThisWeek(recentProds);
+
+          const activeProds = prodRes.data.filter((p: any) => p.isAvailable).length;
+          setActiveProductsCount(activeProds);
+          setActiveProductsPercent(totalProds > 0 ? Math.round((activeProds / totalProds) * 100) : 0);
+
           // Add products to activities list
           prodRes.data.forEach((p: any) => {
             combinedActivities.push({
@@ -183,7 +199,7 @@ export default function FarmerDashboardPage() {
             <div className="w-10 h-10 rounded-xl bg-[#edf4e2] flex items-center justify-center text-[#1e4d1e]">
               <Package className="w-5 h-5" />
             </div>
-            <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-md">+4% this week</span>
+            <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-md">+{productsThisWeek} this week</span>
           </div>
           <div className="mt-4">
             <span className="text-4xl font-extrabold text-gray-900">{productsCount}</span>
@@ -394,13 +410,13 @@ export default function FarmerDashboardPage() {
             {/* Custom progress bar */}
             <div className="flex items-center justify-between text-xs font-bold text-gray-500 mb-1.5">
               <div className="w-2/3 bg-gray-100 h-2 rounded-full overflow-hidden">
-                <div className="bg-[#1e4d1e] h-full w-[85%] rounded-full" />
+                <div className="bg-[#1e4d1e] h-full rounded-full" style={{ width: `${activeProductsPercent}%` }} />
               </div>
-              <span>85% Active</span>
+              <span>{activeProductsPercent}% Active</span>
             </div>
 
             <p className="text-[11px] text-gray-400 mt-2 leading-relaxed font-medium">
-              Your profile visibility is high. Average response time: <span className="text-gray-800 font-bold">14 mins</span>.
+              Your profile visibility is based on active products. You have <span className="text-gray-800 font-bold">{activeProductsCount} active listings</span>.
             </p>
           </div>
 
@@ -414,12 +430,12 @@ export default function FarmerDashboardPage() {
               
               <div className="mt-3 space-y-1.5 text-xs text-gray-500">
                 <div className="flex justify-between">
-                  <span>{t('dashboard.optTemp')}</span>
-                  <span className="font-bold text-gray-800">18°C - 26°C</span>
+                  <span>UV Index</span>
+                  <span className="font-bold text-gray-800">{weather?.current?.uv || 0}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>{t('dashboard.soilMoist')}</span>
-                  <span className="font-bold text-gray-800">45%</span>
+                  <span>Cloud Cover</span>
+                  <span className="font-bold text-gray-800">{weather?.current?.cloud || 0}%</span>
                 </div>
               </div>
             </div>

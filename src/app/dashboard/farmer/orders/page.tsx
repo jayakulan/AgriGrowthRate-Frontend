@@ -44,6 +44,11 @@ export default function OrdersManagementPage() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
+  // Dynamic Calculations
+  const [topProduct, setTopProduct] = useState({ name: 'N/A', orders: 0, percent: 0 });
+  const [revenue, setRevenue] = useState({ current: 0, growth: 0 });
+  const [fulfillment, setFulfillment] = useState({ rate: 0, avgTime: 'N/A' });
+
   // Confirmation popup states
   const [confirmingOrder, setConfirmingOrder] = useState<any | null>(null);
   const [userInputRef, setUserInputRef] = useState('');
@@ -165,6 +170,87 @@ export default function OrdersManagementPage() {
 
   const totalPending = orders.filter(o => o.status === 'pending').length;
   const totalCompleted = orders.filter(o => o.status === 'delivered').length;
+
+  useEffect(() => {
+    if (orders.length > 0) {
+      // 1. Top Selling Product
+      const productCounts: Record<string, { name: string; count: number }> = {};
+      orders.forEach(o => {
+        if (o.status !== 'cancelled' && o.items?.[0]?.product) {
+          const p = o.items[0].product;
+          if (!productCounts[p._id]) {
+            productCounts[p._id] = { name: p.name, count: 0 };
+          }
+          productCounts[p._id].count += 1;
+        }
+      });
+      let maxProduct = { name: 'N/A', count: 0 };
+      let totalValidOrders = 0;
+      Object.values(productCounts).forEach(p => {
+        totalValidOrders += p.count;
+        if (p.count > maxProduct.count) maxProduct = p;
+      });
+      setTopProduct({
+        name: maxProduct.name,
+        orders: maxProduct.count,
+        percent: totalValidOrders > 0 ? (maxProduct.count / totalValidOrders) * 100 : 0
+      });
+
+      // 2. Revenue Growth
+      const now = new Date();
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+      let currentRev = 0;
+      let lastWeekRev = 0;
+      let twoWeeksAgoRev = 0;
+
+      orders.forEach(o => {
+        if (o.status === 'delivered') {
+          currentRev += o.totalAmount;
+          const createdDate = new Date(o.createdAt);
+          if (createdDate >= oneWeekAgo) {
+            lastWeekRev += o.totalAmount;
+          } else if (createdDate >= twoWeeksAgo && createdDate < oneWeekAgo) {
+            twoWeeksAgoRev += o.totalAmount;
+          }
+        }
+      });
+      
+      let growth = 0;
+      if (twoWeeksAgoRev > 0) {
+        growth = ((lastWeekRev - twoWeeksAgoRev) / twoWeeksAgoRev) * 100;
+      } else if (lastWeekRev > 0) {
+        growth = 100;
+      }
+      setRevenue({ current: currentRev, growth });
+
+      // 3. Fulfillment Rate
+      const completedCount = orders.filter(o => o.status === 'delivered').length;
+      const totalCount = orders.filter(o => o.status !== 'cancelled').length;
+      const rate = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+
+      // Avg processing time
+      let totalHours = 0;
+      let deliveredCountWithTime = 0;
+      orders.forEach(o => {
+        if (o.status === 'delivered' && o.updatedAt && o.createdAt) {
+          const diffMs = new Date(o.updatedAt).getTime() - new Date(o.createdAt).getTime();
+          if (diffMs > 0) {
+            totalHours += diffMs / (1000 * 60 * 60);
+            deliveredCountWithTime++;
+          }
+        }
+      });
+      const avgTime = deliveredCountWithTime > 0 ? (totalHours / deliveredCountWithTime).toFixed(1) + 'h' : 'N/A';
+      
+      setFulfillment({ rate, avgTime });
+    } else {
+      setTopProduct({ name: 'N/A', orders: 0, percent: 0 });
+      setRevenue({ current: 0, growth: 0 });
+      setFulfillment({ rate: 0, avgTime: 'N/A' });
+    }
+  }, [orders]);
 
   return (
     <div className="p-8">
@@ -398,14 +484,14 @@ export default function OrdersManagementPage() {
               <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
             </div>
             <div>
-              <h4 className="text-sm font-extrabold text-gray-900 leading-snug">Organic Alfalfa</h4>
-              <span className="text-[11px] text-gray-400 font-semibold mt-0.5 block">124 Orders</span>
+              <h4 className="text-sm font-extrabold text-gray-900 leading-snug">{topProduct.name}</h4>
+              <span className="text-[11px] text-gray-400 font-semibold mt-0.5 block">{topProduct.orders} Orders</span>
             </div>
           </div>
 
           {/* Progress Visual */}
           <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-            <div className="bg-[#1e4d1e] h-full w-[78%] rounded-full" />
+            <div className="bg-[#1e4d1e] h-full rounded-full" style={{ width: `${topProduct.percent}%` }} />
           </div>
         </div>
 
@@ -415,10 +501,16 @@ export default function OrdersManagementPage() {
             <span className="text-[10px] font-extrabold text-gray-400 tracking-wider uppercase">Revenue Growth</span>
 
             <div className="mt-2">
-              <h3 className="text-xl font-extrabold text-gray-900">Rs 12,840.00</h3>
-              <span className="text-[9px] font-extrabold text-green-600 bg-green-50 px-1.5 py-0.5 rounded-md mt-1.5 inline-block">
-                +12.4% vs last week
-              </span>
+              <h3 className="text-xl font-extrabold text-gray-900">Rs {revenue.current.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
+              {revenue.growth !== 0 ? (
+                <span className={`text-[9px] font-extrabold ${revenue.growth > 0 ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'} px-1.5 py-0.5 rounded-md mt-1.5 inline-block`}>
+                  {revenue.growth > 0 ? '+' : ''}{revenue.growth.toFixed(1)}% vs last week
+                </span>
+              ) : (
+                <span className="text-[9px] font-extrabold text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded-md mt-1.5 inline-block">
+                  No previous data
+                </span>
+              )}
             </div>
           </div>
 
@@ -437,8 +529,8 @@ export default function OrdersManagementPage() {
           <span className="text-[10px] font-extrabold text-white/50 tracking-wider uppercase">Fulfillment Rate</span>
 
           <div className="mt-2 z-10">
-            <h3 className="text-4xl font-extrabold text-white">98.2%</h3>
-            <span className="text-[10px] text-white/70 mt-1 block">Average processing time: 4.2h</span>
+            <h3 className="text-4xl font-extrabold text-white">{fulfillment.rate.toFixed(1)}%</h3>
+            <span className="text-[10px] text-white/70 mt-1 block">Average processing time: {fulfillment.avgTime}</span>
           </div>
 
           {/* Stars Sparkles Watermark Icon matches mock */}
