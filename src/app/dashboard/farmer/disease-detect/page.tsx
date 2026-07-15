@@ -151,6 +151,7 @@ export default function DiseaseDetectionPage() {
     setConfidence(scan.confidence);
     setDiseaseImage(scan.image);
     setTreatment(scan.treatment);
+    setHasResult(true);
     toast.success(`Loaded scan results for ${scan.title}`);
   };
 
