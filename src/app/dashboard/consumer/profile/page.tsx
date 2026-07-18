@@ -147,7 +147,7 @@ export default function ConsumerProfilePage() {
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (name) {
       if (/\d/.test(name)) {
         toast.error('Name cannot contain numbers');
@@ -158,13 +158,13 @@ export default function ConsumerProfilePage() {
         return;
       }
     }
-    
+
     // Normalize phone numbers for comparison
     let currentFormatted = user?.phone || '';
     let newFormatted = phone.trim().replace(/[\s\-\+\(\)]/g, '');
     if (newFormatted.startsWith('0')) newFormatted = '94' + newFormatted.slice(1);
     else if (!newFormatted.startsWith('94') && newFormatted.length === 9) newFormatted = '94' + newFormatted;
-    
+
     if (newFormatted !== currentFormatted && currentFormatted) {
       setSaving(true);
       try {
@@ -178,7 +178,7 @@ export default function ConsumerProfilePage() {
       }
       return; // Stop here and wait for OTP
     }
-    
+
     submitProfileUpdate();
   };
 
@@ -187,7 +187,7 @@ export default function ConsumerProfilePage() {
     try {
       const payload: any = { name, phone, address, avatar };
       if (otp) payload.otp = otp;
-      
+
       const response = await api.put('/auth/profile', payload);
       if (response && response.data && response.data.success) {
         updateUser(response.data.data);
@@ -255,7 +255,7 @@ export default function ConsumerProfilePage() {
               <h1 className="text-2xl font-bold text-[#1e4d1e]">{name}</h1>
               <div className="flex items-center justify-center sm:justify-start gap-3 mt-2">
                 <span className="bg-[#1e4d1e] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                  CONSUMER
+                  RETAILER
                 </span>
                 <div className="flex items-center text-gray-500 text-sm font-medium">
                   <MapPin className="w-4 h-4 mr-1 text-gray-400" />
@@ -548,7 +548,7 @@ export default function ConsumerProfilePage() {
             >
               {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Verify & Save'}
             </button>
-            
+
             <button
               disabled={otpTimer > 0 || saving}
               onClick={async () => {
