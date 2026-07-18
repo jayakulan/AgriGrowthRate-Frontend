@@ -309,7 +309,7 @@ export default function RegisterPage() {
                       : 'text-gray-400 hover:text-gray-600'
                       }`}
                   >
-                    Consumer
+                    Retailer
                   </button>
 
                   {/* Animated sliding background capsule */}
@@ -604,29 +604,40 @@ export default function RegisterPage() {
       {/* Floating animated OTP Verification Modal themed in matching Forest Green */}
       <AnimatePresence>
         {showOtpModal && (
-          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+
+            {/* Backdrop with blurring */}
             <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 15 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              transition={{ type: 'spring', duration: 0.3 }}
-              className="bg-white rounded-[24px] w-full max-w-md shadow-xl overflow-hidden relative"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowOtpModal(false)}
+              className="absolute inset-0 bg-[#1e4d1e]/20 backdrop-blur-md cursor-pointer"
+            />
+
+            {/* Modal Card */}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative z-10 w-full max-w-md bg-white border border-[#e4e6df] rounded-[24px] shadow-2xl overflow-hidden"
             >
-              <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+              {/* Header */}
+              <div className="px-6 py-5 border-b border-[#e4e6df] flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
+                  <img src="/logo.png" alt="Logo" className="w-6 h-5 object-contain" />
                   <h3 className="text-lg font-bold text-gray-900">Verify Phone Number</h3>
                 </div>
                 <button
                   onClick={() => setShowOtpModal(false)}
-                  className="text-gray-400 hover:text-gray-700 transition-colors"
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <div className="p-6">
-                <p className="text-sm text-gray-600 mb-6">
+                <p className="text-sm text-gray-500 mb-6">
                   We sent a 6-digit verification code to <span className="text-[#1e4d1e] font-bold">{form.phone}</span>. Please enter it to complete activation.
                 </p>
 
@@ -661,17 +672,17 @@ export default function RegisterPage() {
                       onClick={handleResendOtp}
                       className="text-[11px] text-[#1e4d1e] hover:text-[#4A6D2F] hover:underline font-extrabold transition-colors flex items-center justify-center gap-1.5 mx-auto uppercase"
                     >
-                      <RefreshCw className="w-3.5 h-3.5" /> Resend Verification Code
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin-slow" /> Resend Verification Code
                     </button>
                   )}
                 </div>
 
-                {/* Modal controls */}
+                {/* Modal controls matching requested style */}
                 <div className="flex gap-3">
                   <button
                     type="button"
                     onClick={() => setShowOtpModal(false)}
-                    className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-sm transition-colors cursor-pointer"
+                    className="flex-1 py-3 bg-[#f4f5f0] hover:bg-[#e8eae0] text-gray-700 rounded-xl font-bold text-sm transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -682,7 +693,11 @@ export default function RegisterPage() {
                     onClick={() => handleVerifyAndRegister()}
                     className="flex-1 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
                   >
-                    {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {loading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Check className="w-4 h-4" />
+                    )}
                     Verify Code
                   </button>
                 </div>

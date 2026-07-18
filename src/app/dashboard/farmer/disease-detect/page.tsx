@@ -165,22 +165,20 @@ export default function DiseaseDetectionPage() {
         {/* Left Column: Upload box, Precision Tips, and Analysis Results */}
         <div className="lg:col-span-7 lg:max-w-3xl space-y-4">
           
-          {/* Selected Crop Filter Row */}
-          <div className="flex flex-wrap gap-1.5 items-center justify-center bg-white p-3 rounded-2xl border border-[#edf4e2] shadow-sm mb-4">
-            <span className="text-[11px] font-bold text-gray-400 mr-1">Crop Type:</span>
-            {cropOptions.map((crop) => (
-              <button
-                key={crop.id}
-                onClick={() => setSelectedCrop(crop.id)}
-                className={`px-3 py-1.5 rounded-full text-base font-bold transition-all border ${
-                  selectedCrop === crop.id
-                    ? 'bg-[#1e4d1e] text-white border-[#1e4d1e]'
-                    : 'bg-[#edf4e2] text-[#1e4d1e] border-transparent hover:bg-[#e2eccf]'
-                }`}
-              >
-                {crop.label}
-              </button>
-            ))}
+          {/* Supported Crops Disclaimer */}
+          <div className="flex items-start gap-3 bg-[#edf4e2]/60 border border-[#d2dfc2] rounded-2xl p-3.5 mb-4">
+            <div className="w-7 h-7 rounded-lg bg-[#1e4d1e] flex items-center justify-center shrink-0 mt-0.5">
+              <Sparkles className="w-3.5 h-3.5 text-white" />
+            </div>
+            <div>
+              <p className="text-[11px] font-extrabold text-[#1e4d1e] uppercase tracking-wider mb-1">Supported Crops</p>
+              <p className="text-[11px] text-gray-600 leading-relaxed">
+                This AI disease detection tool is currently trained to identify diseases for the following 6 crops only:{' '}
+                <span className="font-bold text-[#1e4d1e]">Rice, Corn, Potato, Wheat, Tomato</span> and{' '}
+                <span className="font-bold text-[#1e4d1e]">Apple</span>.
+                Results outside these categories may not be accurate.
+              </p>
+            </div>
           </div>
 
           {/* Upload Box */}
