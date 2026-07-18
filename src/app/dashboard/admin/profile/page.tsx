@@ -31,7 +31,7 @@ export default function AdminProfilePage() {
 
   // Stats states
   const [farmersCount, setFarmersCount] = useState(0);
-  const [consumersCount, setConsumersCount] = useState(0);
+  const [retailersCount, setRetailersCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   // Modals
@@ -75,7 +75,7 @@ export default function AdminProfilePage() {
         const statsRes = await api.get('/admin/analytics').catch(() => null);
         if (statsRes && statsRes.data && statsRes.data.success) {
           setFarmersCount(statsRes.data.data.users.farmers || 0);
-          setConsumersCount(statsRes.data.data.users.consumers || 0);
+          setRetailersCount(statsRes.data.data.users.consumers || 0);
         }
       } catch (e) {
         console.warn('Failed to load admin profile info:', e);
@@ -279,10 +279,10 @@ export default function AdminProfilePage() {
                   </div>
                 </div>
 
-                {/* Registered Consumers */}
+                {/* Registered Retailers */}
                 <div className="bg-[#f8fae5] border border-[#eff1da] rounded-2xl p-5 text-left">
-                  <p className="text-[10px] font-bold text-gray-500 mb-4 uppercase tracking-wider">Consumers</p>
-                  <p className="text-2xl font-bold text-[#1e4d1e]">{consumersCount}</p>
+                  <p className="text-[10px] font-bold text-gray-500 mb-4 uppercase tracking-wider">Retailers</p>
+                  <p className="text-2xl font-bold text-[#1e4d1e]">{retailersCount}</p>
                   <div className="w-full h-1 bg-gray-200 rounded-full mt-4 overflow-hidden">
                     <div className="h-full bg-[#1e4d1e] w-1/3 rounded-full" />
                   </div>
@@ -290,9 +290,14 @@ export default function AdminProfilePage() {
 
               </div>
 
-              <button onClick={() => router.push('/dashboard/admin/farmers')} className="w-full py-3.5 rounded-xl border border-[#e4e6df] text-[#4a6d2f] text-sm font-bold hover:bg-[#f4f6ee] transition-colors cursor-pointer">
-                Manage Farmers
-              </button>
+              <div className="flex flex-col gap-3">
+                <button onClick={() => router.push('/dashboard/admin/farmers')} className="w-full py-3.5 rounded-xl border border-[#e4e6df] text-[#4a6d2f] text-sm font-bold hover:bg-[#f4f6ee] transition-colors cursor-pointer">
+                  Manage Farmers
+                </button>
+                <button onClick={() => router.push('/dashboard/admin/retailers')} className="w-full py-3.5 rounded-xl border border-[#e4e6df] text-[#4a6d2f] text-sm font-bold hover:bg-[#f4f6ee] transition-colors cursor-pointer">
+                  Manage Retailers
+                </button>
+              </div>
             </div>
 
             {/* Security & Access Card */}
@@ -332,6 +337,7 @@ export default function AdminProfilePage() {
           <div className="bg-white rounded-[24px] w-full max-w-md shadow-xl overflow-hidden relative">
             <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
+                <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
                 <h3 className="text-lg font-bold text-gray-900">Edit Profile</h3>
               </div>
               <button onClick={() => setIsEditModalOpen(false)} className="text-gray-400 hover:text-gray-700 cursor-pointer">
@@ -405,6 +411,7 @@ export default function AdminProfilePage() {
           <div className="bg-white rounded-[24px] w-full max-w-md shadow-xl overflow-hidden relative">
             <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
+                <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
                 <h3 className="text-lg font-bold text-gray-900">Change Password</h3>
               </div>
               <button onClick={() => setIsPasswordModalOpen(false)} className="text-gray-400 hover:text-gray-700 cursor-pointer">

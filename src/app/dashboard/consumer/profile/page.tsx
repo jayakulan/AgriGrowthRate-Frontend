@@ -76,9 +76,7 @@ export default function ConsumerProfilePage() {
     }
   };
   // Notification states
-  const [priceAlerts, setPriceAlerts] = useState(true);
-  const [orderMessages, setOrderMessages] = useState(true);
-  const [newsletter, setNewsletter] = useState(false);
+  const [messageAlerts, setMessageAlerts] = useState(true);
 
   const router = useRouter();
 
@@ -99,36 +97,27 @@ export default function ConsumerProfilePage() {
     if (savedPrefs) {
       try {
         const parsed = JSON.parse(savedPrefs);
-        if (parsed.priceAlerts !== undefined) setPriceAlerts(parsed.priceAlerts);
-        if (parsed.orderMessages !== undefined) setOrderMessages(parsed.orderMessages);
-        if (parsed.newsletter !== undefined) setNewsletter(parsed.newsletter);
+        if (parsed.messageAlerts !== undefined) setMessageAlerts(parsed.messageAlerts);
       } catch (e) {
         console.error('Failed to parse notification preferences', e);
       }
     }
   }, []);
 
-  const handleTogglePref = (prefKey: 'priceAlerts' | 'orderMessages' | 'newsletter') => {
-    let updatedVal = false;
-    if (prefKey === 'priceAlerts') {
-      updatedVal = !priceAlerts;
-      setPriceAlerts(updatedVal);
-    } else if (prefKey === 'orderMessages') {
-      updatedVal = !orderMessages;
-      setOrderMessages(updatedVal);
-    } else if (prefKey === 'newsletter') {
-      updatedVal = !newsletter;
-      setNewsletter(updatedVal);
-    }
+  const handleTogglePref = () => {
+    const updatedVal = !messageAlerts;
+    setMessageAlerts(updatedVal);
 
     const currentPrefs = {
-      priceAlerts: prefKey === 'priceAlerts' ? updatedVal : priceAlerts,
-      orderMessages: prefKey === 'orderMessages' ? updatedVal : orderMessages,
-      newsletter: prefKey === 'newsletter' ? updatedVal : newsletter,
+      messageAlerts: updatedVal,
     };
 
     localStorage.setItem('agri_notification_prefs', JSON.stringify(currentPrefs));
-    toast.success('Notification preferences updated successfully!');
+    if (updatedVal) {
+      toast.success('Notification On');
+    } else {
+      toast.success('Notification Off');
+    }
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -335,40 +324,12 @@ export default function ConsumerProfilePage() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-bold text-gray-900 mb-0.5">Market Price Alerts</p>
-                    <p className="text-xs text-gray-500">Notify when crop prices change</p>
+                    <p className="text-sm font-bold text-gray-900 mb-0.5">Message</p>
+                    <p className="text-xs text-gray-500">Instant push notification for messages</p>
                   </div>
                   <div
-                    onClick={() => handleTogglePref('priceAlerts')}
-                    className={`w-12 h-6 rounded-full p-1 cursor-pointer flex transition-all duration-200 ${priceAlerts ? 'bg-[#1e4d1e] justify-end' : 'bg-gray-200 justify-start'
-                      }`}
-                  >
-                    <div className="w-4 h-4 bg-white rounded-full shadow-sm" />
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-bold text-gray-900 mb-0.5">New Order Messages</p>
-                    <p className="text-xs text-gray-500">Instant push notification for direct chats</p>
-                  </div>
-                  <div
-                    onClick={() => handleTogglePref('orderMessages')}
-                    className={`w-12 h-6 rounded-full p-1 cursor-pointer flex transition-all duration-200 ${orderMessages ? 'bg-[#1e4d1e] justify-end' : 'bg-gray-200 justify-start'
-                      }`}
-                  >
-                    <div className="w-4 h-4 bg-white rounded-full shadow-sm" />
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-bold text-gray-900 mb-0.5">Newsletter & Updates</p>
-                    <p className="text-xs text-gray-500">Weekly sustainable farming insights</p>
-                  </div>
-                  <div
-                    onClick={() => handleTogglePref('newsletter')}
-                    className={`w-12 h-6 rounded-full p-1 cursor-pointer flex transition-all duration-200 ${newsletter ? 'bg-[#1e4d1e] justify-end' : 'bg-gray-200 justify-start'
+                    onClick={handleTogglePref}
+                    className={`w-12 h-6 rounded-full p-1 cursor-pointer flex transition-all duration-200 ${messageAlerts ? 'bg-[#1e4d1e] justify-end' : 'bg-gray-200 justify-start'
                       }`}
                   >
                     <div className="w-4 h-4 bg-white rounded-full shadow-sm" />

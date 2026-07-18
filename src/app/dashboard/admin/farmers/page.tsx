@@ -16,7 +16,9 @@ import {
   Download, 
   FolderLock,
   X,
-  Loader2
+  Loader2,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -45,6 +47,8 @@ export default function ManageFarmersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('farmer'); // Force farmer role
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
   const [range, setRange] = useState<'1M' | '6M' | '1Y'>('6M');
 
   // Add Card Number modal states
@@ -134,8 +138,14 @@ export default function ManageFarmersPage() {
 
       if (response && response.data && response.data.data) {
         setUsers(response.data.data);
+        if (response.data.pagination) {
+          setTotalPages(response.data.pagination.pages || 1);
+          setTotalUsers(response.data.pagination.total || 0);
+        }
       } else {
         setUsers([]);
+        setTotalPages(1);
+        setTotalUsers(0);
       }
     } catch (error) {
       console.warn('Could not reach backend users API:', error);
@@ -397,26 +407,67 @@ export default function ManageFarmersPage() {
             </div>
           )}
 
-          {/* Table pagination footer exactly matching mock image */}
-          <div className="bg-[#fcfdfa]/80 border-t border-[#e4e6df] px-6 py-4 flex items-center justify-end select-none">
-            <div className="inline-flex items-center gap-1">
-              <button className="px-3 py-1.5 bg-white border border-[#e4e6df] hover:bg-gray-50 rounded-lg text-[10px] font-bold text-gray-500 cursor-pointer transition-all">
-                Previous
-              </button>
-              
-              <button className="w-7 h-7 bg-[#1e4d1e] text-white flex items-center justify-center rounded-lg text-[10px] font-bold cursor-default">
-                1
-              </button>
+          {/* Pagination footer */}
+          {!loading && users.length > 0 && (
+            <div className="bg-[#fcfdfa]/80 border-t border-[#e4e6df] px-6 py-4 flex items-center justify-between select-none">
+              <span className="text-[10px] font-bold text-gray-400">
+                Showing {(currentPage - 1) * 10 + 1}–{Math.min(currentPage * 10, totalUsers)} of {totalUsers} farmers
+              </span>
 
-              <button className="w-7 h-7 bg-white border border-[#e4e6df] hover:bg-gray-50 text-gray-500 flex items-center justify-center rounded-lg text-[10px] font-bold cursor-pointer transition-all">
-                2
-              </button>
-              
-              <button className="px-3 py-1.5 bg-white border border-[#e4e6df] hover:bg-gray-50 rounded-lg text-[10px] font-bold text-gray-500 cursor-pointer transition-all">
-                Next
-              </button>
+              <div className="inline-flex items-center gap-1.5">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 bg-white border border-[#e4e6df] hover:bg-gray-50 rounded-xl text-gray-500 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                  const page = i + 1;
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 rounded-xl text-[10px] font-bold cursor-pointer flex items-center justify-center transition-all ${
+                        currentPage === page
+                          ? 'bg-[#1e4d1e] text-white shadow-sm'
+                          : 'bg-white border border-[#e4e6df] hover:bg-gray-50 text-gray-500'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+
+                {totalPages > 5 && (
+                  <>
+                    <span className="text-gray-400 text-xs font-bold px-1">...</span>
+                    <button
+                      onClick={() => setCurrentPage(totalPages)}
+                      className={`w-8 h-8 rounded-xl text-[10px] font-bold cursor-pointer flex items-center justify-center transition-all ${
+                        currentPage === totalPages
+                          ? 'bg-[#1e4d1e] text-white shadow-sm'
+                          : 'bg-white border border-[#e4e6df] hover:bg-gray-50 text-gray-500'
+                      }`}
+                    >
+                      {totalPages}
+                    </button>
+                  </>
+                )}
+
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 bg-white border border-[#e4e6df] hover:bg-gray-50 rounded-xl text-gray-500 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-          </div>
+          )}
+
+
         </div>
 
         {/* ── BOTTOM INFO STACK SIDE-BY-SIDE ── */}
@@ -511,26 +562,27 @@ export default function ManageFarmersPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="relative z-10 w-full max-w-md bg-white border border-[#e4e6df] rounded-[24px] p-8 shadow-2xl"
+              className="relative z-10 w-full max-w-md bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-2xl text-left"
             >
-              <button
-                onClick={() => setShowCardModal(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="text-center space-y-3 mb-6">
-                <div className="w-12 h-12 rounded-full bg-[#edf4e2] flex items-center justify-center mx-auto border border-[#d2dfc2]">
-                  <FolderLock className="w-6 h-6 text-[#1e4d1e]" />
+              <div className="flex items-center justify-between border-b border-[#f4f5f0] pb-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
+                  <h4 className="text-lg font-extrabold text-gray-900">Add Farmer Card</h4>
                 </div>
-                <h4 className="text-lg font-extrabold text-gray-900">Add Farmer Card</h4>
-                <p className="text-gray-500 text-[11px] leading-relaxed">
-                  Enter a valid Farmer Card Number to allow farmers to register using it.
-                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowCardModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              <form onSubmit={handleAddCardNumber} className="space-y-4 text-left">
+              <p className="text-gray-500 text-[13px] leading-relaxed mb-6">
+                Enter a valid Farmer Card Number to allow farmers to register using it.
+              </p>
+
+              <form onSubmit={handleAddCardNumber} className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
                     Card Number
@@ -545,20 +597,20 @@ export default function ManageFarmersPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className="flex gap-3 mt-6">
                   <button
                     type="button"
                     onClick={() => setShowCardModal(false)}
-                    className="py-3 bg-gray-50 hover:bg-gray-100 border border-[#e4e6df] text-gray-600 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+                    className="flex-1 py-3 bg-gray-50 hover:bg-gray-100 border border-[#e4e6df] text-gray-700 font-bold rounded-xl text-sm transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={addingCard}
-                    className="py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+                    className="flex-1 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl text-sm transition-colors shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                   >
-                    {addingCard ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Save Card'}
+                    {addingCard ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Card'}
                   </button>
                 </div>
               </form>
@@ -586,30 +638,30 @@ export default function ManageFarmersPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="relative z-10 w-full max-w-sm bg-white border border-[#e4e6df] rounded-[24px] p-8 shadow-2xl text-center"
+              className="relative z-10 w-full max-w-md bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-2xl text-left"
             >
-              <button
-                onClick={() => setShowRoleModal(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="w-12 h-12 rounded-full bg-[#edf4e2] flex items-center justify-center mx-auto mb-4 border border-[#d2dfc2]">
-                <FolderLock className="w-6 h-6 text-[#1e4d1e]" />
+              <div className="flex items-center justify-between border-b border-[#f4f5f0] pb-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
+                  <h4 className="text-lg font-extrabold text-gray-900">Adjust Access Level</h4>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowRoleModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              <h4 className="text-base font-extrabold text-gray-900 mb-1">
-                Adjust Access Level
-              </h4>
-              <p className="text-gray-500 text-[11px] leading-relaxed max-w-xs mx-auto mb-6">
+              <p className="text-gray-500 text-[13px] leading-relaxed mb-6">
                 Change credentials role for <span className="text-[#1e4d1e] font-bold">{selectedUser.name}</span>.
               </p>
 
               <div className="space-y-2 mb-6">
                 {['farmer', 'consumer'].map((role) => (
                   <button
-                    key={role}
+                    key={role === 'consumer' ? 'retailer' : role}
                     onClick={() => handleUpdateRole(selectedUser._id, role)}
                     className={`w-full py-3 rounded-xl transition text-xs font-bold uppercase tracking-wider cursor-pointer ${
                       selectedUser.role === role
@@ -617,18 +669,20 @@ export default function ManageFarmersPage() {
                         : 'bg-[#f4f5f0] text-gray-600 hover:bg-[#edf4e2]/60 hover:text-[#1e4d1e]'
                     }`}
                   >
-                    {role}
+                    {role === 'consumer' ? 'retailer' : role}
                   </button>
                 ))}
               </div>
 
-              <button
-                type="button"
-                onClick={() => setShowRoleModal(false)}
-                className="w-full py-3 border border-[#e4e6df] rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowRoleModal(false)}
+                  className="w-full py-3 bg-gray-50 hover:bg-gray-100 border border-[#e4e6df] text-gray-700 font-bold rounded-xl text-sm transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
             </motion.div>
 
           </div>
@@ -653,31 +707,31 @@ export default function ManageFarmersPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="relative z-10 w-full max-w-sm bg-white border border-[#e4e6df] rounded-[24px] p-8 shadow-2xl text-center"
+              className="relative z-10 w-full max-w-md bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-2xl text-left"
             >
-              <button
-                onClick={() => setShowDisableConfirmModal(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4 border border-red-100">
-                <Trash2 className="w-6 h-6 text-red-600" />
-              </div>
-
-              <h4 className="text-base font-extrabold text-gray-900 mb-1">
-                Disable User Account
-              </h4>
-              <p className="text-gray-500 text-[11px] leading-relaxed max-w-xs mx-auto mb-6">
-                Are you sure you want to disable the user <span className="font-bold text-gray-800">{userToDisable.name}</span>? They will no longer be able to log in or use the platform.
-              </p>
-
-              <div className="flex gap-3">
+              <div className="flex items-center justify-between border-b border-[#f4f5f0] pb-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
+                  <h4 className="text-lg font-extrabold text-gray-900">Disable User Account</h4>
+                </div>
                 <button
                   type="button"
                   onClick={() => setShowDisableConfirmModal(false)}
-                  className="flex-1 py-3 bg-gray-50 hover:bg-gray-100 border border-[#e4e6df] text-gray-600 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+                  className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <p className="text-gray-500 text-[13px] leading-relaxed mb-6">
+                Are you sure you want to disable the user <span className="font-bold text-gray-800">{userToDisable.name}</span>? They will no longer be able to log in or use the platform.
+              </p>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowDisableConfirmModal(false)}
+                  className="flex-1 py-3 bg-gray-50 hover:bg-gray-100 border border-[#e4e6df] text-gray-700 font-bold rounded-xl text-sm transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -687,7 +741,7 @@ export default function ManageFarmersPage() {
                     await handleDisableUserConfirmed(userToDisable._id);
                     setShowDisableConfirmModal(false);
                   }}
-                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs transition-colors cursor-pointer shadow-md"
+                  className="flex-1 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl text-sm transition-colors shadow-md flex items-center justify-center gap-2 cursor-pointer"
                 >
                   Disable
                 </button>

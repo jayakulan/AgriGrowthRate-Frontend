@@ -21,6 +21,15 @@ interface ChatHistory {
   updatedAt: string;
 }
 
+interface TrendingProduct {
+  id: string;
+  name: string;
+  demand: string;
+  orders: number;
+  trend: string;
+  score: number;
+}
+
 export default function ConsumerFullChatbot() {
   const { user } = useAuth();
   const [chats, setChats] = useState<ChatHistory[]>([]);
@@ -44,18 +53,13 @@ export default function ConsumerFullChatbot() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Right Panel State (Trending Products)
-  const [trendingProducts, setTrendingProducts] = useState([
-    { id: 'tp-1', name: 'Tomatoes', demand: 'High', orders: 12450, trend: 'up', score: 98 },
-    { id: 'tp-2', name: 'Onions', demand: 'High', orders: 9820, trend: 'up', score: 94 },
-    { id: 'tp-3', name: 'Green Chilli', demand: 'Medium', orders: 5400, trend: 'up', score: 85 },
-    { id: 'tp-4', name: 'Brinjal', demand: 'Medium', orders: 4800, trend: 'down', score: 76 },
-    { id: 'tp-5', name: 'Cabbage', demand: 'Low', orders: 2100, trend: 'up', score: 65 },
-  ]);
+  const [trendingProducts, setTrendingProducts] = useState<TrendingProduct[]>([]);
 
-  const INITIAL_GREETING = "Welcome to the Consumer Recommendation AI.\n\nI can help you with product recommendations, market trends, and high-demand items.\n\nYou can ask questions like:\n1. Which products currently have the highest demand?\n2. What products are selling well this month?\n3. What products are recommended for the current season?\n\nOr type a custom product recommendation query below.";
+  const INITIAL_GREETING = "Welcome to the Consumer Recommendation AI.\n\nI can help you with product recommendations, market trends, and high-demand items.\n\nPlease reply with the number of your choice:\n1. Which products currently have the highest demand?\n2. What products are selling well this month?\n3. What products are recommended for the current season?\n\nOr type a custom product recommendation query below.";
 
   useEffect(() => {
     fetchChats();
+    fetchTrendingProducts();
     const pendingChatId = localStorage.getItem('pendingSubscriptionChatId');
     if (pendingChatId) {
       loadChat(pendingChatId);
@@ -91,6 +95,30 @@ export default function ConsumerFullChatbot() {
       if (error?.response?.status !== 401) {
         console.warn('Could not fetch chats', error?.message);
       }
+    }
+  };
+
+  const fetchTrendingProducts = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+      const { data } = await axios.get(`${apiUrl}/products?limit=5`, { headers: { Authorization: `Bearer ${token}` } });
+      if (data.success && data.data) {
+        const mappedProducts = data.data.map((p: any) => {
+          const score = (p.rating || (p.farmer && p.farmer.avgRating) || 4.5) * 20;
+          return {
+            id: p._id,
+            name: p.name,
+            demand: p.stock < 50 ? 'High' : (p.stock < 100 ? 'Medium' : 'Low'),
+            orders: Math.floor(Math.random() * 500) + 100, // Simulated orders since we don't track it yet
+            trend: Math.random() > 0.5 ? 'up' : 'down',
+            score: Math.min(Math.round(score), 100),
+          };
+        });
+        setTrendingProducts(mappedProducts);
+      }
+    } catch (error) {
+      console.error('Error fetching trending products', error);
     }
   };
 
@@ -309,7 +337,7 @@ export default function ConsumerFullChatbot() {
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-4xl">
                 <button 
-                  onClick={() => handleSendMessage('Which products currently have the highest demand?')}
+                  onClick={() => handleSendMessage('1')}
                   className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow rounded-2xl p-6 text-left group flex flex-col items-start focus:outline-none focus:ring-2 focus:ring-[#1e4d1e]"
                 >
                   <div className="w-10 h-10 bg-[#e8f0e8] text-[#1e4d1e] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -322,7 +350,7 @@ export default function ConsumerFullChatbot() {
                 </button>
                 
                 <button 
-                  onClick={() => handleSendMessage('What products are selling well this month?')}
+                  onClick={() => handleSendMessage('2')}
                   className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow rounded-2xl p-6 text-left group flex flex-col items-start focus:outline-none focus:ring-2 focus:ring-[#1e4d1e]"
                 >
                   <div className="w-10 h-10 bg-[#e8f0e8] text-[#1e4d1e] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -335,7 +363,7 @@ export default function ConsumerFullChatbot() {
                 </button>
 
                 <button 
-                  onClick={() => handleSendMessage('What products are recommended for the current season?')}
+                  onClick={() => handleSendMessage('3')}
                   className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow rounded-2xl p-6 text-left group flex flex-col items-start focus:outline-none focus:ring-2 focus:ring-[#1e4d1e]"
                 >
                   <div className="w-10 h-10 bg-[#e8f0e8] text-[#1e4d1e] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
