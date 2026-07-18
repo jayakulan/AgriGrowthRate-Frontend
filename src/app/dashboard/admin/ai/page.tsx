@@ -26,7 +26,8 @@ import {
   Brain,
   MessageSquare,
   AlertTriangle,
-  Play
+  Play,
+  Trash2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -68,6 +69,11 @@ export default function AIManagementPage() {
   const [syncing, setSyncing] = useState(false);
   const [pdfCount, setPdfCount] = useState(0);
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [docToDelete, setDocToDelete] = useState<KnowledgeBaseDoc | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+
   // Model settings states exactly matching mockup
   const [priority, setPriority] = useState<'Precision' | 'Performance'>('Precision');
   const [contextVal, setContextVal] = useState(70); // slider percent
@@ -87,6 +93,7 @@ export default function AIManagementPage() {
       });
       if (response.data.success) {
         setKnowledgeDocs(response.data.data);
+        setPdfCount(response.data.data.length);
       }
     } catch (error) {
       console.warn('Failed to fetch knowledge base documents', error);
@@ -111,6 +118,30 @@ export default function AIManagementPage() {
     }
   };
 
+
+  const handleDeleteKnowledgeBase = async () => {
+    if (!docToDelete) return;
+    setDeleting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.delete(`http://localhost:5001/api/ai/knowledge/${docToDelete._id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.data.success) {
+        toast.success('Knowledge base deleted successfully');
+        setShowDeleteConfirm(false);
+        setDocToDelete(null);
+        fetchKnowledgeBase();
+      } else {
+        toast.error(response.data.message || 'Deletion failed');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error deleting knowledge base');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const handleForceRetrain = () => {
     toast.success('Force retrain requested! Initiating continuous neural pipeline retrain... 🚀');
   };
@@ -128,6 +159,7 @@ export default function AIManagementPage() {
       const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('pdf', datasetFile);
+      if (datasetName) formData.append('datasetName', datasetName);
 
       const response = await axios.post('http://localhost:5001/api/ai/upload-knowledge', formData, {
         headers: {
@@ -222,7 +254,15 @@ export default function AIManagementPage() {
                           )}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <button className="text-[10px] font-bold text-[#1e4d1e] hover:underline cursor-pointer">Config</button>
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => { setDocToDelete(doc); setShowDeleteConfirm(true); }}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded-lg transition-colors cursor-pointer"
+                              title="Delete Source"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -411,26 +451,27 @@ export default function AIManagementPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="relative z-10 w-full max-w-md bg-white border border-[#e4e6df] rounded-[24px] p-8 shadow-2xl"
+              className="relative z-10 w-full max-w-md bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-2xl text-left"
             >
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="text-center space-y-3 mb-6">
-                <div className="w-12 h-12 rounded-full bg-[#edf4e2] flex items-center justify-center mx-auto border border-[#d2dfc2]">
-                  <Database className="w-6 h-6 text-[#1e4d1e]" />
+              <div className="flex items-center justify-between border-b border-[#f4f5f0] pb-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
+                  <h4 className="text-lg font-extrabold text-gray-900">Add New Data Source</h4>
                 </div>
-                <h4 className="text-lg font-extrabold text-gray-900">Add New Data Source</h4>
-                <p className="text-gray-500 text-[11px] leading-relaxed">
-                  Provide credentials or stream paths to train your local agricultural intelligence.
-                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              <form onSubmit={handleAddDataset} className="space-y-4 text-left">
+              <p className="text-gray-500 text-[13px] leading-relaxed mb-6">
+                Provide credentials or stream paths to train your local agricultural intelligence.
+              </p>
+
+              <form onSubmit={handleAddDataset} className="space-y-4">
                 {/* Dataset Title */}
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
@@ -464,25 +505,86 @@ export default function AIManagementPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className="flex gap-3 mt-6">
                   <button
                     type="button"
                     onClick={() => setShowAddModal(false)}
-                    className="py-3 bg-gray-50 hover:bg-gray-100 border border-[#e4e6df] text-gray-600 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+                    className="flex-1 py-3 bg-gray-50 hover:bg-gray-100 border border-[#e4e6df] text-gray-700 font-bold rounded-xl text-sm transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={syncing}
-                    className="py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+                    className="flex-1 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl text-sm transition-colors shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                   >
-                    {syncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Register Stream'}
+                    {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Register Stream'}
                   </button>
                 </div>
               </form>
             </motion.div>
 
+          </div>
+        )}
+      </AnimatePresence>
+
+
+      {/* ── DELETE CONFIRMATION MODAL ── */}
+      <AnimatePresence>
+        {showDeleteConfirm && docToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowDeleteConfirm(false)}
+              className="absolute inset-0 bg-[#1e4d1e]/20 backdrop-blur-md cursor-pointer"
+            />
+
+            {/* Modal Card */}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative z-10 w-full max-w-sm bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-2xl text-left"
+            >
+              <div className="flex items-center justify-between border-b border-[#f4f5f0] pb-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
+                  <h4 className="text-lg font-extrabold text-gray-900">Delete Dataset</h4>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <p className="text-gray-500 text-[13px] leading-relaxed mb-6">
+                Are you sure you want to delete <span className="text-[#1e4d1e] font-bold">{docToDelete.originalName}</span>? This action cannot be undone.
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 py-3 bg-gray-50 hover:bg-gray-100 border border-[#e4e6df] text-gray-700 font-bold rounded-xl text-sm transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteKnowledgeBase}
+                  disabled={deleting}
+                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-sm transition-colors shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                >
+                  {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Delete'}
+                </button>
+              </div>
+            </motion.div>
           </div>
         )}
       </AnimatePresence>

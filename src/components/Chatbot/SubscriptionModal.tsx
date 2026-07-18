@@ -8,6 +8,17 @@ import toast from 'react-hot-toast';
 export default function SubscriptionModal({ isOpen, onClose, activeChatId }: { isOpen: boolean, onClose: () => void, activeChatId?: string | null }) {
   const [loading, setLoading] = useState(false);
 
+  React.useEffect(() => {
+    if (isOpen) setLoading(false);
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setLoading(false);
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleCheckout = async () => {

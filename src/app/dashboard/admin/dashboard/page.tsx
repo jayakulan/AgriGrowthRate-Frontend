@@ -193,9 +193,7 @@ export default function AdminDashboardPage() {
     );
   };
 
-  const handleViewAllActivities = () => {
-    toast.success('Navigating to full audit log view...');
-  };
+
 
   return (
     <>
@@ -380,10 +378,7 @@ export default function AdminDashboardPage() {
               )}
             </div>
 
-            <button onClick={handleViewAllActivities} className="w-full py-2.5 bg-[#f4f5f0] hover:bg-sidebar text-brand-dark font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 select-none">
-              <span>View All Activities</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
+
           </div>
 
           {/* Right side: Logistics summary card */}

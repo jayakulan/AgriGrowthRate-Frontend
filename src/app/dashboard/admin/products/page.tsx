@@ -234,7 +234,7 @@ export default function ManageProductsPage() {
   const filteredProducts = products.filter(prod => {
     const matchesSearch = prod.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       prod.farmerName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === 'All Categories' || prod.category === categoryFilter;
+    const matchesCategory = categoryFilter === 'All Categories' || (prod.category && prod.category.toLowerCase() === categoryFilter.toLowerCase());
     const matchesStatus = statusFilter === 'All' || prod.status === statusFilter;
     const matchesTab = activeTab === 'All' || (
       (activeTab === 'Approved' && prod.status === 'Approved') ||
@@ -326,11 +326,15 @@ export default function ManageProductsPage() {
               </label>
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setActiveTab(e.target.value);
+                }}
                 className="w-full px-4 py-2.5 border border-[#e4e6df] rounded-xl bg-white text-sm font-medium text-gray-700 outline-none focus:border-[#1e4d1e] cursor-pointer"
               >
                 <option value="All">All</option>
                 <option value="Approved">Approved</option>
+                <option value="Pending">Pending</option>
                 <option value="Rejected">Rejected</option>
               </select>
             </div>
@@ -341,10 +345,13 @@ export default function ManageProductsPage() {
 
         {/* ── TABS SECTION ── */}
         <div className="flex gap-6 border-b border-[#e4e6df] overflow-x-auto pb-4">
-          {['All', 'Approved', 'Rejected'].map((tab) => (
+          {['All', 'Approved', 'Pending', 'Rejected'].map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => {
+                setActiveTab(tab);
+                setStatusFilter(tab);
+              }}
               className={`pb-4 whitespace-nowrap text-sm font-bold transition-colors relative ${activeTab === tab
                 ? 'text-[#1e4d1e]'
                 : 'text-gray-400 hover:text-gray-600'
@@ -388,6 +395,9 @@ export default function ManageProductsPage() {
                       <div className="absolute top-3 left-3 flex gap-2">
                         <span className={`inline-flex px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider shadow-sm backdrop-blur-sm border ${product.quantity === 0 ? 'bg-red-50 text-red-700 border-red-200' : getStatusColor(product.status)}`}>
                           {product.quantity === 0 ? 'Out of Stock' : product.status}
+                        </span>
+                        <span className="inline-flex px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider shadow-sm backdrop-blur-sm border bg-[#f4f5f0] text-gray-700 border-[#e4e6df]">
+                          {product.category}
                         </span>
                       </div>
                     </div>
@@ -456,24 +466,23 @@ export default function ManageProductsPage() {
                       </p>
                     )}
 
-                    {/* Action Buttons at Bottom */}
                     <div className="mt-auto space-y-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          onClick={() => handleApprove(product._id)}
-                          disabled={product.status === 'Approved'}
-                          className="py-2 px-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white text-xs font-bold rounded-xl transition-all cursor-pointer text-center disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none disabled:blur-[0.5px]"
-                        >
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => handleRejectTrigger(product._id)}
-                          disabled={product.status === 'Rejected'}
-                          className="py-2 px-3 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-xl transition-all cursor-pointer border border-red-100 text-center disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none disabled:blur-[0.5px]"
-                        >
-                          Reject
-                        </button>
-                      </div>
+                      {product.status === 'Pending' && (
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            onClick={() => handleApprove(product._id)}
+                            className="py-2 px-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white text-xs font-bold rounded-xl transition-all cursor-pointer text-center"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleRejectTrigger(product._id)}
+                            className="py-2 px-3 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-xl transition-all cursor-pointer border border-red-100 text-center"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
                       <button
                         onClick={() => showDetails(product)}
                         className="w-full py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-600 text-xs font-bold rounded-xl transition-all cursor-pointer border border-gray-100 flex items-center justify-center gap-1.5"

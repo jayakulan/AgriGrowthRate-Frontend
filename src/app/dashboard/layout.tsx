@@ -46,9 +46,32 @@ function PaymentStatusHandler() {
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading, isAuthenticated } = useAuth();
+  const { user, loading, isAuthenticated, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handlePopState = (e: PopStateEvent) => {
+      // If the back button is taking the user to the login page
+      if (window.location.pathname === '/login') {
+        const confirmLogout = window.confirm("Are you sure you want to logout?");
+        if (confirmLogout) {
+          logout().then(() => {
+            // Force a new history entry to wipe the forward button history
+            router.push('/login?logged_out=1');
+          });
+        } else {
+          // Go forward to cancel the back navigation and stay on the dashboard
+          window.history.forward();
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [logout, router]);
 
   useEffect(() => {
     if (loading) return;

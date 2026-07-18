@@ -199,13 +199,13 @@ export default function OrdersMonitoringPage() {
           </div>
 
           {/* Pending */}
-          <div className="bg-white border-2 border-[#1e4d1e] rounded-[20px] p-5 shadow-md flex flex-col justify-between h-32 text-left">
+          <div className="bg-white border border-[#e4e6df] rounded-[20px] p-5 shadow-sm flex flex-col justify-between h-32 text-left">
             <div className="flex items-start justify-between">
               <div className="space-y-1">
                 <div className="p-2 bg-[#edf4e2] rounded-xl w-fit">
                   <Truck className="w-4 h-4 text-[#1e4d1e]" />
                 </div>
-                <p className="text-[10px] text-[#1e4d1e] font-extrabold uppercase tracking-wider mt-2.5">Pending</p>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-2.5">Pending</p>
                 <h3 className="text-xl font-extrabold text-gray-900 leading-none">
                   {loading ? '...' : stats.pending.toLocaleString()}
                 </h3>
@@ -281,7 +281,7 @@ export default function OrdersMonitoringPage() {
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Date</th>
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total</th>
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right">Actions</th>
+
                   </tr>
                 </thead>
 
@@ -316,15 +316,7 @@ export default function OrdersMonitoringPage() {
                         </span>
                       </td>
 
-                      <td className="px-6 py-4 text-right">
-                        <button
-                          type="button"
-                          onClick={() => { setSelectedOrder(ord); setShowStatusModal(true); }}
-                          className="p-1.5 text-gray-400 hover:text-gray-800 hover:bg-gray-50 rounded-lg cursor-pointer transition-all"
-                        >
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
-                      </td>
+
 
                     </tr>
                   ))}
@@ -413,26 +405,30 @@ export default function OrdersMonitoringPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="relative z-10 w-full max-w-sm bg-white border border-[#e4e6df] rounded-[24px] p-8 shadow-2xl text-center"
+              className="relative z-10 w-full max-w-md bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-2xl text-left"
             >
-              <button
-                onClick={() => { setShowStatusModal(false); setSelectedOrder(null); }}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="w-12 h-12 rounded-full bg-[#edf4e2] flex items-center justify-center mx-auto mb-4 border border-[#d2dfc2]">
-                <Truck className="w-6 h-6 text-[#1e4d1e]" />
+              <div className="flex items-center justify-between border-b border-[#f4f5f0] pb-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
+                  <h4 className="text-lg font-extrabold text-gray-900">Update Order Status</h4>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setShowStatusModal(false); setSelectedOrder(null); }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              <h4 className="text-base font-extrabold text-gray-900 mb-1">Update Order Status</h4>
-              <p className="text-gray-500 text-[11px] leading-relaxed max-w-xs mx-auto mb-2">
-                Order <span className="text-[#1e4d1e] font-bold">{selectedOrder.orderNumber}</span>
-              </p>
-              <p className="text-[10px] text-gray-400 font-semibold mb-6">
-                Current: <span className={`px-2 py-0.5 rounded-full border text-[9px] font-bold ${statusColor(selectedOrder.status)}`}>{selectedOrder.status}</span>
-              </p>
+              <div className="mb-6 space-y-1">
+                <p className="text-gray-500 text-[13px] leading-relaxed">
+                  Update the status for order <span className="text-[#1e4d1e] font-bold">{selectedOrder.orderNumber}</span>.
+                </p>
+                <p className="text-[10px] text-gray-400 font-semibold">
+                  Current: <span className={`px-2 py-0.5 rounded-full border text-[9px] font-bold ${statusColor(selectedOrder.status)}`}>{selectedOrder.status}</span>
+                </p>
+              </div>
 
               <div className="space-y-2 mb-6">
                 {ALL_STATUSES.map((status) => (
@@ -455,13 +451,15 @@ export default function OrdersMonitoringPage() {
                 ))}
               </div>
 
-              <button
-                type="button"
-                onClick={() => { setShowStatusModal(false); setSelectedOrder(null); }}
-                className="w-full py-3 border border-[#e4e6df] rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
+              <div className="flex gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => { setShowStatusModal(false); setSelectedOrder(null); }}
+                  className="w-full py-3 bg-gray-50 hover:bg-gray-100 border border-[#e4e6df] text-gray-700 font-bold rounded-xl text-sm transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

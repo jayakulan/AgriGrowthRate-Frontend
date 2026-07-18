@@ -29,7 +29,7 @@ const translations = {
     'header.markAllRead': 'Mark all as read',
     'header.roleFarmer': 'Farmer',
     'header.roleAdmin': 'Admin',
-    'header.roleConsumer': 'Consumer',
+    'header.roleConsumer': 'Retailer',
     'header.newNotifications': 'New',
 
     // Dashboard General
@@ -62,7 +62,7 @@ const translations = {
 
     // Table
     'dashboard.table.orderId': 'Order ID',
-    'dashboard.table.consumerId': 'Consumer ID',
+    'dashboard.table.consumerId': 'Retailer ID',
     'dashboard.table.customer': 'Customer Name',
     'dashboard.table.product': 'Product',
     'dashboard.table.quantity': 'Quantity',
@@ -87,17 +87,17 @@ const translations = {
 
     // Verify Modal
     'dashboard.verifyModal.title': 'Confirm Order Completion',
-    'dashboard.verifyModal.desc': 'Please ask the consumer for the Order Reference Number sent to their phone to verify delivery. Enter it below to complete fulfillment.',
+    'dashboard.verifyModal.desc': 'Please ask the retailer for the Order Reference Number sent to their phone to verify delivery. Enter it below to complete fulfillment.',
     'dashboard.verifyModal.customer': 'Customer:',
     'dashboard.verifyModal.product': 'Product:',
     'dashboard.verifyModal.amount': 'Amount:',
     'dashboard.verifyModal.inputLabel': 'Order Reference Number',
     'dashboard.verifyModal.verifyBtn': 'Verify & Complete',
     'dashboard.verifyModal.cancelBtn': 'Cancel',
-    'dashboard.verifyModal.errorInvalid': 'Incorrect Reference Number. Please verify with the consumer and try again.',
+    'dashboard.verifyModal.errorInvalid': 'Incorrect Reference Number. Please verify with the retailer and try again.',
 
     // Rate Modal
-    'dashboard.rateModal.title': 'Rate & Review Consumer',
+    'dashboard.rateModal.title': 'Rate & Review Retailer',
     'dashboard.rateModal.desc': 'How was your experience with {name}? Leave a rating and brief feedback.',
     'dashboard.rateModal.commentLabel': 'Feedback Comments',
     'dashboard.rateModal.commentPlaceholder': 'Write your feedback here...',
@@ -221,7 +221,7 @@ const translations = {
     'header.markAllRead': 'அனைத்தையும் வாசித்ததாகக் குறிக்கவும்',
     'header.roleFarmer': 'விவசாயி',
     'header.roleAdmin': 'நிர்வாகி',
-    'header.roleConsumer': 'நுகர்வோர்',
+    'header.roleConsumer': 'சில்லறை வியாபாரி',
     'header.newNotifications': 'புதியது',
 
     // Dashboard General
@@ -254,7 +254,7 @@ const translations = {
 
     // Table
     'dashboard.table.orderId': 'கட்டளை எண்',
-    'dashboard.table.consumerId': 'நுகர்வோர் ஐடி',
+    'dashboard.table.consumerId': 'சில்லறை வியாபாரி ஐடி',
     'dashboard.table.customer': 'வாடிக்கையாளர் பெயர்',
     'dashboard.table.product': 'தயாரிப்பு',
     'dashboard.table.quantity': 'அளவு',
@@ -279,7 +279,7 @@ const translations = {
 
     // Verify Modal
     'dashboard.verifyModal.title': 'கட்டளை நிறைவை உறுதிப்படுத்தவும்',
-    'dashboard.verifyModal.desc': 'விநியோகத்தை சரிபார்க்க நுகர்வோரின் தொலைபேசிக்கு அனுப்பப்பட்ட கட்டளை குறிப்பு எண்ணைக் கேட்கவும். நிறைவை முடிக்க அதை கீழே உள்ளிடவும்.',
+    'dashboard.verifyModal.desc': 'விநியோகத்தை சரிபார்க்க சில்லறை வியாபாரியின் தொலைபேசிக்கு அனுப்பப்பட்ட கட்டளை குறிப்பு எண்ணைக் கேட்கவும். நிறைவை முடிக்க அதை கீழே உள்ளிடவும்.',
     'dashboard.verifyModal.customer': 'வாடிக்கையாளர்:',
     'dashboard.verifyModal.product': 'தயாரிப்பு:',
     'dashboard.verifyModal.amount': 'தொகை:',
@@ -413,7 +413,7 @@ const translations = {
     'header.markAllRead': 'සියල්ල කියවූ ලෙස සලකුණු කරන්න',
     'header.roleFarmer': 'ගොවි',
     'header.roleAdmin': 'පරිපාලක',
-    'header.roleConsumer': 'පාරිභෝගික',
+    'header.roleConsumer': 'සිල්ලර වෙළෙන්දා',
     'header.newNotifications': 'නව',
 
     // Dashboard General
@@ -446,8 +446,8 @@ const translations = {
 
     // Table
     'dashboard.table.orderId': 'ඇණවුම් අංකය',
-    'dashboard.table.consumerId': 'පාරිභෝගික හැඳුනුම්පත',
-    'dashboard.table.customer': 'පාරිභෝගිකයාගේ නම',
+    'dashboard.table.consumerId': 'සිල්ලර වෙළෙන්දා හැඳුනුම්පත',
+    'dashboard.table.customer': 'සිල්ලර වෙළෙන්දාගේ නම',
     'dashboard.table.product': 'නිෂ්පාදනය',
     'dashboard.table.quantity': 'ප්‍රමාණය',
     'dashboard.table.price': 'මුළු මිල',
@@ -471,17 +471,17 @@ const translations = {
 
     // Verify Modal
     'dashboard.verifyModal.title': 'ඇණවුම සම්පූර්ණ කිරීම තහවුරු කරන්න',
-    'dashboard.verifyModal.desc': 'බෙදා හැරීම සත්‍යාපනය කිරීම සඳහා පාරිභෝගිකයාගේ දුරකථනයට එවන ලද ඇණවුම් විමර්ශන අංකය විමසන්න. එය සම්පූර්ණ කිරීමට පහත ඇතුළත් කරන්න.',
-    'dashboard.verifyModal.customer': 'පාරිභෝගිකයා:',
+    'dashboard.verifyModal.desc': 'බෙදා හැරීම සත්‍යාපනය කිරීම සඳහා සිල්ලර වෙළෙන්දාගේ දුරකථනයට එවන ලද ඇණවුම් විමර්ශන අංකය විමසන්න. එය සම්පූර්ණ කිරීමට පහත ඇතුළත් කරන්න.',
+    'dashboard.verifyModal.customer': 'සිල්ලර වෙළෙන්දා:',
     'dashboard.verifyModal.product': 'නිෂ්පාදනය:',
     'dashboard.verifyModal.amount': 'මුදල:',
     'dashboard.verifyModal.inputLabel': 'ඇණවුම් විමර්ශන අංකය',
     'dashboard.verifyModal.verifyBtn': 'සත්‍යාපනය කර සම්පූර්ණ කරන්න',
     'dashboard.verifyModal.cancelBtn': 'අවලංගු කරන්න',
-    'dashboard.verifyModal.errorInvalid': 'වැරදි විමර්ශන අංකයකි. කරුණාකර පාරිභෝගිකයා සමඟ සත්‍යාපනය කර නැවත උත්සාහ කරන්න.',
+    'dashboard.verifyModal.errorInvalid': 'වැරදි විමර්ශන අංකයකි. කරුණාකර සිල්ලර වෙළෙන්දා සමඟ සත්‍යාපනය කර නැවත උත්සාහ කරන්න.',
 
     // Rate Modal
-    'dashboard.rateModal.title': 'පාරිභෝගිකයා ඇගයීමට ලක් කරන්න',
+    'dashboard.rateModal.title': 'සිල්ලර වෙළෙන්දා ඇගයීමට ලක් කරන්න',
     'dashboard.rateModal.desc': '{name} සමඟ ඔබේ අත්දැකීම kෙසේද? ඇගයීමක් සහ කෙටි ප්‍රතිපෝෂණයක් ලබා දෙන්න.',
     'dashboard.rateModal.commentLabel': 'ප්‍රතිපෝෂණ අදහස්',
     'dashboard.rateModal.commentPlaceholder': 'ඔබේ ප්‍රතිපෝෂණය මෙහි ලියන්න...',
