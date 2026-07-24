@@ -12,7 +12,6 @@ import {
   AlertCircle,
   HelpCircle,
   Star,
-  Trash2,
   X,
 } from 'lucide-react';
 import { orderService } from '@/services/orderService';
@@ -31,7 +30,7 @@ export default function ConsumerOrdersPage() {
 
   // Rating & Feedback states
   const [orderToRate, setOrderToRate] = useState<any | null>(null);
-  const [rating, setRating] = useState<number>(5);
+  const [rating, setRating] = useState<number>(0);
   const [feedbackComment, setFeedbackComment] = useState<string>('');
   const [submittingFeedback, setSubmittingFeedback] = useState<boolean>(false);
 
@@ -83,6 +82,10 @@ export default function ConsumerOrdersPage() {
 
   const handleFeedbackSubmit = async () => {
     if (!orderToRate) return;
+    if (rating === 0) {
+      toast.error('Please select a rating');
+      return;
+    }
     if (!feedbackComment.trim()) {
       toast.error(t('msg.commentRequired'));
       return;
@@ -98,7 +101,7 @@ export default function ConsumerOrdersPage() {
         toast.success(t('msg.successFeedback'));
         setOrderToRate(null);
         setFeedbackComment('');
-        setRating(5);
+        setRating(0);
         fetchOrders();
       } else {
         toast.error(res.message || t('msg.errorFeedback'));
@@ -244,7 +247,7 @@ export default function ConsumerOrdersPage() {
                           <button
                             onClick={() => {
                               setOrderToRate(order);
-                              setRating(5);
+                              setRating(0);
                               setFeedbackComment('');
                             }}
                             className="bg-[#1e4d1e] hover:bg-[#163d16] text-white text-xs font-extrabold px-4 py-2.5 rounded-xl transition-colors shadow-sm cursor-pointer"
@@ -283,7 +286,10 @@ export default function ConsumerOrdersPage() {
       {orderToRate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
           <div className="bg-white border border-[#e4e6df] rounded-2xl max-w-md w-full p-6 shadow-xl relative animate-scale-up">
-            <h3 className="text-lg font-extrabold text-[#1e4d1e] mb-2">{t('consumer.orders.rateTitle')}</h3>
+            <div className="flex items-center gap-2 mb-2">
+              <img src="/logo.png" alt="Logo" className="h-6 w-auto object-contain" />
+              <h3 className="text-lg font-extrabold text-[#1e4d1e]">{t('consumer.orders.rateTitle')}</h3>
+            </div>
             <p className="text-xs text-gray-500 mb-4 leading-relaxed">
               {t('consumer.orders.rateDesc').replace('{name}', orderToRate.items?.[0]?.product?.name || '')}
             </p>
@@ -388,7 +394,6 @@ export default function ConsumerOrdersPage() {
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <>
-                    <Trash2 className="w-4 h-4" />
                     <span>Yes, Cancel Order</span>
                   </>
                 )}
