@@ -207,7 +207,7 @@ export default function BrowseProductsPage() {
 
                   <p className="text-[12px] text-gray-600 mb-4 flex items-start gap-1">
                     <MapPin className="w-3.5 h-3.5 text-[#1e4d1e] shrink-0 mt-0.5" />
-                    <span className="line-clamp-2">{product.farmer?.address || product.location || 'Address not available'}</span>
+                    <span className="line-clamp-2">{product.farmer?.address || product.farmer?.location || 'Address not available'}</span>
                   </p>
 
                   <Link

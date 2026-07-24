@@ -97,8 +97,8 @@ const translations = {
     'dashboard.verifyModal.errorInvalid': 'Incorrect Reference Number. Please verify with the retailer and try again.',
 
     // Rate Modal
-    'dashboard.rateModal.title': 'Rate & Review Retailer',
-    'dashboard.rateModal.desc': 'How was your experience with {name}? Leave a rating and brief feedback.',
+    'dashboard.rateModal.title': 'Rate & Review System',
+    'dashboard.rateModal.desc': 'How was your experience using our system? Leave a rating and brief feedback.',
     'dashboard.rateModal.commentLabel': 'Feedback Comments',
     'dashboard.rateModal.commentPlaceholder': 'Write your feedback here...',
     'dashboard.rateModal.skip': 'Skip',
@@ -289,8 +289,8 @@ const translations = {
     'dashboard.verifyModal.errorInvalid': 'தவறான குறிப்பு எண். வாடிக்கையாளருடன் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.',
 
     // Rate Modal
-    'dashboard.rateModal.title': 'வாடிக்கையாளரை மதிப்பிடவும்',
-    'dashboard.rateModal.desc': '{name} உடனான உங்கள் அனுபவம் எப்படி இருந்தது? மதிப்பீடு மற்றும் சுருக்கமான கருத்துக்களை இடுங்கள்.',
+    'dashboard.rateModal.title': 'பயன்பாட்டை மதிப்பிடவும்',
+    'dashboard.rateModal.desc': 'எங்கள் பயன்பாட்டுடனான உங்கள் அனுபவம் எப்படி இருந்தது? மதிப்பீடு மற்றும் சுருக்கமான கருத்துக்களை இடுங்கள்.',
     'dashboard.rateModal.commentLabel': 'கருத்துக்கள்',
     'dashboard.rateModal.commentPlaceholder': 'உங்கள் கருத்துக்களை இங்கே எழுதுங்கள்...',
     'dashboard.rateModal.skip': 'தவிர்',
@@ -481,8 +481,8 @@ const translations = {
     'dashboard.verifyModal.errorInvalid': 'වැරදි විමර්ශන අංකයකි. කරුණාකර සිල්ලර වෙළෙන්දා සමඟ සත්‍යාපනය කර නැවත උත්සාහ කරන්න.',
 
     // Rate Modal
-    'dashboard.rateModal.title': 'සිල්ලර වෙළෙන්දා ඇගයීමට ලක් කරන්න',
-    'dashboard.rateModal.desc': '{name} සමඟ ඔබේ අත්දැකීම kෙසේද? ඇගයීමක් සහ කෙටි ප්‍රතිපෝෂණයක් ලබා දෙන්න.',
+    'dashboard.rateModal.title': 'පද්ධතිය ඇගයීමට ලක් කරන්න',
+    'dashboard.rateModal.desc': 'අපගේ පද්ධතිය සමඟ ඔබේ අත්දැකීම කෙසේද? ඇගයීමක් සහ කෙටි ප්‍රතිපෝෂණයක් ලබා දෙන්න.',
     'dashboard.rateModal.commentLabel': 'ප්‍රතිපෝෂණ අදහස්',
     'dashboard.rateModal.commentPlaceholder': 'ඔබේ ප්‍රතිපෝෂණය මෙහි ලියන්න...',
     'dashboard.rateModal.skip': 'මඟහරින්න',

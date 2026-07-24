@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import {
   Heart,
   Star,
@@ -26,6 +26,7 @@ import toast from 'react-hot-toast';
 
 export default function ProductDetailsPage() {
   const { id } = useParams() as { id: string };
+  const router = useRouter();
   const [quantity, setQuantity] = useState(10);
   const [activeImage, setActiveImage] = useState(0);
   const [product, setProduct] = useState<any>(null);
@@ -165,7 +166,7 @@ export default function ProductDetailsPage() {
                 <div>
                   <p className="text-xs font-extrabold text-gray-900 mb-0.5">Farmer Address</p>
                   <p className="text-xs text-gray-600 leading-relaxed">
-                    {product.farmer?.address || product.location || 'Address not available'}
+                    {product.farmer?.address || product.farmer?.location || 'Address not available'}
                   </p>
                 </div>
               </div>
@@ -440,10 +441,11 @@ export default function ProductDetailsPage() {
                   onClick={() => {
                     setShowConfirmModal(false);
                     setOrderResult(null);
+                    router.push('/dashboard/consumer/chat');
                   }}
                   className="w-full bg-[#1e4d1e] hover:bg-[#163d16] text-white py-3 rounded-xl text-xs font-bold transition-colors text-center"
                 >
-                  Continue Shopping
+                  Continue to Chat
                 </button>
               )}
             </div>

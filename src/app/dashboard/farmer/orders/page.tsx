@@ -29,7 +29,6 @@ import {
   Loader2,
   CircleAlert,
   Star,
-  Trash2,
   X,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -56,7 +55,7 @@ export default function OrdersManagementPage() {
 
   // Rating & Feedback states
   const [orderToRate, setOrderToRate] = useState<any | null>(null);
-  const [rating, setRating] = useState<number>(5);
+  const [rating, setRating] = useState<number>(0);
   const [feedbackComment, setFeedbackComment] = useState<string>('');
   const [submittingFeedback, setSubmittingFeedback] = useState<boolean>(false);
 
@@ -118,6 +117,8 @@ export default function OrdersManagementPage() {
         const completedOrder = orders.find(o => o._id === orderId);
         if (completedOrder) {
           setOrderToRate(completedOrder);
+          setRating(0);
+          setFeedbackComment('');
         }
         setConfirmingOrder(null);
         setUserInputRef('');
@@ -136,6 +137,10 @@ export default function OrdersManagementPage() {
 
   const handleFeedbackSubmit = async () => {
     if (!orderToRate) return;
+    if (rating === 0) {
+      toast.error('Please select a rating');
+      return;
+    }
     if (!feedbackComment.trim()) {
       toast.error(t('msg.commentRequired'));
       return;
@@ -151,7 +156,7 @@ export default function OrdersManagementPage() {
         toast.success(t('msg.successFeedback'));
         setOrderToRate(null);
         setFeedbackComment('');
-        setRating(5);
+        setRating(0);
         fetchOrders();
       } else {
         toast.error(res.message || t('msg.errorFeedback'));
@@ -545,7 +550,10 @@ export default function OrdersManagementPage() {
       {confirmingOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
           <div className="bg-white border border-[#e4e6df] rounded-2xl max-w-md w-full p-6 shadow-xl relative animate-scale-up">
-            <h3 className="text-lg font-extrabold text-[#1e4d1e] mb-2">{t('dashboard.verifyModal.title')}</h3>
+            <div className="flex items-center gap-2 mb-2">
+              <img src="/logo.png" alt="Logo" className="h-6 w-auto object-contain" />
+              <h3 className="text-lg font-extrabold text-[#1e4d1e]">{t('dashboard.verifyModal.title')}</h3>
+            </div>
             <p className="text-xs text-gray-500 mb-4 leading-relaxed">
               {t('dashboard.verifyModal.desc')}
             </p>
@@ -626,9 +634,12 @@ export default function OrdersManagementPage() {
       {orderToRate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
           <div className="bg-white border border-[#e4e6df] rounded-2xl max-w-md w-full p-6 shadow-xl relative animate-scale-up">
-            <h3 className="text-lg font-extrabold text-[#1e4d1e] mb-2">{t('dashboard.rateModal.title')}</h3>
+            <div className="flex items-center gap-2 mb-2">
+              <img src="/logo.png" alt="Logo" className="h-6 w-auto object-contain" />
+              <h3 className="text-lg font-extrabold text-[#1e4d1e]">{t('dashboard.rateModal.title')}</h3>
+            </div>
             <p className="text-xs text-gray-500 mb-4 leading-relaxed">
-              {t('dashboard.rateModal.desc').replace('{name}', orderToRate.consumer?.name || t('dashboard.table.anonymous'))}
+              {t('dashboard.rateModal.desc')}
             </p>
 
             {/* Stars selection */}
@@ -667,7 +678,11 @@ export default function OrdersManagementPage() {
             <div className="flex gap-3">
               <button
                 type="button"
-                onClick={() => setOrderToRate(null)}
+                onClick={() => {
+                  setOrderToRate(null);
+                  setRating(0);
+                  setFeedbackComment('');
+                }}
                 className="flex-1 border-2 border-[#e4e6df] text-gray-700 hover:bg-gray-50 px-4 py-3 rounded-xl text-xs font-bold transition-colors"
               >
                 {t('dashboard.rateModal.skip')}
@@ -730,7 +745,6 @@ export default function OrdersManagementPage() {
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <>
-                    <Trash2 className="w-4 h-4" />
                     <span>Yes, Cancel Order</span>
                   </>
                 )}
