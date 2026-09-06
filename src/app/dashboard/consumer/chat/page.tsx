@@ -92,6 +92,68 @@ export default function ConsumerChatPage() {
     setTypedMessage('');
   };
 
+  const formatMessageDateTime = (dateStr: string) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
+
+    const dateFormatted = date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+
+    const timeFormatted = date.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+
+    return `${dateFormatted}, ${timeFormatted}`;
+  };
+
+  const formatDateDivider = (dateStr: string) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
+
+    const today = new Date();
+    if (date.toDateString() === today.toDateString()) {
+      return 'Today';
+    }
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (date.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    }
+
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    });
+  };
+
+  const formatSidebarTimestamp = (dateStr: string) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
+
+    const today = new Date();
+    if (date.toDateString() === today.toDateString()) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    }
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (date.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    }
+
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+  };
+
   const getOtherParticipant = (conversation: any) => {
     if (!currentUser || !conversation) return null;
     return conversation.participants.find((p: any) => p._id !== currentUser._id) || conversation.participants[0];
@@ -133,7 +195,7 @@ export default function ConsumerChatPage() {
                     <div className="flex justify-between items-center mb-0.5">
                       <h4 className="text-[13px] font-bold text-gray-900 truncate">{otherUser?.name || 'Unknown'}</h4>
                       <span className="text-[10px] font-bold text-gray-500 shrink-0">
-                        {chat.lastMessage ? new Date(chat.lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                        {chat.lastMessage ? formatSidebarTimestamp(chat.lastMessage.createdAt) : ''}
                       </span>
                     </div>
                     <p className="text-[11px] text-gray-500 truncate mt-0.5 font-medium">
@@ -170,47 +232,59 @@ export default function ConsumerChatPage() {
               </header>
 
               {/* Chat Messages */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                {messages.map((msg) => {
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                {messages.map((msg, index) => {
                   const isMe = msg.sender._id === currentUser?._id;
+                  const msgDate = new Date(msg.createdAt).toDateString();
+                  const prevMsgDate = index > 0 ? new Date(messages[index - 1].createdAt).toDateString() : null;
+                  const showDateDivider = msgDate !== prevMsgDate;
+
                   return (
-                    <div key={msg._id} className={`flex items-end gap-3 ${isMe ? 'justify-end' : 'justify-start'}`}>
-                      
-                      {!isMe && (
-                        <img
-                          src={msg.sender?.avatar || 'https://via.placeholder.com/150'}
-                          alt={msg.sender?.name}
-                          className="w-8 h-8 rounded-full object-cover shrink-0 shadow-sm"
-                        />
+                    <div key={msg._id || index} className="space-y-4">
+                      {showDateDivider && (
+                        <div className="flex justify-center my-3">
+                          <span className="bg-[#f0f2ea] text-gray-600 text-[11px] font-semibold px-3.5 py-1 rounded-full border border-[#e4e6df] shadow-2xs">
+                            {formatDateDivider(msg.createdAt)}
+                          </span>
+                        </div>
                       )}
 
-                      <div className="max-w-[500px]">
-                        {msg.isImage ? (
-                          <div className="bg-[#f4f5f0] border border-[#e4e6df] rounded-2xl rounded-bl-sm p-2 mb-1 shadow-sm">
-                            <img src={msg.imageSrc} alt="Document" className="w-full h-auto rounded-xl object-cover" />
-                          </div>
-                        ) : (
-                          <div
-                            className={`p-4 text-[13px] leading-relaxed shadow-sm ${
-                              isMe
-                                ? 'bg-[#1e4d1e] text-white rounded-2xl rounded-br-sm'
-                                : 'bg-white border border-[#e4e6df] text-gray-800 rounded-2xl rounded-bl-sm'
-                            }`}
-                          >
-                            {msg.text}
-                          </div>
+                      <div className={`flex items-end gap-3 ${isMe ? 'justify-end' : 'justify-start'}`}>
+                        {!isMe && (
+                          <img
+                            src={msg.sender?.avatar || 'https://via.placeholder.com/150'}
+                            alt={msg.sender?.name}
+                            className="w-8 h-8 rounded-full object-cover shrink-0 shadow-sm"
+                          />
                         )}
-                        <div className={`flex items-center gap-1 text-[10px] text-gray-400 font-bold px-1 mt-1.5 ${isMe ? 'justify-end' : 'justify-start'}`}>
-                          <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                          {isMe && (
-                            <span className="text-green-600 flex items-center ml-0.5">
-                              <Check className="w-3 h-3" />
-                              <Check className="w-3 h-3 -ml-1.5" />
-                            </span>
+
+                        <div className="max-w-[500px]">
+                          {msg.isImage ? (
+                            <div className="bg-[#f4f5f0] border border-[#e4e6df] rounded-2xl rounded-bl-sm p-2 mb-1 shadow-sm">
+                              <img src={msg.imageSrc} alt="Document" className="w-full h-auto rounded-xl object-cover" />
+                            </div>
+                          ) : (
+                            <div
+                              className={`p-4 text-[13px] leading-relaxed shadow-sm ${
+                                isMe
+                                  ? 'bg-[#1e4d1e] text-white rounded-2xl rounded-br-sm'
+                                  : 'bg-white border border-[#e4e6df] text-gray-800 rounded-2xl rounded-bl-sm'
+                              }`}
+                            >
+                              {msg.text}
+                            </div>
                           )}
+                          <div className={`flex items-center gap-1.5 text-[10px] text-gray-400 font-bold px-1 mt-1.5 ${isMe ? 'justify-end' : 'justify-start'}`}>
+                            <span>{formatMessageDateTime(msg.createdAt)}</span>
+                            {isMe && (
+                              <span className="text-green-600 flex items-center ml-0.5">
+                                <Check className="w-3 h-3" />
+                                <Check className="w-3 h-3 -ml-1.5" />
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-
                     </div>
                   );
                 })}
