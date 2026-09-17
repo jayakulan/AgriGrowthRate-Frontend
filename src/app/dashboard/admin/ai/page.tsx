@@ -53,7 +53,8 @@ interface AIData {
 }
 
 interface KnowledgeBaseDoc {
-  _id: string;
+  id?: string;
+  _id?: string;
   originalName: string;
   fileSize: number;
   status: string;
@@ -124,7 +125,8 @@ export default function AIManagementPage() {
     setDeleting(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.delete(`http://localhost:5001/api/ai/knowledge/${docToDelete._id}`, {
+      const docId = docToDelete.id || docToDelete._id;
+      const response = await axios.delete(`http://localhost:5001/api/ai/knowledge/${docId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.data.success) {
@@ -234,8 +236,8 @@ export default function AIManagementPage() {
                       </td>
                     </tr>
                   ) : (
-                    knowledgeDocs.map((doc) => (
-                      <tr key={doc._id}>
+                    knowledgeDocs.map((doc, idx) => (
+                      <tr key={doc.id || doc._id || `kdoc-${idx}`}>
                         <td className="px-4 py-3 text-xs font-bold text-gray-800 flex items-center gap-2">
                           <FileText className="w-4 h-4 text-gray-400 shrink-0" />
                           <span className="truncate max-w-50">{doc.originalName}</span>

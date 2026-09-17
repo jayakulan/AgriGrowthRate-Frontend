@@ -26,9 +26,11 @@ import DailyLogisticsCard from '@/components/DailyLogisticsCard';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface User {
-  _id: string;
+  _id?: string;
+  id?: string;
   name: string;
   email: string;
+  phone?: string;
   contactNo?: string;
   address?: string;
   role: string;
@@ -39,6 +41,19 @@ interface User {
   initials?: string;
   initialsBg?: string;
 }
+
+const formatPhoneNumber = (phone?: string) => {
+  if (!phone || !phone.trim()) return 'N/A';
+  const clean = phone.trim();
+  const digits = clean.replace(/[\s\-\+\(\)]/g, '');
+  if (digits.startsWith('94') && digits.length === 11) {
+    return `+94 ${digits.slice(2, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
+  }
+  if (digits.startsWith('0') && digits.length === 10) {
+    return `+94 ${digits.slice(1, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
+  }
+  return clean;
+};
 
 export default function ManageRetailersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -284,8 +299,10 @@ export default function ManageRetailersPage() {
                       </td>
                     </tr>
                   ) : (
-                    users.map((user) => (
-                      <tr key={user._id} className="hover:bg-[#f4f5f0]/20 transition-colors">
+                    users.map((user, idx) => {
+                      const userId = user.id || user._id || `retailer-${idx}`;
+                      return (
+                        <tr key={userId} className="hover:bg-[#f4f5f0]/20 transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             {user.avatar ? (
@@ -313,7 +330,7 @@ export default function ManageRetailersPage() {
                         </td>
 
                         <td className="px-6 py-4 text-xs font-semibold text-gray-500">
-                          {user.contactNo || '+94 77 123 4567'}
+                          {formatPhoneNumber(user.phone || user.contactNo)}
                         </td>
 
                         <td className="px-6 py-4 text-xs font-semibold text-gray-500">
@@ -347,8 +364,9 @@ export default function ManageRetailersPage() {
                           )}
                         </td>
                       </tr>
-                    ))
-                  )}
+                    );
+                  })
+                )}
                 </tbody>
 
               </table>
@@ -480,7 +498,7 @@ export default function ManageRetailersPage() {
             <DailyLogisticsCard
               className="w-full rounded-[24px] p-6 shadow-sm flex flex-col justify-between"
               label="RETAILER MANAGEMENT"
-              headline={analytics.totalRetailers > 0 ? `${Math.round((analytics.activeRetailers / analytics.totalRetailers) * 100)}% of Retailers Verified` : '100% Retailers Verified'}
+              headline={analytics.totalRetailers > 0 ? `${Math.min(100, Math.round((analytics.activeRetailers / analytics.totalRetailers) * 100))}% of Retailers Verified` : '100% Retailers Verified'}
               description={analytics.totalRetailers > 0
                 ? `Out of ${analytics.totalRetailers} total registered consumers and retailers on AgriGrowthRate, ${analytics.activeRetailers} have active, enabled profiles.`
                 : "No registered consumers or retailers recorded in database yet."}
@@ -644,7 +662,7 @@ export default function ManageRetailersPage() {
                 {['farmer', 'consumer'].map((role) => (
                   <button
                     key={role === 'consumer' ? 'retailer' : role}
-                    onClick={() => handleUpdateRole(selectedUser._id, role)}
+                    onClick={() => handleUpdateRole(selectedUser.id || selectedUser._id || '', role)}
                     className={`w-full py-3 rounded-xl transition text-xs font-bold uppercase tracking-wider cursor-pointer ${
                       selectedUser.role === role
                         ? 'bg-[#1e4d1e] text-white shadow-md'
@@ -720,7 +738,7 @@ export default function ManageRetailersPage() {
                 <button
                   type="button"
                   onClick={async () => {
-                    await handleDisableUserConfirmed(userToDisable._id);
+                    await handleDisableUserConfirmed(userToDisable.id || userToDisable._id || '');
                     setShowDisableConfirmModal(false);
                   }}
                   className="flex-1 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl text-sm transition-colors shadow-md flex items-center justify-center gap-2 cursor-pointer"

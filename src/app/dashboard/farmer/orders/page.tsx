@@ -65,9 +65,10 @@ export default function OrdersManagementPage() {
 
   const handleCancelOrder = async () => {
     if (!orderToCancel) return;
+    const orderId = orderToCancel.id || orderToCancel._id;
     try {
       setCancellingOrder(true);
-      const res = await orderService.cancel(orderToCancel._id);
+      const res = await orderService.cancel(orderId);
       if (res && res.success) {
         toast.success('Order cancelled successfully! Stock updated.');
         setOrderToCancel(null);
@@ -114,7 +115,7 @@ export default function OrdersManagementPage() {
       if (res && res.success) {
         toast.success(t('msg.successCompleted'));
         // Save to orderToRate so the rating modal shows up immediately
-        const completedOrder = orders.find(o => o._id === orderId);
+        const completedOrder = orders.find(o => (o.id || o._id) === orderId);
         if (completedOrder) {
           setOrderToRate(completedOrder);
           setRating(0);
@@ -148,7 +149,7 @@ export default function OrdersManagementPage() {
     try {
       setSubmittingFeedback(true);
       const res = await feedbackService.submitFeedback({
-        orderId: orderToRate._id,
+        orderId: orderToRate.id || orderToRate._id,
         rating,
         comment: feedbackComment,
       });
@@ -345,7 +346,7 @@ export default function OrdersManagementPage() {
                 {orders
                   .filter(ord => {
                     const customerName = ord.consumer?.name || 'Guest';
-                    const orderId = ord._id || '';
+                    const orderId = ord.id || ord._id || '';
                     const pName = ord.items?.[0]?.product?.name || '';
                     return (
                       customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -363,9 +364,10 @@ export default function OrdersManagementPage() {
                     // Sort by date as fallback (newest first)
                     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
                   })
-                  .map((ord) => {
+                  .map((ord, idx) => {
                     const firstItem = ord.items?.[0];
                     const product = firstItem?.product;
+                    const orderId = ord.id || ord._id || `farmer-ord-${idx}`;
                     const formattedDate = new Date(ord.createdAt).toLocaleDateString(undefined, {
                       year: 'numeric',
                       month: 'short',
@@ -373,10 +375,10 @@ export default function OrdersManagementPage() {
                     });
 
                     return (
-                      <tr key={ord._id} className="text-xs text-gray-700 hover:bg-[#f9f9f6]/40 transition-colors">
+                      <tr key={orderId} className="text-xs text-gray-700 hover:bg-[#f9f9f6]/40 transition-colors">
                         {/* Order ID */}
-                        <td className="py-4 px-6 font-bold font-mono text-[#1e4d1e]" title={ord._id}>
-                          {ord._id}
+                        <td className="py-4 px-6 font-bold font-mono text-[#1e4d1e]" title={orderId}>
+                          {ord.orderConfirmationNumber ? ord.orderConfirmationNumber.replace(/^AGR-/, '#') : (orderId ? '#' + orderId.slice(-6).toUpperCase() : 'N/A')}
                         </td>
 
                         {/* Customer */}
@@ -437,7 +439,7 @@ export default function OrdersManagementPage() {
                             ) : (
                               <>
                                 <button
-                                  disabled={updatingId === ord._id}
+                                  disabled={updatingId === (ord.id || ord._id)}
                                   onClick={() => {
                                     setConfirmingOrder(ord);
                                     setUserInputRef('');
@@ -611,7 +613,7 @@ export default function OrdersManagementPage() {
               </button>
               <button
                 type="button"
-                disabled={updatingId === confirmingOrder._id}
+                disabled={updatingId === (confirmingOrder.id || confirmingOrder._id)}
                 onClick={() => {
                   const targetRef = confirmingOrder.orderConfirmationNumber || '';
                   const fullInput = `AGR-${userInputRef.trim()}`;
@@ -620,7 +622,7 @@ export default function OrdersManagementPage() {
                     return;
                   }
                   setValidationError(null);
-                  handleUpdateStatus(confirmingOrder._id, 'delivered');
+                  handleUpdateStatus(confirmingOrder.id || confirmingOrder._id, 'delivered');
                 }}
                 className="flex-1 bg-[#1e4d1e] hover:bg-[#163d16] text-white px-4 py-3 rounded-xl text-xs font-bold transition-colors disabled:opacity-50"
               >
@@ -722,7 +724,7 @@ export default function OrdersManagementPage() {
             {/* Modal Body */}
             <div className="text-left mb-6">
               <p className="text-sm font-medium text-gray-600 leading-relaxed">
-                Are you sure you want to cancel order <span className="font-extrabold text-gray-900">#{orderToCancel.orderConfirmationNumber || orderToCancel._id.slice(-6).toUpperCase()}</span>? This action will release the reserved stock back to the marketplace.
+                Are you sure you want to cancel order <span className="font-extrabold text-gray-900">{orderToCancel.orderConfirmationNumber ? orderToCancel.orderConfirmationNumber.replace(/^AGR-/, '#') : (orderToCancel.id || orderToCancel._id ? '#' + (orderToCancel.id || orderToCancel._id).slice(-6).toUpperCase() : '')}</span>? This action will release the reserved stock back to the marketplace.
               </p>
             </div>
 

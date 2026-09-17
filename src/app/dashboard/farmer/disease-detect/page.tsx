@@ -36,8 +36,8 @@ export default function DiseaseDetectionPage() {
     try {
       const res = await api.get('/ai/assessments');
       if (res.data && res.data.success) {
-        const mappedScans = (res.data.data.recentScans || []).map((scan: any) => ({
-          id: scan._id,
+        const mappedScans = (res.data.data.recentScans || []).map((scan: any, index: number) => ({
+          id: scan._id || scan.id || `scan-${index}-${Date.now()}`,
           title: `${scan.crop} - ${scan.diseaseName}`,
           details: new Date(scan.createdAt).toLocaleDateString(),
           image: scan.image,
@@ -237,9 +237,9 @@ export default function DiseaseDetectionPage() {
 
             {/* Vertical list of cards */}
             <div className="flex flex-col gap-3">
-              {recentScans.map((scan) => (
+              {recentScans.map((scan, idx) => (
                 <button
-                  key={scan.id}
+                  key={scan.id || scan._id || `recent-scan-${idx}`}
                   onClick={() => handleSelectRecent(scan)}
                   className="bg-white border border-[#edf4e2] rounded-xl p-3 flex items-start gap-3 shadow-sm hover:shadow hover:border-[#1e4d1e] transition-all text-left w-full group relative"
                 >
@@ -358,7 +358,7 @@ export default function DiseaseDetectionPage() {
                   {/* Y-axis Ticks and Dashed Lines */}
                   <div className="absolute inset-0 pb-6 pl-10 flex flex-col justify-between">
                     {yTicks.map((tick, i) => (
-                      <div key={i} className="relative flex items-center w-full border-t border-dashed border-gray-200">
+                      <div key={`ytick-${i}-${tick}`} className="relative flex items-center w-full border-t border-dashed border-gray-200">
                         <span className="absolute -left-10 w-8 text-right text-[10px] text-gray-400 font-bold -translate-y-1/2">{tick}</span>
                       </div>
                     ))}
@@ -379,7 +379,7 @@ export default function DiseaseDetectionPage() {
                       const monthName = monthNames[monthIndex];
 
                       return (
-                        <div key={index} className="relative group flex flex-col items-center justify-end h-full w-[12%] cursor-pointer">
+                        <div key={`monthly-stat-${index}-${monthName}`} className="relative group flex flex-col items-center justify-end h-full w-[12%] cursor-pointer">
                           {/* Bar */}
                           <div 
                             className="w-full relative rounded-t-md transition-all duration-300 bg-[#dbe3d3] group-hover:bg-[#1a401a] group-hover:scale-x-105 shadow-sm overflow-hidden"
