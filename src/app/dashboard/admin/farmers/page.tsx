@@ -30,6 +30,7 @@ interface User {
   id?: string;
   name: string;
   email: string;
+  phone?: string;
   contactNo?: string;
   address?: string;
   role: string;
@@ -41,6 +42,19 @@ interface User {
   initialsBg?: string;
   farmerCardNo?: string;
 }
+
+const formatPhoneNumber = (phone?: string) => {
+  if (!phone || !phone.trim()) return 'N/A';
+  const clean = phone.trim();
+  const digits = clean.replace(/[\s\-\+\(\)]/g, '');
+  if (digits.startsWith('94') && digits.length === 11) {
+    return `+94 ${digits.slice(2, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
+  }
+  if (digits.startsWith('0') && digits.length === 10) {
+    return `+94 ${digits.slice(1, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
+  }
+  return clean;
+};
 
 export default function ManageFarmersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -365,7 +379,7 @@ export default function ManageFarmersPage() {
 
                         {/* Contact number */}
                         <td className="px-6 py-4 text-xs font-semibold text-gray-500">
-                          {user.contactNo || '+94 77 123 4567'}
+                          {formatPhoneNumber(user.phone || user.contactNo)}
                         </td>
 
                         {/* Address */}
@@ -536,7 +550,7 @@ export default function ManageFarmersPage() {
             <DailyLogisticsCard
               className="w-full rounded-[24px] p-6 shadow-sm flex flex-col justify-between"
               label="FARMER MANAGEMENT"
-              headline={analytics.totalFarmers > 0 ? `${Math.round((analytics.activeFarmers / analytics.totalFarmers) * 100)}% of Farmers Active` : '100% Farmers Active'}
+              headline={analytics.totalFarmers > 0 ? `${Math.min(100, Math.round((analytics.activeFarmers / analytics.totalFarmers) * 100))}% of Farmers Active` : '100% Farmers Active'}
               description={analytics.totalFarmers > 0
                 ? `Out of ${analytics.totalFarmers} total registered farmers on AgriGrowthRate, ${analytics.activeFarmers} are verified and currently trading active crop inventories.`
                 : "No registered farmers recorded in database yet."}
