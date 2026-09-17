@@ -134,7 +134,7 @@ export default function ConsumerDashboardPage() {
                 <div className="flex -space-x-2">
                   {favFarmers.slice(0, 3).map((f, i) => (
                     <img 
-                      key={i} 
+                      key={f.id || f._id || f.farmerId?.id || f.farmerId?._id || `fav-farmer-${i}`} 
                       className="w-8 h-8 rounded-full border-2 border-white object-cover bg-gray-100" 
                       src={f.farmerId?.avatar ? (f.farmerId.avatar.startsWith('http') || f.farmerId.avatar.startsWith('data:') ? f.farmerId.avatar : `http://localhost:5001${f.farmerId.avatar}`) : "https://images.unsplash.com/photo-1595858688461-8f5bc289569e?w=100&h=100&fit=crop"} 
                       alt="Farmer" 
@@ -166,19 +166,21 @@ export default function ConsumerDashboardPage() {
             {orders.length === 0 ? (
               <p className="text-xs font-medium text-gray-400">No recent orders found</p>
             ) : (
-              orders.slice(0, 3).map((ord) => {
+              orders.slice(0, 3).map((ord, idx) => {
                 const statusText = ord.status === 'delivered' ? t('consumer.delivered') :
                   ord.status === 'pending' ? t('consumer.processing') :
-                  ord.status === 'shipped' ? t('consumer.outForDelivery') : ord.status.toUpperCase();
+                  ord.status === 'shipped' ? t('consumer.outForDelivery') : (ord.status || '').toUpperCase();
 
-                const formattedOrderDate = new Date(ord.createdAt).toLocaleDateString(undefined, {
+                const formattedOrderDate = new Date(ord.createdAt || Date.now()).toLocaleDateString(undefined, {
                   month: 'short',
                   day: 'numeric',
                   year: 'numeric'
                 });
 
+                const ordId = ord.id || ord._id || `consumer-dashboard-ord-${idx}`;
+
                 return (
-                  <div key={ord._id} className="flex items-center justify-between">
+                  <div key={ordId} className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center ${ord.status === 'delivered' ? 'bg-[#e2fbe9] text-[#1e4d1e]' :
                           ord.status === 'cancelled' ? 'bg-red-50 text-red-500' :
@@ -193,7 +195,7 @@ export default function ConsumerDashboardPage() {
                         )}
                       </div>
                       <div>
-                        <h4 className="text-[15px] font-bold text-gray-900 mb-0.5">Order #{ord.orderConfirmationNumber || ord._id.slice(-6).toUpperCase()}</h4>
+                        <h4 className="text-[15px] font-bold text-gray-900 mb-0.5">Order #{ord.orderConfirmationNumber || (ord.id || ord._id || '').slice(-6).toUpperCase()}</h4>
                         <p className="text-[11px] font-medium text-gray-500">{formattedOrderDate}</p>
                       </div>
                     </div>

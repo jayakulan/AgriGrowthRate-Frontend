@@ -5,6 +5,7 @@ import { ShoppingCart, Star, Leaf, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Product {
+  id?: string;
   _id: string;
   name: string;
   description: string;
@@ -36,7 +37,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
   const imageUrl = product.images?.[0] || `https://source.unsplash.com/400x300/?${encodeURIComponent(product.category)},farm`;
 
   return (
-    <Link href={`/marketplace/${product._id}`} className="block group">
+    <Link href={`/marketplace/${product.id || product._id}`} className="block group">
       <div className="glass-card overflow-hidden hover:border-green-700/40 hover:shadow-lg hover:shadow-green-900/20 transition-all duration-300 hover:-translate-y-1">
         {/* Image */}
         <div className="relative h-48 overflow-hidden bg-[#0d1a0d]">
@@ -106,7 +107,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
               onClick={handleAddToCart}
               disabled={product.stock === 0}
               className="flex items-center gap-1.5 btn-primary text-xs py-2 px-3 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
-              id={`add-to-cart-${product._id}`}
+              id={`add-to-cart-${product.id || product._id}`}
             >
               <ShoppingCart className="w-3.5 h-3.5" />
               Add to Cart

@@ -18,7 +18,8 @@ import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 
 interface Product {
-  _id: string;
+  _id?: string;
+  id?: string;
   name: string;
   price: number;
   quantity?: number;
@@ -376,14 +377,16 @@ export default function ManageProductsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredProducts.map((product, idx) => (
-              <React.Fragment key={product._id}>
-                <motion.div
-                  key={product._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-white border border-[#e4e6df] rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group flex flex-col h-full"
-                >
+            {filteredProducts.map((product, idx) => {
+              const pid = product.id || product._id || `product-${idx}`;
+              return (
+                <React.Fragment key={pid}>
+                  <motion.div
+                    key={pid}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white border border-[#e4e6df] rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group flex flex-col h-full"
+                  >
                   {/* Product Image */}
                   <div className="relative h-36 overflow-hidden shrink-0 p-3 pb-0">
                     <div className="relative w-full h-full rounded-2xl overflow-hidden bg-gray-100">
@@ -470,13 +473,13 @@ export default function ManageProductsPage() {
                       {product.status === 'Pending' && (
                         <div className="grid grid-cols-2 gap-2">
                           <button
-                            onClick={() => handleApprove(product._id)}
+                            onClick={() => handleApprove(product.id || product._id || '')}
                             className="py-2 px-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white text-xs font-bold rounded-xl transition-all cursor-pointer text-center"
                           >
                             Approve
                           </button>
                           <button
-                            onClick={() => handleRejectTrigger(product._id)}
+                            onClick={() => handleRejectTrigger(product.id || product._id || '')}
                             className="py-2 px-3 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-xl transition-all cursor-pointer border border-red-100 text-center"
                           >
                             Reject
@@ -492,7 +495,7 @@ export default function ManageProductsPage() {
                       </button>
 
                       <button
-                        onClick={() => handleDelete(product._id)}
+                        onClick={() => handleDelete(product.id || product._id || '')}
                         className="w-full py-2.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-xl transition-all cursor-pointer border border-red-100 flex items-center justify-center gap-2"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -502,7 +505,8 @@ export default function ManageProductsPage() {
                   </div>
                 </motion.div>
               </React.Fragment>
-            ))}
+            );
+          })}
             {/* Detail popup render */}
             <DetailPopup product={detailProduct} open={detailOpen} onClose={closeDetails} />
 

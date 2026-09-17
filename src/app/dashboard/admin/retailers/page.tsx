@@ -26,7 +26,8 @@ import DailyLogisticsCard from '@/components/DailyLogisticsCard';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface User {
-  _id: string;
+  _id?: string;
+  id?: string;
   name: string;
   email: string;
   phone?: string;
@@ -298,8 +299,10 @@ export default function ManageRetailersPage() {
                       </td>
                     </tr>
                   ) : (
-                    users.map((user) => (
-                      <tr key={user._id} className="hover:bg-[#f4f5f0]/20 transition-colors">
+                    users.map((user, idx) => {
+                      const userId = user.id || user._id || `retailer-${idx}`;
+                      return (
+                        <tr key={userId} className="hover:bg-[#f4f5f0]/20 transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             {user.avatar ? (
@@ -361,8 +364,9 @@ export default function ManageRetailersPage() {
                           )}
                         </td>
                       </tr>
-                    ))
-                  )}
+                    );
+                  })
+                )}
                 </tbody>
 
               </table>
@@ -658,7 +662,7 @@ export default function ManageRetailersPage() {
                 {['farmer', 'consumer'].map((role) => (
                   <button
                     key={role === 'consumer' ? 'retailer' : role}
-                    onClick={() => handleUpdateRole(selectedUser._id, role)}
+                    onClick={() => handleUpdateRole(selectedUser.id || selectedUser._id || '', role)}
                     className={`w-full py-3 rounded-xl transition text-xs font-bold uppercase tracking-wider cursor-pointer ${
                       selectedUser.role === role
                         ? 'bg-[#1e4d1e] text-white shadow-md'
@@ -734,7 +738,7 @@ export default function ManageRetailersPage() {
                 <button
                   type="button"
                   onClick={async () => {
-                    await handleDisableUserConfirmed(userToDisable._id);
+                    await handleDisableUserConfirmed(userToDisable.id || userToDisable._id || '');
                     setShowDisableConfirmModal(false);
                   }}
                   className="flex-1 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl text-sm transition-colors shadow-md flex items-center justify-center gap-2 cursor-pointer"

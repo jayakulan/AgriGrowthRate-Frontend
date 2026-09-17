@@ -150,14 +150,15 @@ export default function BrowseProductsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-          {products.map((product) => {
+          {products.map((product, idx) => {
+            const productId = product.id || product._id || `product-${idx}`;
             const productImg = product.images && product.images[0]
               ? (product.images[0].startsWith('http') || product.images[0].startsWith('data:') ? product.images[0] : `http://localhost:5001${product.images[0]}`)
               : 'https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=400&h=300&fit=crop';
 
             return (
               <div
-                key={product._id}
+                key={productId}
                 className="bg-white border border-[#e4e6df] rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group flex flex-col h-full"
               >
                 {/* Image */}
@@ -211,7 +212,7 @@ export default function BrowseProductsPage() {
                   </p>
 
                   <Link
-                    href={`/dashboard/consumer/browse-products/${product._id}`}
+                    href={`/dashboard/consumer/browse-products/${productId}`}
                     className="mt-auto w-full bg-[#17451e] hover:bg-[#113316] text-white text-sm font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
                   >
                     <ShoppingCart className="w-4 h-4" />

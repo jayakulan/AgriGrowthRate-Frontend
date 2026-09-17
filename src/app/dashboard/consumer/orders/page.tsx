@@ -40,9 +40,10 @@ export default function ConsumerOrdersPage() {
 
   const handleCancelOrder = async () => {
     if (!orderToCancel) return;
+    const orderId = orderToCancel.id || orderToCancel._id;
     try {
       setCancellingOrder(true);
-      const res = await orderService.cancel(orderToCancel._id);
+      const res = await orderService.cancel(orderId);
       if (res && res.success) {
         toast.success('Order cancelled successfully! Stock updated.');
         setOrderToCancel(null);
@@ -93,7 +94,7 @@ export default function ConsumerOrdersPage() {
     try {
       setSubmittingFeedback(true);
       const res = await feedbackService.submitFeedback({
-        orderId: orderToRate._id,
+        orderId: orderToRate.id || orderToRate._id,
         rating,
         comment: feedbackComment,
       });
@@ -181,7 +182,8 @@ export default function ConsumerOrdersPage() {
       {/* ── Order List ─────────────────────────────────────── */}
       {!loading && !error && orders.length > 0 && (
         <div className="space-y-6 mb-8">
-          {orders.map((order) => {
+          {orders.map((order, idx) => {
+            const orderId = order.id || order._id || `order-${idx}`;
             const firstItem = order.items && order.items[0];
             const product = firstItem?.product;
 
@@ -198,7 +200,7 @@ export default function ConsumerOrdersPage() {
             });
 
             return (
-              <div key={order._id} className="bg-white border border-[#e4e6df] rounded-2xl overflow-hidden shadow-sm">
+              <div key={orderId} className="bg-white border border-[#e4e6df] rounded-2xl overflow-hidden shadow-sm">
                 <div className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
 
                   <div className="flex items-start gap-6">
@@ -208,7 +210,7 @@ export default function ConsumerOrdersPage() {
                     <div>
                       <div className="flex flex-wrap items-center gap-3 mb-1">
                         <h2 className="text-base font-extrabold text-[#1e4d1e] tracking-tight">
-                          {order.orderConfirmationNumber || `#ORD-${order._id.slice(-6).toUpperCase()}`}
+                          {order.orderConfirmationNumber ? order.orderConfirmationNumber.replace(/^AGR-/, '#') : `#${order._id.slice(-6).toUpperCase()}`}
                         </h2>
 
                         {/* Status badging */}
@@ -371,7 +373,7 @@ export default function ConsumerOrdersPage() {
             {/* Modal Body */}
             <div className="text-left mb-6">
               <p className="text-sm font-medium text-gray-600 leading-relaxed">
-                Are you sure you want to cancel order <span className="font-extrabold text-gray-900">#{orderToCancel.orderConfirmationNumber || orderToCancel._id.slice(-6).toUpperCase()}</span>? This action will release the reserved stock back to the marketplace.
+                Are you sure you want to cancel order <span className="font-extrabold text-gray-900">{orderToCancel.orderConfirmationNumber ? orderToCancel.orderConfirmationNumber.replace(/^AGR-/, '#') : '#' + orderToCancel._id.slice(-6).toUpperCase()}</span>? This action will release the reserved stock back to the marketplace.
               </p>
             </div>
 

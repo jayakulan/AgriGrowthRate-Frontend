@@ -38,9 +38,10 @@ export default function ProductDetailsPage() {
   const [isFavorite, setIsFavorite] = useState(false);
   
   const toggleFavorite = async () => {
-    if (!product?.farmer?._id) return;
+    const farmerId = product?.farmer?.id || product?.farmer?._id;
+    if (!farmerId) return;
     try {
-      const res = await api.post(`/auth/favorite-farmer/${product.farmer._id}`);
+      const res = await api.post(`/auth/favorite-farmer/${farmerId}`);
       if (res.data.success) {
         setIsFavorite(!isFavorite);
         toast.success(res.data.message);
@@ -63,7 +64,7 @@ export default function ProductDetailsPage() {
             const relRes = await productService.getAll({ category: res.data.category, limit: '4' });
             if (relRes && relRes.success) {
               // Exclude current product
-              const filtered = (relRes.data || []).filter((p: any) => p._id !== id);
+              const filtered = (relRes.data || []).filter((p: any) => (p.id || p._id) !== id);
               setRelatedProducts(filtered.slice(0, 4));
             }
           }
@@ -398,7 +399,7 @@ export default function ProductDetailsPage() {
                         
                         const response = await orderService.create({
                           items: [{
-                            product: product._id,
+                            product: product.id || product._id,
                             quantity: quantity
                           }],
                           paymentMethod: 'cash'
@@ -468,13 +469,14 @@ export default function ProductDetailsPage() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {relatedProducts.map((prod) => {
+            {relatedProducts.map((prod, idx) => {
+              const prodId = prod.id || prod._id || `rel-${idx}`;
               const prodImg = prod.images && prod.images[0] 
                 ? (prod.images[0].startsWith('http') || prod.images[0].startsWith('data:') ? prod.images[0] : `http://localhost:5001${prod.images[0]}`) 
                 : 'https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=400&h=300&fit=crop';
 
               return (
-                <Link key={prod._id} href={`/dashboard/consumer/browse-products/${prod._id}`} className="bg-white border border-[#e4e6df] rounded-2xl overflow-hidden shadow-sm group block">
+                <Link key={prodId} href={`/dashboard/consumer/browse-products/${prodId}`} className="bg-white border border-[#e4e6df] rounded-2xl overflow-hidden shadow-sm group block">
                   <div className="relative aspect-square">
                     <img src={prodImg} alt={prod.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <button className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shadow-sm">

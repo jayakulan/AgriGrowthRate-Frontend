@@ -30,14 +30,18 @@ export default function FarmerChatPage() {
 
   useEffect(() => {
     if (activeConversation) {
-      fetchMessages(activeConversation._id);
-      socket.emit('join_conversation', activeConversation._id);
+      const convId = activeConversation.id || activeConversation._id;
+      if (convId) {
+        fetchMessages(convId);
+        socket.emit('join_conversation', convId);
+      }
     }
   }, [activeConversation]);
 
   useEffect(() => {
     const handleReceiveMessage = (message: any) => {
-      if (activeConversation && message.conversationId === activeConversation._id) {
+      const currentConvId = activeConversation?.id || activeConversation?._id;
+      if (activeConversation && message.conversationId === currentConvId) {
         setMessages((prev) => [...prev, message]);
         scrollToBottom();
       }
@@ -83,9 +87,12 @@ export default function FarmerChatPage() {
     e.preventDefault();
     if (!typedMessage.trim() || !activeConversation || !currentUser) return;
 
+    const convId = activeConversation.id || activeConversation._id;
+    const userId = currentUser.id || currentUser._id;
+
     socket.emit('send_message', {
-      conversationId: activeConversation._id,
-      senderId: currentUser._id,
+      conversationId: convId,
+      senderId: userId,
       text: typedMessage,
     });
 
@@ -156,7 +163,8 @@ export default function FarmerChatPage() {
 
   const getOtherParticipant = (conversation: any) => {
     if (!currentUser || !conversation) return null;
-    return conversation.participants.find((p: any) => p._id !== currentUser._id) || conversation.participants[0];
+    const currentId = currentUser.id || currentUser._id;
+    return conversation.participants?.find((p: any) => (p.id || p._id) !== currentId) || conversation.participants?.[0];
   };
 
   return (
@@ -173,13 +181,15 @@ export default function FarmerChatPage() {
 
           {/* Scrollable list */}
           <div className="flex-1 overflow-y-auto px-2 space-y-1">
-            {conversations.map((chat) => {
+            {conversations.map((chat, idx) => {
               const otherUser = getOtherParticipant(chat);
-              const isActive = activeConversation?._id === chat._id;
+              const chatId = chat.id || chat._id || `conv-${idx}`;
+              const activeId = activeConversation?.id || activeConversation?._id;
+              const isActive = activeId === chatId;
               
               return (
                 <button
-                  key={chat._id}
+                  key={chatId}
                   onClick={() => setActiveConversation(chat)}
                   className={`w-full p-3.5 flex items-start gap-3 transition-colors text-left relative rounded-2xl ${
                     isActive ? 'bg-[#edf4e2] border border-[#d2dfc2]/50' : 'hover:bg-gray-100/50 border border-transparent'
@@ -236,13 +246,16 @@ export default function FarmerChatPage() {
               {/* Chat Thread */}
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 {messages.map((msg, index) => {
-                  const isMe = msg.sender._id === currentUser?._id;
+                  const senderId = msg.sender?.id || msg.sender?._id;
+                  const currentId = currentUser?.id || currentUser?._id;
+                  const isMe = senderId === currentId;
                   const msgDate = new Date(msg.createdAt).toDateString();
                   const prevMsgDate = index > 0 ? new Date(messages[index - 1].createdAt).toDateString() : null;
                   const showDateDivider = msgDate !== prevMsgDate;
+                  const msgId = msg.id || msg._id || index;
 
                   return (
-                    <div key={msg._id || index} className="space-y-4">
+                    <div key={msgId} className="space-y-4">
                       {showDateDivider && (
                         <div className="flex justify-center my-3">
                           <span className="bg-[#f0f2ea] text-gray-600 text-[11px] font-semibold px-3.5 py-1 rounded-full border border-[#e4e6df] shadow-2xs">

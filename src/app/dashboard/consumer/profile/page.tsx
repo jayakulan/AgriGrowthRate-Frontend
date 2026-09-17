@@ -160,12 +160,15 @@ export default function ConsumerProfilePage() {
     }
 
     // Normalize phone numbers for comparison
-    let currentFormatted = user?.phone || '';
+    let currentFormatted = user?.phone ? user.phone.trim().replace(/[\s\-\+\(\)]/g, '') : '';
+    if (currentFormatted.startsWith('0')) currentFormatted = '94' + currentFormatted.slice(1);
+    else if (!currentFormatted.startsWith('94') && currentFormatted.length === 9) currentFormatted = '94' + currentFormatted;
+
     let newFormatted = phone.trim().replace(/[\s\-\+\(\)]/g, '');
     if (newFormatted.startsWith('0')) newFormatted = '94' + newFormatted.slice(1);
     else if (!newFormatted.startsWith('94') && newFormatted.length === 9) newFormatted = '94' + newFormatted;
 
-    if (newFormatted !== currentFormatted && currentFormatted) {
+    if (newFormatted && newFormatted !== currentFormatted) {
       setSaving(true);
       try {
         await api.post('/auth/send-otp', { phone: newFormatted });

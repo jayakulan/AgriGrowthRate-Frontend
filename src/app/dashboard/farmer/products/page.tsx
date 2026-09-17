@@ -24,7 +24,8 @@ import { useLanguage } from '@/context/LanguageContext';
 
 // ── Type ─────────────────────────────────────────────────────────────────────
 interface Product {
-  _id: string;
+  id?: string;
+  _id?: string;
   name: string;
   category: string;
   price: number;
@@ -35,6 +36,10 @@ interface Product {
   images: string[];
   description: string;
   status?: string;
+}
+
+function getProductId(p: Product): string {
+  return p.id || p._id || '';
 }
 
 function deriveStatus(p: Product): string {
@@ -89,12 +94,13 @@ export default function MyProductsPage() {
 
   // ── Toggle listing status ────────────────────────────────────────────────────
   const handleToggleStatus = async (p: Product) => {
-    setActionId(p._id);
+    const id = getProductId(p);
+    setActionId(id);
     const newAvailability = !p.isAvailable;
     try {
-      await productService.update(p._id, { isAvailable: newAvailability });
+      await productService.update(id, { isAvailable: newAvailability });
       setProducts((prev) =>
-        prev.map((item) => item._id === p._id ? { ...item, isAvailable: newAvailability } : item)
+        prev.map((item) => getProductId(item) === id ? { ...item, isAvailable: newAvailability } : item)
       );
       toast.success(`${p.name} ${newAvailability ? 'listed' : 'unlisted'} successfully`);
     } catch (err: any) {
@@ -119,18 +125,19 @@ export default function MyProductsPage() {
       images: p.images,
     });
   };
-  // ── Delete ────────────────────────────────────────────────────────
+
   const handleDelete = (p: Product) => {
     setDeleteProduct(p);
   };
 
   const handleEditSave = async () => {
     if (!editProduct) return;
-    setActionId(editProduct._id);
+    const id = getProductId(editProduct);
+    setActionId(id);
     try {
-      await productService.update(editProduct._id, formData);
+      await productService.update(id, formData);
       setProducts((prev) =>
-        prev.map((item) => (item._id === editProduct._id ? { ...item, ...formData } as Product : item))
+        prev.map((item) => (getProductId(item) === id ? { ...item, ...formData } as Product : item))
       );
       toast.success(`${editProduct.name} updated successfully`);
     } catch (err: any) {
@@ -141,14 +148,12 @@ export default function MyProductsPage() {
     }
   };
 
-
-
-
   const handleDeleteConfirmed = async (product: Product) => {
-    setActionId(product._id);
+    const id = getProductId(product);
+    setActionId(id);
     try {
-      await productService.delete(product._id);
-      setProducts((prev) => prev.filter((item) => item._id !== product._id));
+      await productService.delete(id);
+      setProducts((prev) => prev.filter((item) => getProductId(item) !== id));
       toast.success(`${product.name} deleted successfully`);
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to delete product');
@@ -312,14 +317,15 @@ export default function MyProductsPage() {
       {/* Products grid */}
       {!loading && !error && filtered.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-          {filtered.map((p) => {
+          {filtered.map((p, index) => {
+            const pid = getProductId(p) || `product-${index}`;
             const status = deriveStatus(p);
-            const isDoingAction = actionId === p._id;
+            const isDoingAction = actionId === pid;
             const imageUrl = p.images?.[0] || FALLBACK_IMAGE;
 
             return (
               <div
-                key={p._id}
+                key={pid}
                 className="bg-white border border-[#e4e6df] rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group flex flex-col h-full relative"
               >
                 {/* Overlay when action in progress */}

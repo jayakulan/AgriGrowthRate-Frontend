@@ -14,6 +14,7 @@ interface Message {
 }
 
 interface ChatHistory {
+  id?: string;
   _id: string;
   title: string;
   updatedAt: string;
@@ -212,18 +213,21 @@ export default function RetailerChatbot() {
               {filteredChats.length === 0 ? (
                 <div className="text-center text-sm text-gray-400 mt-4">No chats found</div>
               ) : (
-                filteredChats.map(chat => (
-                  <div key={chat._id} className={`group flex items-center justify-between p-3 rounded-xl cursor-pointer transition-colors ${activeChatId === chat._id ? 'bg-[#e8f0e8] text-[#1e4d1e]' : 'hover:bg-gray-100 text-gray-700'}`} onClick={() => loadChat(chat._id)}>
-                    <div className="flex items-center gap-3 overflow-hidden">
-                      <MessageSquare className="w-4 h-4 shrink-0 opacity-70" />
-                      <span className="text-sm truncate font-medium">{chat.title}</span>
+                filteredChats.map((chat, idx) => {
+                  const chatId = chat.id || chat._id || `retailer-chat-${idx}`;
+                  return (
+                    <div key={chatId} className={`group flex items-center justify-between p-3 rounded-xl cursor-pointer transition-colors ${activeChatId === chatId ? 'bg-[#e8f0e8] text-[#1e4d1e]' : 'hover:bg-gray-100 text-gray-700'}`} onClick={() => loadChat(chatId)}>
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <MessageSquare className="w-4 h-4 shrink-0 opacity-70" />
+                        <span className="text-sm truncate font-medium">{chat.title}</span>
+                      </div>
+                      <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity gap-1">
+                        <button onClick={(e) => { e.stopPropagation(); openRenameModal(chatId, chat.title); }} className="p-1 hover:text-[#1e4d1e]"><Edit2 className="w-3.5 h-3.5" /></button>
+                        <button onClick={(e) => { e.stopPropagation(); openDeleteModal(chatId); }} className="p-1 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                      </div>
                     </div>
-                    <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity gap-1">
-                      <button onClick={(e) => { e.stopPropagation(); openRenameModal(chat._id, chat.title); }} className="p-1 hover:text-[#1e4d1e]"><Edit2 className="w-3.5 h-3.5" /></button>
-                      <button onClick={(e) => { e.stopPropagation(); openDeleteModal(chat._id); }} className="p-1 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </motion.div>
