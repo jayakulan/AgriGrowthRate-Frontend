@@ -508,7 +508,7 @@ export default function ConsumerFullChatbot() {
       {/* Modals */}
       {renameModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-[24px] w-full max-w-md shadow-xl overflow-hidden relative">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-xl overflow-hidden relative">
             <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" />

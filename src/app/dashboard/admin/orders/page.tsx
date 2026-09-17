@@ -231,7 +231,7 @@ export default function OrdersMonitoringPage() {
         </div>
 
         {/* ── ORDERS TABLE ── */}
-        <div className="bg-white border border-[#e4e6df] rounded-[24px] overflow-hidden shadow-sm">
+        <div className="bg-white border border-[#e4e6df] rounded-3xl overflow-hidden shadow-sm">
 
           {/* Filter bar */}
           <div className="px-6 py-4 border-b border-[#e4e6df] flex flex-col sm:flex-row items-center justify-between gap-4">

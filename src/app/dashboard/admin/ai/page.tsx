@@ -197,7 +197,7 @@ export default function AIManagementPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
           {/* Knowledge Base Management (col-span-7) */}
-          <div className="lg:col-span-8 bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-sm flex flex-col justify-between min-h-[420px] text-left">
+          <div className="lg:col-span-8 bg-white border border-[#e4e6df] rounded-3xl p-6 shadow-sm flex flex-col justify-between min-h-105 text-left">
             <div className="flex items-center justify-between border-b border-[#f4f5f0] pb-3 mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-[#edf4e2] flex items-center justify-center text-[#1e4d1e] shrink-0">
@@ -214,7 +214,7 @@ export default function AIManagementPage() {
             </div>
 
             <div className="overflow-x-auto flex-1">
-              <table className="w-full text-left border-collapse min-w-[500px]">
+              <table className="w-full text-left border-collapse min-w-125">
 
                 <thead className="bg-[#fcfdfa]/80 border-b border-[#e4e6df]">
                   <tr>
@@ -238,7 +238,7 @@ export default function AIManagementPage() {
                       <tr key={doc._id}>
                         <td className="px-4 py-3 text-xs font-bold text-gray-800 flex items-center gap-2">
                           <FileText className="w-4 h-4 text-gray-400 shrink-0" />
-                          <span className="truncate max-w-[200px]">{doc.originalName}</span>
+                          <span className="truncate max-w-50">{doc.originalName}</span>
                         </td>
                         <td className="px-4 py-3 text-xs font-semibold text-gray-500">{(doc.fileSize / (1024 * 1024)).toFixed(2)} MB</td>
                         <td className="px-4 py-3 text-[10px] font-semibold text-gray-400">
@@ -281,7 +281,7 @@ export default function AIManagementPage() {
           </div>
 
           {/* Model Configuration & Settings (col-span-5) */}
-          <div className="lg:col-span-4 bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-sm space-y-4 min-h-[420px] flex flex-col justify-between text-left">
+          <div className="lg:col-span-4 bg-white border border-[#e4e6df] rounded-3xl p-6 shadow-sm space-y-4 min-h-105 flex flex-col justify-between text-left">
             <div className="flex items-center gap-3 border-b border-[#f4f5f0] pb-3">
               <div className="w-8 h-8 rounded-full bg-[#edf4e2] flex items-center justify-center text-[#1e4d1e] shrink-0">
                 <Sliders className="w-4 h-4" />
@@ -351,7 +351,7 @@ export default function AIManagementPage() {
 
 
         {/* ── MODEL HEALTH ARCHITECTURE ── */}
-        <div className="bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-sm space-y-6 text-left relative overflow-hidden">
+        <div className="bg-white border border-[#e4e6df] rounded-3xl p-6 shadow-sm space-y-6 text-left relative overflow-hidden">
           <div className="flex items-center gap-3 border-b border-[#f4f5f0] pb-4">
             <div className="w-8 h-8 rounded-full bg-[#edf4e2] flex items-center justify-center text-[#1e4d1e] shrink-0">
               <TrendingUp className="w-4 h-4" />
@@ -451,7 +451,7 @@ export default function AIManagementPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="relative z-10 w-full max-w-md bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-2xl text-left"
+              className="relative z-10 w-full max-w-md bg-white border border-[#e4e6df] rounded-3xl p-6 shadow-2xl text-left"
             >
               <div className="flex items-center justify-between border-b border-[#f4f5f0] pb-4 mb-4">
                 <div className="flex items-center gap-2">

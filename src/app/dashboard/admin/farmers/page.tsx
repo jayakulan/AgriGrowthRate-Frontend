@@ -293,7 +293,7 @@ export default function ManageFarmersPage() {
         </div>
 
         {/* ── USERS DATATABLE CONTAINER ── */}
-        <div className="bg-white border border-[#e4e6df] rounded-[24px] overflow-hidden shadow-sm">
+        <div className="bg-white border border-[#e4e6df] rounded-3xl overflow-hidden shadow-sm">
           {loading ? (
             <div className="p-12 text-center text-gray-500 font-semibold flex flex-col items-center justify-center">
               <Loader2 className="w-6 h-6 text-[#1e4d1e] animate-spin mb-2" />
@@ -301,7 +301,7 @@ export default function ManageFarmersPage() {
             </div>
           ) : (
             <div className="overflow-x-auto select-none">
-              <table className="w-full text-left border-collapse min-w-[700px]">
+              <table className="w-full text-left border-collapse min-w-175">
                 
                 {/* Table Header exactly styled in mock structure */}
                 <thead className="bg-[#fcfdfa]/80 border-b border-[#e4e6df]">
@@ -473,7 +473,7 @@ export default function ManageFarmersPage() {
         {/* ── BOTTOM INFO STACK SIDE-BY-SIDE ── */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
 
-          <div className="lg:col-span-8 bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-sm overflow-hidden select-none flex flex-col justify-between">
+          <div className="lg:col-span-8 bg-white border border-[#e4e6df] rounded-3xl p-6 shadow-sm overflow-hidden select-none flex flex-col justify-between">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <h3 className="text-sm font-extrabold text-gray-900 uppercase tracking-wider">
@@ -494,7 +494,7 @@ export default function ManageFarmersPage() {
               </select>
             </div>
 
-            <div className="mt-8 w-full h-[320px] flex-1">
+            <div className="mt-8 w-full h-80 flex-1">
               {analyticsLoading ? (
                 <div className="h-full flex items-center justify-center">
                   <Loader2 className="w-8 h-8 text-[#1e4d1e] animate-spin" />
@@ -530,7 +530,7 @@ export default function ManageFarmersPage() {
 
           <div className="lg:col-span-4 flex">
             <DailyLogisticsCard
-              className="w-full rounded-[24px] p-6 shadow-sm flex flex-col justify-between"
+              className="w-full rounded-3xl p-6 shadow-sm flex flex-col justify-between"
               label="FARMER MANAGEMENT"
               headline={analytics.totalFarmers > 0 ? `${Math.round((analytics.activeFarmers / analytics.totalFarmers) * 100)}% of Farmers Active` : '100% Farmers Active'}
               description={analytics.totalFarmers > 0
@@ -562,7 +562,7 @@ export default function ManageFarmersPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="relative z-10 w-full max-w-md bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-2xl text-left"
+              className="relative z-10 w-full max-w-md bg-white border border-[#e4e6df] rounded-3xl p-6 shadow-2xl text-left"
             >
               <div className="flex items-center justify-between border-b border-[#f4f5f0] pb-4 mb-4">
                 <div className="flex items-center gap-2">
@@ -638,7 +638,7 @@ export default function ManageFarmersPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="relative z-10 w-full max-w-md bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-2xl text-left"
+              className="relative z-10 w-full max-w-md bg-white border border-[#e4e6df] rounded-3xl p-6 shadow-2xl text-left"
             >
               <div className="flex items-center justify-between border-b border-[#f4f5f0] pb-4 mb-4">
                 <div className="flex items-center gap-2">
