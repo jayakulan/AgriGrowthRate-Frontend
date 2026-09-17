@@ -19,7 +19,7 @@ import {
   HelpCircle,
   ArrowLeft,
   Upload,
-  DollarSign,
+  Tag,
   Layers,
   FileText,
   BadgeAlert,
@@ -170,7 +170,7 @@ export default function AddProductPage() {
           {/* Inventory Card */}
           <div className="bg-white border border-[#e4e6df] rounded-2xl p-6 shadow-sm space-y-5">
             <div className="flex items-center gap-2 pb-2 border-b border-[#f4f5f0]">
-              <DollarSign className="w-4 h-4 text-[#1e4d1e]" />
+              <Tag className="w-4 h-4 text-[#1e4d1e]" />
               <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">{t('addproduct.pricingInv')}</h3>
             </div>
 

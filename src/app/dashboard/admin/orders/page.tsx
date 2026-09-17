@@ -23,7 +23,8 @@ const ALL_STATUSES = ['Pending', 'Delivered', 'Cancelled'] as const;
 type OrderStatus = typeof ALL_STATUSES[number];
 
 interface Order {
-  _id: string;
+  _id?: string;
+  id?: string;
   orderNumber: string;
   customerName: string;
   customerInitials: string;
@@ -94,7 +95,7 @@ export default function OrdersMonitoringPage() {
 
         const formatted: Order[] = raw.map((item: any) => ({
           _id: item._id,
-          orderNumber: `#AGR-${String(item._id).slice(-6).toUpperCase()}`,
+          orderNumber: item.orderConfirmationNumber ? item.orderConfirmationNumber.replace(/^AGR-/, '#') : `#${String(item._id).slice(-6).toUpperCase()}`,
           customerName: item.consumer?.name || item.buyerName || 'Unknown Customer',
           customerInitials: initials(item.consumer?.name || item.buyerName || 'UK'),
           farmerName:
@@ -286,8 +287,10 @@ export default function OrdersMonitoringPage() {
                 </thead>
 
                 <tbody className="divide-y divide-[#f4f5f0]">
-                  {orders.map((ord) => (
-                    <tr key={ord._id} className="hover:bg-[#f4f5f0]/20 transition-colors">
+                  {orders.map((ord, idx) => {
+                    const oid = ord.id || ord._id || `ord-${idx}`;
+                    return (
+                      <tr key={oid} className="hover:bg-[#f4f5f0]/20 transition-colors">
 
                       <td className="px-6 py-4 text-xs font-extrabold text-[#1e4d1e] tracking-tight">
                         {ord.orderNumber}
@@ -319,8 +322,9 @@ export default function OrdersMonitoringPage() {
 
 
                     </tr>
-                  ))}
-                </tbody>
+                  );
+                })}
+              </tbody>
               </table>
             </div>
           )}
@@ -434,7 +438,7 @@ export default function OrdersMonitoringPage() {
                 {ALL_STATUSES.map((status) => (
                   <button
                     key={status}
-                    onClick={() => handleUpdateStatus(selectedOrder._id, status)}
+                    onClick={() => handleUpdateStatus(selectedOrder.id || selectedOrder._id || '', status)}
                     disabled={updatingStatus || selectedOrder.status === status}
                     className={`w-full py-3 rounded-xl transition text-xs font-bold uppercase tracking-wider cursor-pointer disabled:cursor-not-allowed ${
                       selectedOrder.status === status
