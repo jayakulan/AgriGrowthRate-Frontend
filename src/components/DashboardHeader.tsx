@@ -190,7 +190,8 @@ export default function DashboardHeader() {
   const role = user?.role || 'user';
   
   const isAdminHeader = pathname.includes('/dashboard/admin');
-  const displayRole = isAdminHeader ? 'AGRI ADMIN' : role;
+  const roleLabel = role === 'consumer' ? 'retailer' : role;
+  const displayRole = isAdminHeader ? 'AGRI ADMIN' : roleLabel;
   const displayName = isAdminHeader ? 'Nuha Nazardeen' : userName;
   
   return (

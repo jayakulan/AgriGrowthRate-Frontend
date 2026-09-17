@@ -44,6 +44,11 @@ export default function FarmerDashboardPage() {
   const [weather, setWeather] = useState<any>(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
 
+  // Additional stats
+  const [productsThisWeek, setProductsThisWeek] = useState(0);
+  const [activeProductsPercent, setActiveProductsPercent] = useState(0);
+  const [activeProductsCount, setActiveProductsCount] = useState(0);
+
   // Dynamic tip generator
   const getDynamicTip = (current: any) => {
     if (!current) return 'Optimizing field conditions...';
@@ -55,18 +60,18 @@ export default function FarmerDashboardPage() {
     const temp = current.temp_c;
 
     if (isRaining) {
-      return '🌧️ Rain Alert: Avoid irrigation, check drainage paths, and delay any chemical sprays to prevent runoff.';
+      return 'Rain Alert: Avoid irrigation, check drainage paths, and delay any chemical sprays to prevent runoff.';
     }
     if (humidity > 85) {
-      return '💧 High Humidity Alert: Increased risk of fungal diseases. Inspect leaves for powdery mildew and improve airflow.';
+      return 'High Humidity Alert: Increased risk of fungal diseases. Inspect leaves for powdery mildew and improve airflow.';
     }
     if (wind > 20) {
-      return '💨 High Wind Alert: Postpone pesticide spraying to avoid drift, and secure delicate nursery plants.';
+      return 'High Wind Alert: Postpone pesticide spraying to avoid drift, and secure delicate nursery plants.';
     }
     if (temp > 32) {
-      return '☀️ Heat Alert: High temp. Irrigate crops in early morning or evening hours to reduce water evaporation loss.';
+      return 'Heat Alert: High temp. Irrigate crops in early morning or evening hours to reduce water evaporation loss.';
     }
-    return '🌱 Weather conditions are optimal. Ideal time for planting, weeding, and compost application.';
+    return 'Weather conditions are optimal. Ideal time for planting, weeding, and compost application.';
   };
 
   useEffect(() => {
@@ -76,7 +81,18 @@ export default function FarmerDashboardPage() {
 
         const prodRes = await productService.getMyProducts();
         if (prodRes && prodRes.data) {
-          setProductsCount(prodRes.data.length);
+          const totalProds = prodRes.data.length;
+          setProductsCount(totalProds);
+          
+          const now = new Date();
+          const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          const recentProds = prodRes.data.filter((p: any) => new Date(p.createdAt) >= sevenDaysAgo).length;
+          setProductsThisWeek(recentProds);
+
+          const activeProds = prodRes.data.filter((p: any) => p.isAvailable).length;
+          setActiveProductsCount(activeProds);
+          setActiveProductsPercent(totalProds > 0 ? Math.round((activeProds / totalProds) * 100) : 0);
+
           // Add products to activities list
           prodRes.data.forEach((p: any) => {
             combinedActivities.push({
@@ -183,7 +199,7 @@ export default function FarmerDashboardPage() {
             <div className="w-10 h-10 rounded-xl bg-[#edf4e2] flex items-center justify-center text-[#1e4d1e]">
               <Package className="w-5 h-5" />
             </div>
-            <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-md">+4% this week</span>
+            <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-md">+{productsThisWeek} this week</span>
           </div>
           <div className="mt-4">
             <span className="text-4xl font-extrabold text-gray-900">{productsCount}</span>
@@ -330,7 +346,7 @@ export default function FarmerDashboardPage() {
           <Link href="/dashboard/farmer/weather" className="block bg-white border border-[#e4e6df] rounded-2xl p-5 shadow-sm space-y-4 hover:shadow-md transition-shadow cursor-pointer">
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-bold text-gray-900">{t('dashboard.weatherAdvisory') || 'Weather Advisory'}</h4>
-              <span className="text-[10px] font-extrabold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100 uppercase tracking-wider">Live</span>
+              <span className="text-[10px] font-extrabold text-[#1e4d1e] bg-[#edf4e2] px-2 py-0.5 rounded-full border border-[#d2dfc2] uppercase tracking-wider">Live</span>
             </div>
 
             {weatherLoading ? (
@@ -341,11 +357,12 @@ export default function FarmerDashboardPage() {
             ) : weather ? (
               <>
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-500">
+                  <div className="w-12 h-12 rounded-xl bg-[#edf4e2] border border-[#d2dfc2] flex items-center justify-center text-[#1e4d1e]">
                     <img
                       src={`https:${weather.current.condition.icon}`}
                       alt={weather.current.condition.text}
                       className="w-8 h-8 object-contain"
+                      style={{ filter: weather.current.is_day === 0 ? 'hue-rotate(-120deg)' : 'none' }}
                     />
                   </div>
                   <div>
@@ -369,8 +386,11 @@ export default function FarmerDashboardPage() {
                   </div>
                 </div>
 
-                <div className="bg-[#edf4e2] text-[#4A6D2F] border border-[#d2dfc2] rounded-xl p-3 text-xs leading-relaxed font-medium">
-                  💡 <span className="font-bold">Agri Tip:</span> {getDynamicTip(weather.current)}
+                <div className="bg-[#edf4e2] text-[#4A6D2F] border border-[#d2dfc2] rounded-xl p-3 text-xs leading-relaxed font-medium flex items-center gap-3">
+                  <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain shrink-0" />
+                  <div>
+                    <span className="font-bold">Agri Tip:</span> {getDynamicTip(weather.current)}
+                  </div>
                 </div>
               </>
             ) : (
@@ -390,13 +410,13 @@ export default function FarmerDashboardPage() {
             {/* Custom progress bar */}
             <div className="flex items-center justify-between text-xs font-bold text-gray-500 mb-1.5">
               <div className="w-2/3 bg-gray-100 h-2 rounded-full overflow-hidden">
-                <div className="bg-[#1e4d1e] h-full w-[85%] rounded-full" />
+                <div className="bg-[#1e4d1e] h-full rounded-full" style={{ width: `${activeProductsPercent}%` }} />
               </div>
-              <span>85% Active</span>
+              <span>{activeProductsPercent}% Active</span>
             </div>
 
             <p className="text-[11px] text-gray-400 mt-2 leading-relaxed font-medium">
-              Your profile visibility is high. Average response time: <span className="text-gray-800 font-bold">14 mins</span>.
+              Your profile visibility is based on active products. You have <span className="text-gray-800 font-bold">{activeProductsCount} active listings</span>.
             </p>
           </div>
 
@@ -410,12 +430,12 @@ export default function FarmerDashboardPage() {
               
               <div className="mt-3 space-y-1.5 text-xs text-gray-500">
                 <div className="flex justify-between">
-                  <span>{t('dashboard.optTemp')}</span>
-                  <span className="font-bold text-gray-800">18°C - 26°C</span>
+                  <span>UV Index</span>
+                  <span className="font-bold text-gray-800">{weather?.current?.uv || 0}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>{t('dashboard.soilMoist')}</span>
-                  <span className="font-bold text-gray-800">45%</span>
+                  <span>Cloud Cover</span>
+                  <span className="font-bold text-gray-800">{weather?.current?.cloud || 0}%</span>
                 </div>
               </div>
             </div>

@@ -185,10 +185,25 @@ export default function ManageProductsPage() {
     }
   };
 
-  const handleReject = async (productId: string) => {
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectProductId, setRejectProductId] = useState('');
+  const [rejectReason, setRejectReason] = useState('');
+
+  const handleRejectTrigger = (productId: string) => {
+    setRejectProductId(productId);
+    setRejectReason('');
+    setRejectModalOpen(true);
+  };
+
+  const submitRejection = async () => {
+    if (!rejectReason.trim()) {
+      toast.error('Please enter a reason for rejecting the product.');
+      return;
+    }
     try {
-      await api.patch(`/admin/products/${productId}/status`, { status: 'Rejected' });
-      toast.error('Product rejected.');
+      await api.patch(`/admin/products/${rejectProductId}/status`, { status: 'Rejected', reason: rejectReason });
+      toast.success('Product rejected.');
+      setRejectModalOpen(false);
       fetchProducts();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to reject product');
@@ -219,7 +234,7 @@ export default function ManageProductsPage() {
   const filteredProducts = products.filter(prod => {
     const matchesSearch = prod.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       prod.farmerName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === 'All Categories' || prod.category === categoryFilter;
+    const matchesCategory = categoryFilter === 'All Categories' || (prod.category && prod.category.toLowerCase() === categoryFilter.toLowerCase());
     const matchesStatus = statusFilter === 'All' || prod.status === statusFilter;
     const matchesTab = activeTab === 'All' || (
       (activeTab === 'Approved' && prod.status === 'Approved') ||
@@ -311,11 +326,15 @@ export default function ManageProductsPage() {
               </label>
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setActiveTab(e.target.value);
+                }}
                 className="w-full px-4 py-2.5 border border-[#e4e6df] rounded-xl bg-white text-sm font-medium text-gray-700 outline-none focus:border-[#1e4d1e] cursor-pointer"
               >
                 <option value="All">All</option>
                 <option value="Approved">Approved</option>
+                <option value="Pending">Pending</option>
                 <option value="Rejected">Rejected</option>
               </select>
             </div>
@@ -326,10 +345,13 @@ export default function ManageProductsPage() {
 
         {/* ── TABS SECTION ── */}
         <div className="flex gap-6 border-b border-[#e4e6df] overflow-x-auto pb-4">
-          {['All', 'Approved', 'Rejected'].map((tab) => (
+          {['All', 'Approved', 'Pending', 'Rejected'].map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => {
+                setActiveTab(tab);
+                setStatusFilter(tab);
+              }}
               className={`pb-4 whitespace-nowrap text-sm font-bold transition-colors relative ${activeTab === tab
                 ? 'text-[#1e4d1e]'
                 : 'text-gray-400 hover:text-gray-600'
@@ -374,6 +396,9 @@ export default function ManageProductsPage() {
                         <span className={`inline-flex px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider shadow-sm backdrop-blur-sm border ${product.quantity === 0 ? 'bg-red-50 text-red-700 border-red-200' : getStatusColor(product.status)}`}>
                           {product.quantity === 0 ? 'Out of Stock' : product.status}
                         </span>
+                        <span className="inline-flex px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider shadow-sm backdrop-blur-sm border bg-[#f4f5f0] text-gray-700 border-[#e4e6df]">
+                          {product.category}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -387,7 +412,7 @@ export default function ManageProductsPage() {
                       </h3>
                       <div className="text-right shrink-0 ml-2">
                         <span className="text-[14px] font-bold text-[#0f172a]">
-                          ₹{product.price.toLocaleString()}
+                          LKR {product.price.toLocaleString()}
                         </span>
                         <span className="text-[12px] font-bold text-[#0f172a]">/unit</span>
                       </div>
@@ -441,24 +466,23 @@ export default function ManageProductsPage() {
                       </p>
                     )}
 
-                    {/* Action Buttons at Bottom */}
                     <div className="mt-auto space-y-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          onClick={() => handleApprove(product._id)}
-                          disabled={product.status === 'Approved'}
-                          className="py-2 px-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white text-xs font-bold rounded-xl transition-all cursor-pointer text-center disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none disabled:blur-[0.5px]"
-                        >
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => handleReject(product._id)}
-                          disabled={product.status === 'Rejected'}
-                          className="py-2 px-3 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-xl transition-all cursor-pointer border border-red-100 text-center disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none disabled:blur-[0.5px]"
-                        >
-                          Reject
-                        </button>
-                      </div>
+                      {product.status === 'Pending' && (
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            onClick={() => handleApprove(product._id)}
+                            className="py-2 px-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white text-xs font-bold rounded-xl transition-all cursor-pointer text-center"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleRejectTrigger(product._id)}
+                            className="py-2 px-3 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-xl transition-all cursor-pointer border border-red-100 text-center"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
                       <button
                         onClick={() => showDetails(product)}
                         className="w-full py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-600 text-xs font-bold rounded-xl transition-all cursor-pointer border border-gray-100 flex items-center justify-center gap-1.5"
@@ -481,6 +505,39 @@ export default function ManageProductsPage() {
             ))}
             {/* Detail popup render */}
             <DetailPopup product={detailProduct} open={detailOpen} onClose={closeDetails} />
+
+            {/* Rejection Modal */}
+            {rejectModalOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+                <div className="absolute inset-0" onClick={() => setRejectModalOpen(false)} />
+                <div className="relative z-10 w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-[#e4e6df] animate-scale-up text-left">
+                  <h3 className="text-lg font-extrabold text-gray-900 mb-2">Reject Product</h3>
+                  <p className="text-xs font-semibold text-gray-500 mb-4">
+                    Enter the reason for rejecting the product:
+                  </p>
+                  <textarea
+                    className="w-full h-24 p-3 text-xs font-semibold text-gray-800 border border-[#e4e6df] rounded-xl focus:outline-none focus:ring-1 focus:ring-[#1e4d1e] bg-[#f9f9f6]"
+                    placeholder="e.g. Image quality is too low or invalid price."
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                  />
+                  <div className="flex gap-3 mt-5">
+                    <button
+                      onClick={() => setRejectModalOpen(false)}
+                      className="w-1/2 py-3 bg-gray-150 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-all cursor-pointer text-center"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={submitRejection}
+                      className="w-1/2 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white text-xs font-bold rounded-xl transition-all cursor-pointer text-center"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -549,7 +606,7 @@ function DetailPopup({ product, open, onClose }: { product: Product | null; open
               </div>
               <div className="grid grid-cols-3 items-center">
                 <span className="font-extrabold text-xs text-[#1e4d1e] tracking-wide uppercase">Price</span>
-                <span className="col-span-2 text-[#1e4d1e] font-black">₹{product.price} / unit</span>
+                <span className="col-span-2 text-[#1e4d1e] font-black">LKR {product.price} / unit</span>
               </div>
               <div className="grid grid-cols-3 items-center">
                 <span className="font-extrabold text-xs text-[#1e4d1e] tracking-wide uppercase">Quantity</span>

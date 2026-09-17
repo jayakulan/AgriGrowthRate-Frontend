@@ -4,11 +4,19 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Eye, EyeOff, Loader2, Mail, Lock, User, Phone, MapPin, ShieldCheck, X, RefreshCw, ArrowUpRight, CreditCard, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Mail, Lock, User, Phone, MapPin, ShieldCheck, X, RefreshCw, ArrowUpRight, CreditCard, Sparkles, CircleAlert, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 import Footer from '@/components/Footer';
 import { useGoogleLogin } from '@react-oauth/google';
+
+const sriLankanDistricts = [
+  'Colombo', 'Gampaha', 'Kalutara', 'Kandy', 'Matale', 'Nuwara Eliya',
+  'Galle', 'Matara', 'Hambantota', 'Jaffna', 'Kilinochchi', 'Mannar',
+  'Vavuniya', 'Mullaitivu', 'Batticaloa', 'Ampara', 'Trincomalee',
+  'Kurunegala', 'Puttalam', 'Anuradhapura', 'Polonnaruwa', 'Badulla',
+  'Moneragala', 'Ratnapura', 'Kegalle'
+];
 
 export default function RegisterPage() {
   const { register, loginWithGoogle } = useAuth();
@@ -36,11 +44,12 @@ export default function RegisterPage() {
       setGoogleLoading(true);
       try {
         const loggedInUser = await loginWithGoogle(undefined, tokenResponse.access_token, form.role);
-        toast.success('Registration successful! Welcome.');
         if (loggedInUser.role === 'admin') {
+          toast.success('Login successful! Welcome.');
           router.push('/dashboard/admin');
         } else {
-          router.push(`/dashboard/${loggedInUser.role}`);
+          toast.success('Registration successful! Please login to continue.');
+          router.push('/login');
         }
       } catch (err: any) {
         toast.error(err.response?.data?.message || 'Google registration failed');
@@ -64,10 +73,16 @@ export default function RegisterPage() {
     }
   }, [otpTimer]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    if (errors[e.target.name]) {
-      setErrors({ ...errors, [e.target.name]: '' });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    if (name === 'name') {
+      if (value !== '' && !/^[A-Za-z\s]+$/.test(value)) {
+        return;
+      }
+    }
+    setForm({ ...form, [name]: value });
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: '' });
     }
   };
 
@@ -101,12 +116,31 @@ export default function RegisterPage() {
     e.preventDefault();
     const newErrors: { [key: string]: string } = {};
 
-    if (!form.name.trim()) newErrors.name = 'Full Name is required';
-    if (!form.email.trim()) newErrors.email = 'Email Address is required';
-    else if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(form.email)) newErrors.email = 'Invalid email format';
+    if (!form.name.trim()) {
+      newErrors.name = 'Full Name is required';
+    } else if (!/^[A-Za-z\s]+$/.test(form.name.trim())) {
+      newErrors.name = 'Full Name must contain only letters and spaces';
+    } else if (form.name.trim().length < 3) {
+      newErrors.name = 'Full Name must be at least 3 characters long';
+    }
 
-    if (!form.phone.trim()) newErrors.phone = 'Phone number is required for SMS verification';
-    if (!form.address.trim()) newErrors.address = 'Address is required';
+    if (!form.email.trim()) {
+      newErrors.email = 'Email Address is required';
+    } else if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(form.email)) {
+      newErrors.email = 'Invalid email format';
+    }
+
+    if (!form.phone.trim()) {
+      newErrors.phone = 'Phone number is required for SMS verification';
+    } else if (!/^(?:\+94|0)?7[0-9]{8}$/.test(form.phone.trim().replace(/[\s\-]/g, ''))) {
+      newErrors.phone = 'Invalid Sri Lankan phone number format (e.g. 077XXXXXXXX)';
+    }
+
+    if (!form.address.trim()) {
+      newErrors.address = 'Address is required';
+    } else if (!sriLankanDistricts.includes(form.address)) {
+      newErrors.address = 'Please select a valid Sri Lankan district';
+    }
 
     if (form.role === 'farmer') {
       if (!form.farmerCardNo.trim()) {
@@ -139,6 +173,7 @@ export default function RegisterPage() {
       const { authService } = await import('@/services/authService');
       await authService.sendOtp(form.phone, form.email);
       toast.success('Verification OTP code sent to your phone! 📱');
+      setOtpDigits(['', '', '', '', '', '']);
       setShowOtpModal(true);
       setOtpTimer(30);
     } catch (err: any) {
@@ -166,15 +201,19 @@ export default function RegisterPage() {
         form.role,
         form.phone,
         otpCode,
-        form.farmerCardNo
+        form.farmerCardNo,
+        form.address
       );
 
-      toast.success('Verification complete! Account created 🌱');
+      toast.success('Verification complete! Account created 🌱. Please login to continue.');
       setShowOtpModal(false);
-      router.push(`/dashboard/${loggedInUser.role}`);
+      router.push('/login');
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || 'OTP verification failed';
       toast.error(msg);
+      setOtpDigits(['', '', '', '', '', '']); // Reset OTP on failure
+      const firstInput = document.getElementById('otp-0');
+      if (firstInput) firstInput.focus();
     } finally {
       setLoading(false);
     }
@@ -244,7 +283,12 @@ export default function RegisterPage() {
                 <div className="flex bg-[#f4f5f0] border border-[#e4e6df] p-1 rounded-xl shadow-inner relative">
                   <button
                     type="button"
-                    onClick={() => setForm({ ...form, role: 'farmer' })}
+                    onClick={() => {
+                      setForm({
+                        name: '', email: '', password: '', confirm: '', role: 'farmer', phone: '', address: '', farmerCardNo: ''
+                      });
+                      setErrors({});
+                    }}
                     className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all cursor-pointer relative z-10 ${form.role === 'farmer'
                       ? 'text-white'
                       : 'text-gray-400 hover:text-gray-600'
@@ -254,13 +298,18 @@ export default function RegisterPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setForm({ ...form, role: 'consumer' })}
+                    onClick={() => {
+                      setForm({
+                        name: '', email: '', password: '', confirm: '', role: 'consumer', phone: '', address: '', farmerCardNo: ''
+                      });
+                      setErrors({});
+                    }}
                     className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all cursor-pointer relative z-10 ${form.role === 'consumer'
                       ? 'text-white'
                       : 'text-gray-400 hover:text-gray-600'
                       }`}
                   >
-                    Consumer
+                    Retailer
                   </button>
 
                   {/* Animated sliding background capsule */}
@@ -289,10 +338,14 @@ export default function RegisterPage() {
                       value={form.name}
                       onChange={handleChange}
                       placeholder="Full Name"
-                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 text-sm text-gray-800 placeholder-gray-400"
-                      
+                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-12 text-sm text-gray-800 placeholder-gray-400"
                     />
-                    {errors.name && <span className="text-red-500 text-[10px] md:text-xs mt-1 block font-semibold">{errors.name}</span>}
+                    {errors.name && (
+                      <div className="flex items-center gap-1.5 mt-1.5 bg-red-50/50 border border-red-200/40 rounded-lg px-2.5 py-1 text-[10px] md:text-xs text-red-600 font-medium animate-fadeIn">
+                        <CircleAlert className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errors.name}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="relative group">
@@ -303,10 +356,14 @@ export default function RegisterPage() {
                       value={form.email}
                       onChange={handleChange}
                       placeholder="Email Address"
-                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 text-sm text-gray-800 placeholder-gray-400"
-                      
+                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-12 text-sm text-gray-800 placeholder-gray-400"
                     />
-                    {errors.email && <span className="text-red-500 text-[10px] md:text-xs mt-1 block font-semibold">{errors.email}</span>}
+                    {errors.email && (
+                      <div className="flex items-center gap-1.5 mt-1.5 bg-red-50/50 border border-red-200/40 rounded-lg px-2.5 py-1 text-[10px] md:text-xs text-red-600 font-medium animate-fadeIn">
+                        <CircleAlert className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errors.email}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -320,24 +377,42 @@ export default function RegisterPage() {
                       value={form.phone}
                       onChange={handleChange}
                       placeholder="Phone Number (SMS OTP)"
-                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 text-sm text-gray-800 placeholder-gray-400"
-                      
+                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-12 text-sm text-gray-800 placeholder-gray-400"
                     />
-                    {errors.phone && <span className="text-red-500 text-[10px] md:text-xs mt-1 block font-semibold">{errors.phone}</span>}
+                    {errors.phone && (
+                      <div className="flex items-center gap-1.5 mt-1.5 bg-red-50/50 border border-red-200/40 rounded-lg px-2.5 py-1 text-[10px] md:text-xs text-red-600 font-medium animate-fadeIn">
+                        <CircleAlert className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errors.phone}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="relative group">
-                    <MapPin className="absolute left-1 top-2.5 w-4 h-4 text-gray-400 group-focus-within:text-[#1e4d1e] transition-colors" />
-                    <input
+                    <MapPin className="absolute left-1 top-2.5 w-4 h-4 text-gray-400 group-focus-within:text-[#1e4d1e] transition-colors z-10" />
+                    <select
                       name="address"
-                      type="text"
                       value={form.address}
                       onChange={handleChange}
-                      placeholder="Address (City, Country)"
-                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 text-sm text-gray-800 placeholder-gray-400"
-                      
-                    />
-                    {errors.address && <span className="text-red-500 text-[10px] md:text-xs mt-1 block font-semibold">{errors.address}</span>}
+                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-8 text-sm text-gray-800 placeholder-gray-400 cursor-pointer appearance-none"
+                    >
+                      <option value="" disabled className="text-gray-400">Select Sri Lankan District</option>
+                      {sriLankanDistricts.map((district) => (
+                        <option key={district} value={district} className="text-gray-800 bg-white">
+                          {district}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute right-1 top-2.5 flex items-center gap-1.5 pointer-events-none transition-all duration-300">
+                      <svg className="fill-current h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                      </svg>
+                    </div>
+                    {errors.address && (
+                      <div className="flex items-center gap-1.5 mt-1.5 bg-red-50/50 border border-red-200/40 rounded-lg px-2.5 py-1 text-[10px] md:text-xs text-red-600 font-medium animate-fadeIn">
+                        <CircleAlert className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errors.address}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -359,10 +434,14 @@ export default function RegisterPage() {
                           value={form.farmerCardNo}
                           onChange={handleChange}
                           placeholder="Farmer Card Number (e.g. FSN0000000)"
-                          className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 text-sm text-gray-800 placeholder-gray-400 font-semibold tracking-wide"
-                          
+                          className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-12 text-sm text-gray-800 placeholder-gray-400 font-semibold tracking-wide"
                         />
-                        {errors.farmerCardNo && <span className="text-red-500 text-[10px] md:text-xs mt-1 block font-semibold">{errors.farmerCardNo}</span>}
+                        {errors.farmerCardNo && (
+                          <div className="flex items-center gap-1.5 mt-1.5 bg-red-50/50 border border-red-200/40 rounded-lg px-2.5 py-1 text-[10px] md:text-xs text-red-600 font-medium animate-fadeIn">
+                            <CircleAlert className="w-3.5 h-3.5 shrink-0" />
+                            <span>{errors.farmerCardNo}</span>
+                          </div>
+                        )}
                         <span className="text-[10px] text-[#4A6D2F] font-bold mt-1.5 block">
                           * Required to verify registered agricultural producer status.
                         </span>
@@ -381,8 +460,7 @@ export default function RegisterPage() {
                       value={form.password}
                       onChange={handleChange}
                       placeholder="Password"
-                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-8 text-sm text-gray-800 placeholder-gray-400"
-                      
+                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-16 text-sm text-gray-800 placeholder-gray-400"
                     />
                     <button
                       type="button"
@@ -391,7 +469,18 @@ export default function RegisterPage() {
                     >
                       {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
-                    {errors.password && <span className="text-red-500 text-[10px] md:text-xs mt-1 block font-semibold">{errors.password}</span>}
+                    {errors.password && (
+                      <div className="flex items-center gap-1.5 mt-1.5 bg-red-50/50 border border-red-200/40 rounded-lg px-2.5 py-1 text-[10px] md:text-xs text-red-600 font-medium animate-fadeIn">
+                        <CircleAlert className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errors.password}</span>
+                      </div>
+                    )}
+                    {form.password && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$/.test(form.password) && !errors.password && (
+                      <div className="flex items-center gap-1.5 mt-1.5 bg-red-50/50 border border-red-200/40 rounded-lg px-2.5 py-1 text-[10px] md:text-xs text-red-600 font-medium animate-fadeIn">
+                        <CircleAlert className="w-3.5 h-3.5 shrink-0" />
+                        <span>Must be at least 8 characters, include uppercase, lowercase, number & special character</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="relative group">
@@ -402,17 +491,23 @@ export default function RegisterPage() {
                       value={form.confirm}
                       onChange={handleChange}
                       placeholder="Confirm Password"
-                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-8 text-sm text-gray-800 placeholder-gray-400"
-                      
+                      className="w-full bg-transparent border-b-2 border-gray-100 focus:border-[#1e4d1e] focus:outline-none transition-all py-2.5 pl-7 pr-16 text-sm text-gray-800 placeholder-gray-400"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPwd(!showConfirmPwd)}
-                      className="absolute right-1 top-2.5 text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      {showConfirmPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                    {errors.confirm && <span className="text-red-500 text-[10px] md:text-xs mt-1 block font-semibold">{errors.confirm}</span>}
+                    <div className="absolute right-1 top-2.5 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPwd(!showConfirmPwd)}
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        {showConfirmPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    {errors.confirm && (
+                      <div className="flex items-center gap-1.5 mt-1.5 bg-red-50/50 border border-red-200/40 rounded-lg px-2.5 py-1 text-[10px] md:text-xs text-red-600 font-medium animate-fadeIn">
+                        <CircleAlert className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errors.confirm}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -511,7 +606,7 @@ export default function RegisterPage() {
         {showOtpModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
 
-            {/* Modal Backdrop with fade animation */}
+            {/* Backdrop with blurring */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -520,86 +615,92 @@ export default function RegisterPage() {
               className="absolute inset-0 bg-[#1e4d1e]/20 backdrop-blur-md cursor-pointer"
             />
 
-            {/* Modal Card with scaling spring animation */}
+            {/* Modal Card */}
             <motion.div
-              initial={{ scale: 0.92, opacity: 0, y: 15 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.92, opacity: 0, y: 15 }}
-              transition={{ type: 'spring', duration: 0.5 }}
-              className="relative z-10 w-full max-w-md bg-white border border-[#e4e6df] rounded-[24px] p-8 shadow-2xl text-center"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative z-10 w-full max-w-md bg-white border border-[#e4e6df] rounded-[24px] shadow-2xl overflow-hidden"
             >
-              {/* Close button */}
-              <button
-                onClick={() => setShowOtpModal(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              {/* Shield key lock icon matching signature green theme */}
-              <div className="w-14 h-14 rounded-full bg-[#edf4e2] border border-[#d2dfc2] flex items-center justify-center mx-auto mb-5 shadow-sm">
-                <ShieldCheck className="w-7 h-7 text-[#1e4d1e]" />
+              {/* Header */}
+              <div className="px-6 py-5 border-b border-[#e4e6df] flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <img src="/logo.png" alt="Logo" className="w-6 h-5 object-contain" />
+                  <h3 className="text-lg font-bold text-gray-900">Verify Phone Number</h3>
+                </div>
+                <button
+                  onClick={() => setShowOtpModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              <h3 className="text-lg font-extrabold text-gray-900 mb-2">Verify Phone Number</h3>
-              <p className="text-gray-500 text-xs leading-relaxed max-w-xs mx-auto mb-6">
-                We sent a 6-digit verification code to <span className="text-[#1e4d1e] font-bold">{form.phone}</span>. Please enter it to complete activation.
-              </p>
+              <div className="p-6">
+                <p className="text-sm text-gray-500 mb-6">
+                  We sent a 6-digit verification code to <span className="text-[#1e4d1e] font-bold">{form.phone}</span>. Please enter it to complete activation.
+                </p>
 
-              {/* OTP Digits input boxes */}
-              <div className="flex gap-2 justify-center mb-6">
-                {otpDigits.map((digit, i) => (
-                  <input
-                    key={i}
-                    id={`otp-${i}`}
-                    type="text"
-                    pattern="[0-9]*"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) => handleOtpChange(i, e.target.value)}
-                    onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                    className="w-11 h-11 text-center bg-[#f9f9f6] border border-[#e4e6df] focus:border-[#1e4d1e] focus:ring-2 focus:ring-[#1e4d1e]/10 text-gray-800 rounded-xl text-lg font-bold outline-none transition-all"
-                    autoFocus={i === 0}
-                  />
-                ))}
-              </div>
+                {/* OTP Digits input boxes */}
+                <div className="flex gap-2 justify-center mb-6">
+                  {otpDigits.map((digit, i) => (
+                    <input
+                      key={i}
+                      id={`otp-${i}`}
+                      type="text"
+                      pattern="[0-9]*"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleOtpChange(i, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                      className="w-11 h-11 text-center bg-[#f4f6ee] border border-[#e4e6df] focus:border-[#1e4d1e] text-gray-800 rounded-xl text-lg font-bold outline-none transition-all"
+                      autoFocus={i === 0}
+                    />
+                  ))}
+                </div>
 
-              {/* Resend OTP actions */}
-              <div className="mb-6">
-                {otpTimer > 0 ? (
-                  <p className="text-[11px] text-gray-400 font-bold">
-                    Resend code in <span className="text-gray-700 font-extrabold">{otpTimer}s</span>
-                  </p>
-                ) : (
+                {/* Resend OTP actions */}
+                <div className="mb-6 text-center">
+                  {otpTimer > 0 ? (
+                    <p className="text-[11px] text-gray-400 font-bold">
+                      Resend code in <span className="text-gray-700 font-extrabold">{otpTimer}s</span>
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleResendOtp}
+                      className="text-[11px] text-[#1e4d1e] hover:text-[#4A6D2F] hover:underline font-extrabold transition-colors flex items-center justify-center gap-1.5 mx-auto uppercase"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin-slow" /> Resend Verification Code
+                    </button>
+                  )}
+                </div>
+
+                {/* Modal controls matching requested style */}
+                <div className="flex gap-3">
                   <button
                     type="button"
-                    onClick={handleResendOtp}
-                    className="text-[11px] text-[#1e4d1e] hover:text-[#4A6D2F] hover:underline font-extrabold transition-colors flex items-center gap-1.5 mx-auto uppercase"
+                    onClick={() => setShowOtpModal(false)}
+                    className="flex-1 py-3 bg-[#f4f5f0] hover:bg-[#e8eae0] text-gray-700 rounded-xl font-bold text-sm transition-colors cursor-pointer"
                   >
-                    <RefreshCw className="w-3.5 h-3.5" /> Resend Verification Code
+                    Cancel
                   </button>
-                )}
-              </div>
 
-              {/* Modal controls */}
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  type="button"
-                  onClick={() => setShowOtpModal(false)}
-                  className="py-3 bg-gray-50 hover:bg-gray-100 border border-[#e4e6df] rounded-xl text-xs font-bold text-gray-600 transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="button"
-                  disabled={loading}
-                  onClick={() => handleVerifyAndRegister()}
-                  className="py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl text-xs shadow-sm transition-all flex items-center justify-center gap-1.5 disabled:opacity-60 cursor-pointer"
-                >
-                  {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Verify Code'}
-                </button>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => handleVerifyAndRegister()}
+                    className="flex-1 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
+                  >
+                    {loading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Check className="w-4 h-4" />
+                    )}
+                    Verify Code
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>

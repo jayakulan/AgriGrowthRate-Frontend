@@ -13,6 +13,7 @@ export interface RegisterPayload {
   phone?: string;
   otp?: string;
   farmerCardNo?: string;
+  address?: string;
 }
 
 export const authService = {

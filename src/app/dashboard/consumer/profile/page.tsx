@@ -76,9 +76,7 @@ export default function ConsumerProfilePage() {
     }
   };
   // Notification states
-  const [priceAlerts, setPriceAlerts] = useState(true);
-  const [orderMessages, setOrderMessages] = useState(true);
-  const [newsletter, setNewsletter] = useState(false);
+  const [messageAlerts, setMessageAlerts] = useState(true);
 
   const router = useRouter();
 
@@ -99,36 +97,27 @@ export default function ConsumerProfilePage() {
     if (savedPrefs) {
       try {
         const parsed = JSON.parse(savedPrefs);
-        if (parsed.priceAlerts !== undefined) setPriceAlerts(parsed.priceAlerts);
-        if (parsed.orderMessages !== undefined) setOrderMessages(parsed.orderMessages);
-        if (parsed.newsletter !== undefined) setNewsletter(parsed.newsletter);
+        if (parsed.messageAlerts !== undefined) setMessageAlerts(parsed.messageAlerts);
       } catch (e) {
         console.error('Failed to parse notification preferences', e);
       }
     }
   }, []);
 
-  const handleTogglePref = (prefKey: 'priceAlerts' | 'orderMessages' | 'newsletter') => {
-    let updatedVal = false;
-    if (prefKey === 'priceAlerts') {
-      updatedVal = !priceAlerts;
-      setPriceAlerts(updatedVal);
-    } else if (prefKey === 'orderMessages') {
-      updatedVal = !orderMessages;
-      setOrderMessages(updatedVal);
-    } else if (prefKey === 'newsletter') {
-      updatedVal = !newsletter;
-      setNewsletter(updatedVal);
-    }
+  const handleTogglePref = () => {
+    const updatedVal = !messageAlerts;
+    setMessageAlerts(updatedVal);
 
     const currentPrefs = {
-      priceAlerts: prefKey === 'priceAlerts' ? updatedVal : priceAlerts,
-      orderMessages: prefKey === 'orderMessages' ? updatedVal : orderMessages,
-      newsletter: prefKey === 'newsletter' ? updatedVal : newsletter,
+      messageAlerts: updatedVal,
     };
 
     localStorage.setItem('agri_notification_prefs', JSON.stringify(currentPrefs));
-    toast.success('Notification preferences updated successfully!');
+    if (updatedVal) {
+      toast.success('Notification On');
+    } else {
+      toast.success('Notification Off');
+    }
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -158,13 +147,24 @@ export default function ConsumerProfilePage() {
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    if (name) {
+      if (/\d/.test(name)) {
+        toast.error('Name cannot contain numbers');
+        return;
+      }
+      if (!/^[a-zA-Z\s\.\-]+$/.test(name)) {
+        toast.error('Name can only contain alphabetic characters, spaces, dots, or hyphens');
+        return;
+      }
+    }
+
     // Normalize phone numbers for comparison
     let currentFormatted = user?.phone || '';
     let newFormatted = phone.trim().replace(/[\s\-\+\(\)]/g, '');
     if (newFormatted.startsWith('0')) newFormatted = '94' + newFormatted.slice(1);
     else if (!newFormatted.startsWith('94') && newFormatted.length === 9) newFormatted = '94' + newFormatted;
-    
+
     if (newFormatted !== currentFormatted && currentFormatted) {
       setSaving(true);
       try {
@@ -178,7 +178,7 @@ export default function ConsumerProfilePage() {
       }
       return; // Stop here and wait for OTP
     }
-    
+
     submitProfileUpdate();
   };
 
@@ -187,7 +187,7 @@ export default function ConsumerProfilePage() {
     try {
       const payload: any = { name, phone, address, avatar };
       if (otp) payload.otp = otp;
-      
+
       const response = await api.put('/auth/profile', payload);
       if (response && response.data && response.data.success) {
         updateUser(response.data.data);
@@ -255,7 +255,7 @@ export default function ConsumerProfilePage() {
               <h1 className="text-2xl font-bold text-[#1e4d1e]">{name}</h1>
               <div className="flex items-center justify-center sm:justify-start gap-3 mt-2">
                 <span className="bg-[#1e4d1e] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                  CONSUMER
+                  RETAILER
                 </span>
                 <div className="flex items-center text-gray-500 text-sm font-medium">
                   <MapPin className="w-4 h-4 mr-1 text-gray-400" />
@@ -324,40 +324,12 @@ export default function ConsumerProfilePage() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-bold text-gray-900 mb-0.5">Market Price Alerts</p>
-                    <p className="text-xs text-gray-500">Notify when crop prices change</p>
+                    <p className="text-sm font-bold text-gray-900 mb-0.5">Message</p>
+                    <p className="text-xs text-gray-500">Instant push notification for messages</p>
                   </div>
                   <div
-                    onClick={() => handleTogglePref('priceAlerts')}
-                    className={`w-12 h-6 rounded-full p-1 cursor-pointer flex transition-all duration-200 ${priceAlerts ? 'bg-[#1e4d1e] justify-end' : 'bg-gray-200 justify-start'
-                      }`}
-                  >
-                    <div className="w-4 h-4 bg-white rounded-full shadow-sm" />
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-bold text-gray-900 mb-0.5">New Order Messages</p>
-                    <p className="text-xs text-gray-500">Instant push notification for direct chats</p>
-                  </div>
-                  <div
-                    onClick={() => handleTogglePref('orderMessages')}
-                    className={`w-12 h-6 rounded-full p-1 cursor-pointer flex transition-all duration-200 ${orderMessages ? 'bg-[#1e4d1e] justify-end' : 'bg-gray-200 justify-start'
-                      }`}
-                  >
-                    <div className="w-4 h-4 bg-white rounded-full shadow-sm" />
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-bold text-gray-900 mb-0.5">Newsletter & Updates</p>
-                    <p className="text-xs text-gray-500">Weekly sustainable farming insights</p>
-                  </div>
-                  <div
-                    onClick={() => handleTogglePref('newsletter')}
-                    className={`w-12 h-6 rounded-full p-1 cursor-pointer flex transition-all duration-200 ${newsletter ? 'bg-[#1e4d1e] justify-end' : 'bg-gray-200 justify-start'
+                    onClick={handleTogglePref}
+                    className={`w-12 h-6 rounded-full p-1 cursor-pointer flex transition-all duration-200 ${messageAlerts ? 'bg-[#1e4d1e] justify-end' : 'bg-gray-200 justify-start'
                       }`}
                   >
                     <div className="w-4 h-4 bg-white rounded-full shadow-sm" />
@@ -418,9 +390,15 @@ export default function ConsumerProfilePage() {
                   type="text"
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  className="w-full bg-[#f4f6ee] border border-[#e4e6df] rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#1e4d1e]"
+                  className={`w-full bg-[#f4f6ee] border rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#1e4d1e] ${name && (/\d/.test(name) || !/^[a-zA-Z\s\.\-]+$/.test(name)) ? 'border-red-500' : 'border-[#e4e6df]'}`}
                   required
                 />
+                {name && /\d/.test(name) && (
+                  <p className="text-red-500 text-xs font-semibold mt-1">Name cannot contain numbers</p>
+                )}
+                {name && !/\d/.test(name) && !/^[a-zA-Z\s\.\-]+$/.test(name) && (
+                  <p className="text-red-500 text-xs font-semibold mt-1">Name can only contain alphabetic characters, spaces, dots, or hyphens</p>
+                )}
               </div>
 
               <div>
@@ -454,8 +432,8 @@ export default function ConsumerProfilePage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={saving}
-                  className="flex-1 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+                  disabled={saving || !!(name && (/\d/.test(name) || !/^[a-zA-Z\s\.\-]+$/.test(name)))}
+                  className="flex-1 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-75 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {saving && <Loader2 className="w-4 h-4 animate-spin" />}
                   Save Changes
@@ -570,7 +548,7 @@ export default function ConsumerProfilePage() {
             >
               {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Verify & Save'}
             </button>
-            
+
             <button
               disabled={otpTimer > 0 || saving}
               onClick={async () => {

@@ -88,18 +88,18 @@ export default function WeatherForecastPage() {
     const temp = current.temp_c;
 
     if (isRaining) {
-      return '🌧️ Rain Alert: Avoid irrigation, check drainage paths, and delay any chemical sprays to prevent runoff.';
+      return 'Rain Alert: Avoid irrigation, check drainage paths, and delay any chemical sprays to prevent runoff.';
     }
     if (humidity > 85) {
-      return '💧 High Humidity Alert: Increased risk of fungal diseases. Inspect leaves for powdery mildew and improve airflow.';
+      return 'High Humidity Alert: Increased risk of fungal diseases. Inspect leaves for powdery mildew and improve airflow.';
     }
     if (wind > 20) {
-      return '💨 High Wind Alert: Postpone pesticide spraying to avoid drift, and secure delicate nursery plants.';
+      return 'High Wind Alert: Postpone pesticide spraying to avoid drift, and secure delicate nursery plants.';
     }
     if (temp > 32) {
-      return '☀️ Heat Alert: High temp. Irrigate crops in early morning or evening hours to reduce water evaporation loss.';
+      return 'Heat Alert: High temp. Irrigate crops in early morning or evening hours to reduce water evaporation loss.';
     }
-    return '🌱 Weather conditions are optimal. Ideal time for planting, weeding, and compost application.';
+    return 'Weather conditions are optimal. Ideal time for planting, weeding, and compost application.';
   };
 
   return (
@@ -163,6 +163,7 @@ export default function WeatherForecastPage() {
                   src={`https:${weatherData.current.condition.icon}`}
                   alt={weatherData.current.condition.text}
                   className="w-20 h-20 object-contain"
+                  style={{ filter: weatherData.current.is_day === 0 ? 'hue-rotate(-120deg)' : 'none' }}
                 />
               </div>
 
@@ -179,7 +180,7 @@ export default function WeatherForecastPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
+                  <div className="p-2 bg-[#edf4e2] rounded-xl text-[#1e4d1e]">
                     <Wind className="w-4 h-4" />
                   </div>
                   <div>
@@ -204,7 +205,7 @@ export default function WeatherForecastPage() {
             <div className="bg-[#edf4e2] border border-[#d2dfc2] rounded-3xl p-6 shadow-sm flex flex-col justify-between relative overflow-hidden">
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-[#1e4d1e]">
-                  <Compass className="w-5 h-5" />
+                  <img src="/logo.png" alt="Logo" className="w-5 h-5 object-contain" />
                   <h4 className="font-extrabold text-sm uppercase tracking-wider">Agricultural Advisory</h4>
                 </div>
                 <p className="text-xs leading-relaxed text-[#355220] font-medium">

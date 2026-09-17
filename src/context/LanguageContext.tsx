@@ -29,7 +29,7 @@ const translations = {
     'header.markAllRead': 'Mark all as read',
     'header.roleFarmer': 'Farmer',
     'header.roleAdmin': 'Admin',
-    'header.roleConsumer': 'Consumer',
+    'header.roleConsumer': 'Retailer',
     'header.newNotifications': 'New',
 
     // Dashboard General
@@ -40,6 +40,8 @@ const translations = {
     'dashboard.weatherAdvisory': 'Weather Advisory',
     'dashboard.totalProducts': 'Total Products',
     'dashboard.activeOrders': 'Active Orders',
+    'dashboard.pendingOrders': 'Pending Orders',
+    'dashboard.completedOrders': 'Completed Orders',
     'dashboard.totalEarnings': 'Total Earnings',
     'dashboard.recentActivity': 'Recent Activity',
     'dashboard.viewAll': 'View All',
@@ -60,7 +62,7 @@ const translations = {
 
     // Table
     'dashboard.table.orderId': 'Order ID',
-    'dashboard.table.consumerId': 'Consumer ID',
+    'dashboard.table.consumerId': 'Retailer ID',
     'dashboard.table.customer': 'Customer Name',
     'dashboard.table.product': 'Product',
     'dashboard.table.quantity': 'Quantity',
@@ -85,18 +87,18 @@ const translations = {
 
     // Verify Modal
     'dashboard.verifyModal.title': 'Confirm Order Completion',
-    'dashboard.verifyModal.desc': 'Please ask the consumer for the Order Reference Number sent to their phone to verify delivery. Enter it below to complete fulfillment.',
+    'dashboard.verifyModal.desc': 'Please ask the retailer for the Order Reference Number sent to their phone to verify delivery. Enter it below to complete fulfillment.',
     'dashboard.verifyModal.customer': 'Customer:',
     'dashboard.verifyModal.product': 'Product:',
     'dashboard.verifyModal.amount': 'Amount:',
     'dashboard.verifyModal.inputLabel': 'Order Reference Number',
     'dashboard.verifyModal.verifyBtn': 'Verify & Complete',
     'dashboard.verifyModal.cancelBtn': 'Cancel',
-    'dashboard.verifyModal.errorInvalid': 'Incorrect Reference Number. Please verify with the consumer and try again.',
+    'dashboard.verifyModal.errorInvalid': 'Incorrect Reference Number. Please verify with the retailer and try again.',
 
     // Rate Modal
-    'dashboard.rateModal.title': 'Rate & Review Consumer',
-    'dashboard.rateModal.desc': 'How was your experience with {name}? Leave a rating and brief feedback.',
+    'dashboard.rateModal.title': 'Rate & Review System',
+    'dashboard.rateModal.desc': 'How was your experience using our system? Leave a rating and brief feedback.',
     'dashboard.rateModal.commentLabel': 'Feedback Comments',
     'dashboard.rateModal.commentPlaceholder': 'Write your feedback here...',
     'dashboard.rateModal.skip': 'Skip',
@@ -219,7 +221,7 @@ const translations = {
     'header.markAllRead': 'அனைத்தையும் வாசித்ததாகக் குறிக்கவும்',
     'header.roleFarmer': 'விவசாயி',
     'header.roleAdmin': 'நிர்வாகி',
-    'header.roleConsumer': 'நுகர்வோர்',
+    'header.roleConsumer': 'சில்லறை வியாபாரி',
     'header.newNotifications': 'புதியது',
 
     // Dashboard General
@@ -230,6 +232,8 @@ const translations = {
     'dashboard.weatherAdvisory': 'வானிலை ஆலோசனைகள்',
     'dashboard.totalProducts': 'மொத்த தயாரிப்புகள்',
     'dashboard.activeOrders': 'செயலில் உள்ள கட்டளைகள்',
+    'dashboard.pendingOrders': 'நிலுவையில் உள்ள ஆர்டர்கள்',
+    'dashboard.completedOrders': 'நிறைவடைந்த ஆர்டர்கள்',
     'dashboard.totalEarnings': 'மொத்த வருவாய்',
     'dashboard.recentActivity': 'சமீபத்திய நடவடிக்கைகள்',
     'dashboard.viewAll': 'அனைத்தையும் பார்',
@@ -250,7 +254,7 @@ const translations = {
 
     // Table
     'dashboard.table.orderId': 'கட்டளை எண்',
-    'dashboard.table.consumerId': 'நுகர்வோர் ஐடி',
+    'dashboard.table.consumerId': 'சில்லறை வியாபாரி ஐடி',
     'dashboard.table.customer': 'வாடிக்கையாளர் பெயர்',
     'dashboard.table.product': 'தயாரிப்பு',
     'dashboard.table.quantity': 'அளவு',
@@ -275,7 +279,7 @@ const translations = {
 
     // Verify Modal
     'dashboard.verifyModal.title': 'கட்டளை நிறைவை உறுதிப்படுத்தவும்',
-    'dashboard.verifyModal.desc': 'விநியோகத்தை சரிபார்க்க நுகர்வோரின் தொலைபேசிக்கு அனுப்பப்பட்ட கட்டளை குறிப்பு எண்ணைக் கேட்கவும். நிறைவை முடிக்க அதை கீழே உள்ளிடவும்.',
+    'dashboard.verifyModal.desc': 'விநியோகத்தை சரிபார்க்க சில்லறை வியாபாரியின் தொலைபேசிக்கு அனுப்பப்பட்ட கட்டளை குறிப்பு எண்ணைக் கேட்கவும். நிறைவை முடிக்க அதை கீழே உள்ளிடவும்.',
     'dashboard.verifyModal.customer': 'வாடிக்கையாளர்:',
     'dashboard.verifyModal.product': 'தயாரிப்பு:',
     'dashboard.verifyModal.amount': 'தொகை:',
@@ -285,8 +289,8 @@ const translations = {
     'dashboard.verifyModal.errorInvalid': 'தவறான குறிப்பு எண். வாடிக்கையாளருடன் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.',
 
     // Rate Modal
-    'dashboard.rateModal.title': 'வாடிக்கையாளரை மதிப்பிடவும்',
-    'dashboard.rateModal.desc': '{name} உடனான உங்கள் அனுபவம் எப்படி இருந்தது? மதிப்பீடு மற்றும் சுருக்கமான கருத்துக்களை இடுங்கள்.',
+    'dashboard.rateModal.title': 'பயன்பாட்டை மதிப்பிடவும்',
+    'dashboard.rateModal.desc': 'எங்கள் பயன்பாட்டுடனான உங்கள் அனுபவம் எப்படி இருந்தது? மதிப்பீடு மற்றும் சுருக்கமான கருத்துக்களை இடுங்கள்.',
     'dashboard.rateModal.commentLabel': 'கருத்துக்கள்',
     'dashboard.rateModal.commentPlaceholder': 'உங்கள் கருத்துக்களை இங்கே எழுதுங்கள்...',
     'dashboard.rateModal.skip': 'தவிர்',
@@ -409,7 +413,7 @@ const translations = {
     'header.markAllRead': 'සියල්ල කියවූ ලෙස සලකුණු කරන්න',
     'header.roleFarmer': 'ගොවි',
     'header.roleAdmin': 'පරිපාලක',
-    'header.roleConsumer': 'පාරිභෝගික',
+    'header.roleConsumer': 'සිල්ලර වෙළෙන්දා',
     'header.newNotifications': 'නව',
 
     // Dashboard General
@@ -420,6 +424,8 @@ const translations = {
     'dashboard.weatherAdvisory': 'කාලගුණ උපදේශනය',
     'dashboard.totalProducts': 'මුළු නිෂ්පාදන',
     'dashboard.activeOrders': 'සක්‍රිය ඇණවුම්',
+    'dashboard.pendingOrders': 'වූ ඇණවුම් බලාපොරොත්තුවෙන්',
+    'dashboard.completedOrders': 'සම්පූර්ණ කරන ලද ඇණවුම්',
     'dashboard.totalEarnings': 'මුළු උපයීම්',
     'dashboard.recentActivity': 'මෑත ක්‍රියාකාරකම්',
     'dashboard.viewAll': 'සියල්ල බලන්න',
@@ -440,8 +446,8 @@ const translations = {
 
     // Table
     'dashboard.table.orderId': 'ඇණවුම් අංකය',
-    'dashboard.table.consumerId': 'පාරිභෝගික හැඳුනුම්පත',
-    'dashboard.table.customer': 'පාරිභෝගිකයාගේ නම',
+    'dashboard.table.consumerId': 'සිල්ලර වෙළෙන්දා හැඳුනුම්පත',
+    'dashboard.table.customer': 'සිල්ලර වෙළෙන්දාගේ නම',
     'dashboard.table.product': 'නිෂ්පාදනය',
     'dashboard.table.quantity': 'ප්‍රමාණය',
     'dashboard.table.price': 'මුළු මිල',
@@ -465,18 +471,18 @@ const translations = {
 
     // Verify Modal
     'dashboard.verifyModal.title': 'ඇණවුම සම්පූර්ණ කිරීම තහවුරු කරන්න',
-    'dashboard.verifyModal.desc': 'බෙදා හැරීම සත්‍යාපනය කිරීම සඳහා පාරිභෝගිකයාගේ දුරකථනයට එවන ලද ඇණවුම් විමර්ශන අංකය විමසන්න. එය සම්පූර්ණ කිරීමට පහත ඇතුළත් කරන්න.',
-    'dashboard.verifyModal.customer': 'පාරිභෝගිකයා:',
+    'dashboard.verifyModal.desc': 'බෙදා හැරීම සත්‍යාපනය කිරීම සඳහා සිල්ලර වෙළෙන්දාගේ දුරකථනයට එවන ලද ඇණවුම් විමර්ශන අංකය විමසන්න. එය සම්පූර්ණ කිරීමට පහත ඇතුළත් කරන්න.',
+    'dashboard.verifyModal.customer': 'සිල්ලර වෙළෙන්දා:',
     'dashboard.verifyModal.product': 'නිෂ්පාදනය:',
     'dashboard.verifyModal.amount': 'මුදල:',
     'dashboard.verifyModal.inputLabel': 'ඇණවුම් විමර්ශන අංකය',
     'dashboard.verifyModal.verifyBtn': 'සත්‍යාපනය කර සම්පූර්ණ කරන්න',
     'dashboard.verifyModal.cancelBtn': 'අවලංගු කරන්න',
-    'dashboard.verifyModal.errorInvalid': 'වැරදි විමර්ශන අංකයකි. කරුණාකර පාරිභෝගිකයා සමඟ සත්‍යාපනය කර නැවත උත්සාහ කරන්න.',
+    'dashboard.verifyModal.errorInvalid': 'වැරදි විමර්ශන අංකයකි. කරුණාකර සිල්ලර වෙළෙන්දා සමඟ සත්‍යාපනය කර නැවත උත්සාහ කරන්න.',
 
     // Rate Modal
-    'dashboard.rateModal.title': 'පාරිභෝගිකයා ඇගයීමට ලක් කරන්න',
-    'dashboard.rateModal.desc': '{name} සමඟ ඔබේ අත්දැකීම kෙසේද? ඇගයීමක් සහ කෙටි ප්‍රතිපෝෂණයක් ලබා දෙන්න.',
+    'dashboard.rateModal.title': 'පද්ධතිය ඇගයීමට ලක් කරන්න',
+    'dashboard.rateModal.desc': 'අපගේ පද්ධතිය සමඟ ඔබේ අත්දැකීම කෙසේද? ඇගයීමක් සහ කෙටි ප්‍රතිපෝෂණයක් ලබා දෙන්න.',
     'dashboard.rateModal.commentLabel': 'ප්‍රතිපෝෂණ අදහස්',
     'dashboard.rateModal.commentPlaceholder': 'ඔබේ ප්‍රතිපෝෂණය මෙහි ලියන්න...',
     'dashboard.rateModal.skip': 'මඟහරින්න',

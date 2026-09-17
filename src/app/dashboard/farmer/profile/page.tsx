@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
+import { productService } from '@/services/productService';
+import { orderService } from '@/services/orderService';
 import {
   MapPin,
   Edit2,
@@ -94,6 +96,66 @@ export default function FarmerProfilePage() {
     }
   }, [user]);
 
+  const [activeListings, setActiveListings] = useState(0);
+  const [totalListings, setTotalListings] = useState(0);
+  const [totalSales, setTotalSales] = useState(0);
+  const [salesGrowth, setSalesGrowth] = useState(0);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const prodRes = await productService.getMyProducts();
+        if (prodRes && prodRes.data) {
+          const total = prodRes.data.length;
+          const active = prodRes.data.filter((p: any) => p.isAvailable).length;
+          setTotalListings(total);
+          setActiveListings(active);
+        }
+
+        const ordRes = await orderService.getFarmerOrders();
+        if (ordRes && ordRes.success && ordRes.data) {
+          const orders = ordRes.data;
+          
+          let total = 0;
+          let thisMonthSales = 0;
+          let lastMonthSales = 0;
+
+          const now = new Date();
+          const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+          const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+
+          orders.forEach((o: any) => {
+            if (o.status === 'delivered') {
+              total += o.totalAmount;
+              const date = new Date(o.createdAt);
+              if (date >= thisMonthStart) {
+                thisMonthSales += o.totalAmount;
+              } else if (date >= lastMonthStart && date <= lastMonthEnd) {
+                lastMonthSales += o.totalAmount;
+              }
+            }
+          });
+
+          setTotalSales(total);
+          
+          let growth = 0;
+          if (lastMonthSales > 0) {
+            growth = ((thisMonthSales - lastMonthSales) / lastMonthSales) * 100;
+          } else if (thisMonthSales > 0) {
+            growth = 100;
+          }
+          setSalesGrowth(growth);
+        }
+      } catch (err) {
+        console.error('Failed to fetch profile stats', err);
+      }
+    };
+    if (user) {
+      fetchStats();
+    }
+  }, [user]);
+
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
@@ -121,6 +183,17 @@ export default function FarmerProfilePage() {
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (name) {
+      if (/\d/.test(name)) {
+        toast.error('Name cannot contain numbers');
+        return;
+      }
+      if (!/^[a-zA-Z\s\.\-]+$/.test(name)) {
+        toast.error('Name can only contain alphabetic characters, spaces, dots, or hyphens');
+        return;
+      }
+    }
     
     // Normalize phone numbers for comparison
     let currentFormatted = user?.phone || '';
@@ -289,19 +362,21 @@ export default function FarmerProfilePage() {
                 {/* Active Listings */}
                 <div className="bg-[#f8fae5] border border-[#eff1da] rounded-2xl p-5">
                   <p className="text-[11px] font-bold text-gray-500 mb-4 uppercase tracking-wider">Active Listings</p>
-                  <p className="text-2xl font-bold text-[#1e4d1e]">3</p>
+                  <p className="text-2xl font-bold text-[#1e4d1e]">{activeListings}</p>
                   <div className="w-full h-1 bg-gray-200 rounded-full mt-4 overflow-hidden">
-                    <div className="h-full bg-[#1e4d1e] w-1/3 rounded-full" />
+                    <div className="h-full bg-[#1e4d1e] rounded-full" style={{ width: `${totalListings > 0 ? (activeListings / totalListings) * 100 : 0}%` }} />
                   </div>
                 </div>
 
                 {/* Total Sales */}
                 <div className="bg-[#f8fae5] border border-[#eff1da] rounded-2xl p-5">
                   <p className="text-[11px] font-bold text-gray-500 mb-4 uppercase tracking-wider">Total Sales</p>
-                  <p className="text-2xl font-bold text-[#1e4d1e]">Rs 1,250</p>
+                  <p className="text-2xl font-bold text-[#1e4d1e]">Rs {totalSales.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   <div className="flex items-center gap-1 mt-3">
-                    <TrendingUp className="w-3.5 h-3.5 text-[#4a6d2f]" />
-                    <span className="text-[11px] font-medium text-[#4a6d2f]">+12% this month</span>
+                    <TrendingUp className={`w-3.5 h-3.5 ${salesGrowth >= 0 ? 'text-[#4a6d2f]' : 'text-red-500'}`} />
+                    <span className={`text-[11px] font-medium ${salesGrowth >= 0 ? 'text-[#4a6d2f]' : 'text-red-500'}`}>
+                      {salesGrowth > 0 ? '+' : ''}{salesGrowth.toFixed(1)}% this month
+                    </span>
                   </div>
                 </div>
 
@@ -364,9 +439,15 @@ export default function FarmerProfilePage() {
                   type="text"
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  className="w-full bg-[#f4f6ee] border border-[#e4e6df] rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#1e4d1e]"
+                  className={`w-full bg-[#f4f6ee] border rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#1e4d1e] ${name && (/\d/.test(name) || !/^[a-zA-Z\s\.\-]+$/.test(name)) ? 'border-red-500' : 'border-[#e4e6df]'}`}
                   required
                 />
+                {name && /\d/.test(name) && (
+                  <p className="text-red-500 text-xs font-semibold mt-1">Name cannot contain numbers</p>
+                )}
+                {name && !/\d/.test(name) && !/^[a-zA-Z\s\.\-]+$/.test(name) && (
+                  <p className="text-red-500 text-xs font-semibold mt-1">Name can only contain alphabetic characters, spaces, dots, or hyphens</p>
+                )}
               </div>
 
               <div>
@@ -400,8 +481,8 @@ export default function FarmerProfilePage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={saving}
-                  className="flex-1 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+                  disabled={saving || !!(name && (/\d/.test(name) || !/^[a-zA-Z\s\.\-]+$/.test(name)))}
+                  className="flex-1 py-3 bg-[#1e4d1e] hover:bg-[#163d16] text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-75 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {saving && <Loader2 className="w-4 h-4 animate-spin" />}
                   Save Changes
