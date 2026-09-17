@@ -17,8 +17,8 @@ export const aiService = {
     const res = await api.get('/ai/weather-advisory', { params: { lat, lon } });
     return res.data;
   },
-  chat: async (message: string, history: { role: string; content: string }[]) => {
-    const res = await api.post('/chat', { message, history });
+  chat: async (messages: { role: string; content: string }[]) => {
+    const res = await api.post('/ai/chat', { messages });
     return res.data;
   },
 };
