@@ -7,15 +7,16 @@ export default function HeroSection() {
   return (
     <div id="home" className="relative w-full min-h-[600px] md:min-h-[700px] flex flex-col justify-center font-sans">
       {/* Background Image Container */}
-      <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
+      <div className="absolute inset-0 w-full h-full z-0 overflow-hidden bg-[#2d471d]">
         <img
-          src="/background.png"
+          src="/background.jpg"
           alt="Smart farm with lush crops"
-          className="absolute inset-0 w-full h-full object-cover"
+          loading="eager"
+          className="absolute inset-0 w-full h-full object-cover object-center"
         />
         {/* Gradient Overlay for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b md:bg-gradient-to-r from-black/75 via-black/50 to-black/40 md:from-black/65 md:via-black/40 md:to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
       </div>
 
       {/* Text Content */}
