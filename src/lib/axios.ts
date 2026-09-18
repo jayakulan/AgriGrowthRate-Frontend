@@ -1,24 +1,12 @@
 import axios from 'axios';
 
-const getBaseURL = () => {
-  if (typeof window !== 'undefined') {
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return 'http://localhost:5001/api';
-    }
-    return `${window.location.protocol}//${window.location.host}/api`;
-  }
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
-};
-
 const api = axios.create({
-  baseURL: getBaseURL(),
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true, // Send cookies with all requests
 });
 
 // A clean instance specifically for token refreshes to avoid interceptor recursion
 const refreshApi = axios.create({
-  baseURL: getBaseURL(),
   withCredentials: true,
 });
 
@@ -27,10 +15,30 @@ let failedQueue: any[] = [];
 
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      config.baseURL = 'http://localhost:5001/api';
+    } else {
+      config.baseURL = `${window.location.protocol}//${window.location.host}/api`;
+    }
     const token = localStorage.getItem('token');
     if (token && token !== 'undefined' && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+  } else {
+    config.baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+  }
+  return config;
+});
+
+refreshApi.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      config.baseURL = 'http://localhost:5001/api';
+    } else {
+      config.baseURL = `${window.location.protocol}//${window.location.host}/api`;
+    }
+  } else {
+    config.baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
   }
   return config;
 });
