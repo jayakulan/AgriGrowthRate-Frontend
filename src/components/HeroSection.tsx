@@ -12,11 +12,11 @@ export default function HeroSection() {
           src="/background.jpg"
           alt="Smart farm with lush crops"
           loading="eager"
-          className="absolute inset-0 w-full h-full object-cover object-center"
+          className="absolute inset-0 w-full h-full object-cover object-[82%_center] sm:object-[80%_center] md:object-center"
         />
         {/* Gradient Overlay for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-b md:bg-gradient-to-r from-black/75 via-black/50 to-black/40 md:from-black/65 md:via-black/40 md:to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b md:bg-gradient-to-r from-black/80 via-black/40 to-black/20 md:from-black/70 md:via-black/40 md:to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
       </div>
 
       {/* Text Content */}
