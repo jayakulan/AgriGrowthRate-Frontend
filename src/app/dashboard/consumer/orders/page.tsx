@@ -125,7 +125,7 @@ export default function ConsumerOrdersPage() {
   ];
 
   return (
-    <div className="p-8 max-w-[1000px] mx-auto font-sans">
+    <div className="p-3 sm:p-6 md:p-8 max-w-[1000px] mx-auto font-sans">
 
 
       {/* ── Status Cards ───────────────────────────────────── */}

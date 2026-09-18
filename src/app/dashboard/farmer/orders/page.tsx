@@ -278,7 +278,7 @@ export default function OrdersManagementPage() {
   }, [orders]);
 
   return (
-    <div className="p-8">
+    <div className="p-3 sm:p-6 md:p-8 font-sans">
 
       {/* Top Bar: Metrics and Filters in a single line */}
       <div className="flex flex-col xl:flex-row gap-4 mb-8 xl:items-center w-full">
