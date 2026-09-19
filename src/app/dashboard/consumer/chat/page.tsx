@@ -6,6 +6,41 @@ import toast from 'react-hot-toast';
 import api from '@/lib/axios';
 import { socket } from '@/lib/socket';
 
+function UserAvatar({ name, avatar, size = 'md' }: { name?: string; avatar?: string; size?: 'sm' | 'md' | 'lg' }) {
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [avatar]);
+
+  const sizeClasses = {
+    sm: 'w-8 h-8 text-xs',
+    md: 'w-11 h-11 text-sm',
+    lg: 'w-12 h-12 text-base',
+  }[size];
+
+  const initial = (name?.trim()?.[0] || 'U').toUpperCase();
+
+  const isValidAvatar = avatar && !avatar.includes('via.placeholder.com') && !imgError;
+
+  if (isValidAvatar) {
+    return (
+      <img
+        src={avatar}
+        alt={name || 'User'}
+        onError={() => setImgError(true)}
+        className={`${sizeClasses} rounded-full object-cover border border-white shadow-sm shrink-0`}
+      />
+    );
+  }
+
+  return (
+    <div className={`${sizeClasses} rounded-full bg-[#1e4d1e] text-white font-bold flex items-center justify-center border border-white shadow-sm shrink-0 uppercase tracking-wider`}>
+      {initial}
+    </div>
+  );
+}
+
 export default function ConsumerChatPage() {
   const [typedMessage, setTypedMessage] = useState('');
   const [conversations, setConversations] = useState<any[]>([]);
@@ -195,11 +230,7 @@ export default function ConsumerChatPage() {
                   }`}
                 >
                   <div className="relative shrink-0">
-                    <img
-                      src={otherUser?.avatar || 'https://via.placeholder.com/150'}
-                      alt={otherUser?.name || 'User'}
-                      className="w-11 h-11 rounded-full object-cover border border-white shadow-sm"
-                    />
+                    <UserAvatar name={otherUser?.name} avatar={otherUser?.avatar} size="md" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center mb-0.5">
@@ -226,11 +257,7 @@ export default function ConsumerChatPage() {
               {/* Header */}
               <header className="h-20 px-8 border-b border-[#e4e6df] bg-white flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-4">
-                  <img
-                    src={getOtherParticipant(activeConversation)?.avatar || 'https://via.placeholder.com/150'}
-                    alt={getOtherParticipant(activeConversation)?.name}
-                    className="w-12 h-12 rounded-full object-cover shadow-sm"
-                  />
+                  <UserAvatar name={getOtherParticipant(activeConversation)?.name} avatar={getOtherParticipant(activeConversation)?.avatar} size="lg" />
                   <div>
                     <h3 className="text-sm font-extrabold text-gray-900 leading-snug">{getOtherParticipant(activeConversation)?.name}</h3>
                     <div className="flex items-center gap-1.5 mt-0.5">
@@ -264,11 +291,7 @@ export default function ConsumerChatPage() {
 
                       <div className={`flex items-end gap-3 ${isMe ? 'justify-end' : 'justify-start'}`}>
                         {!isMe && (
-                          <img
-                            src={msg.sender?.avatar || 'https://via.placeholder.com/150'}
-                            alt={msg.sender?.name}
-                            className="w-8 h-8 rounded-full object-cover shrink-0 shadow-sm"
-                          />
+                          <UserAvatar name={msg.sender?.name} avatar={msg.sender?.avatar} size="sm" />
                         )}
 
                         <div className="max-w-[500px]">
