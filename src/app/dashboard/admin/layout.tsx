@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -12,7 +12,8 @@ import {
   BarChart3, 
   Zap, 
   LogOut, 
-  User
+  User,
+  X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DashboardHeader from '@/components/DashboardHeader';
@@ -24,6 +25,7 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const mainSidebarMenus = [
     { label: 'Dashboard', href: '/dashboard/admin/dashboard', icon: LayoutDashboard },
@@ -58,8 +60,8 @@ export default function AdminLayout({
     <div className="min-h-screen bg-[#f9f9f6] flex flex-col font-sans">
       <div className="flex flex-1">
 
-        {/* ── Left Sidebar ── */}
-        <aside className="w-[220px] bg-[#edf4e2] flex flex-col justify-between pt-8 pb-4 shrink-0 min-h-screen">
+        {/* ── Left Desktop Sidebar ── */}
+        <aside className="hidden md:flex w-[220px] bg-[#edf4e2] flex-col justify-between pt-8 pb-4 shrink-0 min-h-screen">
           <div className="space-y-8">
             {/* Logo */}
             <div className="flex items-center justify-center px-6">
@@ -120,9 +122,69 @@ export default function AdminLayout({
           </div>
         </aside>
 
+        {/* ── Mobile Slide-over Drawer ── */}
+        {mobileMenuOpen && (
+          <div className="fixed inset-0 z-50 md:hidden flex">
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-xs animate-fade-in"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            {/* Drawer Content */}
+            <aside className="relative w-[260px] bg-[#edf4e2] flex flex-col justify-between pt-6 pb-4 z-10 shadow-2xl h-full">
+              <div className="space-y-6 overflow-y-auto">
+                {/* Header with Logo */}
+                <div className="flex items-center justify-between px-6">
+                  <Link href="/dashboard/admin/dashboard" onClick={() => setMobileMenuOpen(false)} className="block select-none">
+                    <img src="/logo.png" alt="Logo" className="w-auto h-8 object-contain" />
+                  </Link>
+                  <button
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-1.5 text-[#1e4d1e] hover:bg-white/40 rounded-xl"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Nav Items */}
+                <nav className="px-4 space-y-1">
+                  {mainSidebarMenus.map((menu) => {
+                    const Icon = menu.icon;
+                    const active = isActive(menu.href);
+                    return (
+                      <Link
+                        key={menu.href}
+                        href={menu.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-xs transition-colors ${
+                          active ? 'bg-[#1e4d1e] text-white shadow-sm' : 'text-[#1e4d1e]/80 hover:bg-white/40'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4 shrink-0" />
+                        <span>{menu.label}</span>
+                      </Link>
+                    );
+                  })}
+                </nav>
+              </div>
+
+              {/* Logout */}
+              <div className="px-4 pt-4 border-t border-[#d2dfc2]">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 px-4 py-2.5 rounded-2xl font-bold text-xs hover:bg-red-100 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            </aside>
+          </div>
+        )}
+
         {/* ── Right Dashboard Layout ── */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          <DashboardHeader />
+          <DashboardHeader onMobileMenuToggle={() => setMobileMenuOpen(true)} />
           <main className="flex-1 overflow-y-auto">
             {children}
           </main>

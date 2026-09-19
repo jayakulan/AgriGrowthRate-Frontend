@@ -125,7 +125,7 @@ export default function ConsumerOrdersPage() {
   ];
 
   return (
-    <div className="p-8 max-w-[1000px] mx-auto font-sans">
+    <div className="p-3 sm:p-6 md:p-8 max-w-[1000px] mx-auto font-sans">
 
 
       {/* ── Status Cards ───────────────────────────────────── */}
@@ -187,6 +187,10 @@ export default function ConsumerOrdersPage() {
             const firstItem = order.items && order.items[0];
             const product = firstItem?.product;
 
+            const productName = (typeof product === 'object' && product?.name)
+              || firstItem?.productName
+              || (typeof product === 'string' ? product : 'Produce Item');
+
             // Image fallback resolver
             const productImg = product?.images && product.images[0]
               ? (product.images[0].startsWith('http') || product.images[0].startsWith('data:') ? product.images[0] : `http://localhost:5001${product.images[0]}`)
@@ -205,7 +209,7 @@ export default function ConsumerOrdersPage() {
 
                   <div className="flex items-start gap-6">
                     <div className="w-24 h-24 bg-[#f4f5f0] rounded-xl border border-[#e4e6df] overflow-hidden shrink-0">
-                      <img src={productImg} alt={product?.name || 'Produce Item'} className="w-full h-full object-cover" />
+                      <img src={productImg} alt={productName} className="w-full h-full object-cover" />
                     </div>
                     <div>
                       <div className="flex flex-wrap items-center gap-3 mb-1">
@@ -227,6 +231,7 @@ export default function ConsumerOrdersPage() {
                           {order.paymentStatus}
                         </span>
                       </div>
+                      <h3 className="text-sm font-bold text-gray-800 mb-1">{productName}</h3>
                       <p className="text-[10px] font-mono text-gray-400 font-bold mb-1.5">
                         ID: {order._id}
                       </p>

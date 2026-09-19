@@ -21,7 +21,7 @@ import toast from 'react-hot-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 import Footer from '@/components/Footer';
 import { useGoogleLogin } from '@react-oauth/google';
-import axios from 'axios';
+import api from '@/lib/axios';
 
 export default function LoginPage() {
   const { login, loginWithGoogle } = useAuth();
@@ -127,7 +127,7 @@ export default function LoginPage() {
 
     setForgotLoading(true);
     try {
-      const res = await axios.post('http://localhost:5001/api/auth/forgot-password/send-otp', {
+      const res = await api.post('/auth/forgot-password/send-otp', {
         phone: forgotPhone
       });
       if (res.data && res.data.success) {
@@ -151,7 +151,7 @@ export default function LoginPage() {
 
     setForgotLoading(true);
     try {
-      const res = await axios.post('http://localhost:5001/api/auth/forgot-password/verify-otp', {
+      const res = await api.post('/auth/forgot-password/verify-otp', {
         phone: forgotPhone,
         otp: otpCode
       });
@@ -181,7 +181,7 @@ export default function LoginPage() {
 
     setForgotLoading(true);
     try {
-      const res = await axios.post('http://localhost:5001/api/auth/forgot-password/reset', {
+      const res = await api.post('/auth/forgot-password/reset', {
         phone: forgotPhone,
         otp: otpCode,
         password: forgotNewPwd
