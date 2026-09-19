@@ -127,7 +127,7 @@ export default function ReportsAnalyticsPage() {
         <tr>
           <td><strong>${prod.name}</strong></td>
           <td>${prod.category}</td>
-          <td>₹${prod.price.toLocaleString('en-IN')}</td>
+          <td>Rs ${prod.price.toLocaleString('en-IN')}</td>
           <td><strong>${prod.salesCount || 0}</strong> units</td>
         </tr>
       `).join('')
@@ -138,7 +138,7 @@ export default function ReportsAnalyticsPage() {
         <tr>
           <td><strong>${cat.name}</strong></td>
           <td>${cat.value} products</td>
-          <td>₹${((data?.categoryBreakdown?.find(c => c._id === cat.name)?.revenue) || 0).toLocaleString('en-IN')}</td>
+          <td>Rs ${((data?.categoryBreakdown?.find(c => c._id === cat.name)?.revenue) || 0).toLocaleString('en-IN')}</td>
         </tr>
       `).join('')
       : `<tr><td colspan="3" style="text-align: center; color: #94a3b8; padding: 20px;">No category data available in system</td></tr>`;
@@ -298,7 +298,7 @@ export default function ReportsAnalyticsPage() {
           </div>
           <div class="kpi-card">
             <div class="kpi-label">Total Revenue</div>
-            <div class="kpi-value">₹${stats.totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+            <div class="kpi-value">Rs ${stats.totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
           </div>
         </div>
 
@@ -493,7 +493,7 @@ export default function ReportsAnalyticsPage() {
                   <span className="text-[9px] font-bold uppercase tracking-wider">Total Revenue</span>
                 </div>
                 <h3 className="text-2xl font-black text-gray-900 leading-none mt-2">
-                  {loading ? '...' : `₹${stats.totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                  {loading ? '...' : `Rs ${stats.totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 </h3>
               </div>
               <p className="text-[10px] font-bold text-green-600 flex items-center gap-1 mt-2">
@@ -695,7 +695,7 @@ export default function ReportsAnalyticsPage() {
                     </div>
 
                     <div className="text-right shrink-0">
-                      <p className="text-xs font-extrabold text-[#1e4d1e]">₹{prod.price.toLocaleString('en-IN')}</p>
+                      <p className="text-xs font-extrabold text-[#1e4d1e]">Rs {prod.price.toLocaleString('en-IN')}</p>
                       <p className="text-[9px] text-gray-400 font-bold">{prod.salesCount || 0} sales</p>
                     </div>
                   </div>
