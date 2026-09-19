@@ -177,17 +177,36 @@ export default function OrdersManagementPage() {
   const totalPending = orders.filter(o => o.status === 'pending').length;
   const totalCompleted = orders.filter(o => o.status === 'delivered').length;
 
+  const getProductName = (item: any) => {
+    if (!item) return 'N/A';
+    if (typeof item.product === 'object' && item.product?.name) {
+      return item.product.name;
+    }
+    if (item.productName) {
+      return item.productName;
+    }
+    if (typeof item.product === 'string') {
+      return item.product;
+    }
+    return 'N/A';
+  };
+
   useEffect(() => {
     if (orders.length > 0) {
       // 1. Top Selling Product
       const productCounts: Record<string, { name: string; count: number }> = {};
       orders.forEach(o => {
-        if (o.status !== 'cancelled' && o.items?.[0]?.product) {
-          const p = o.items[0].product;
-          if (!productCounts[p._id]) {
-            productCounts[p._id] = { name: p.name, count: 0 };
+        if (o.status !== 'cancelled' && o.items?.[0]) {
+          const item = o.items[0];
+          const pName = getProductName(item);
+          const pId = typeof item.product === 'object'
+            ? (item.product.id || item.product._id || pName)
+            : (item.product || pName);
+
+          if (!productCounts[pId]) {
+            productCounts[pId] = { name: pName, count: 0 };
           }
-          productCounts[p._id].count += 1;
+          productCounts[pId].count += 1;
         }
       });
       let maxProduct = { name: 'N/A', count: 0 };
@@ -259,7 +278,7 @@ export default function OrdersManagementPage() {
   }, [orders]);
 
   return (
-    <div className="p-8">
+    <div className="p-3 sm:p-6 md:p-8 font-sans">
 
       {/* Top Bar: Metrics and Filters in a single line */}
       <div className="flex flex-col xl:flex-row gap-4 mb-8 xl:items-center w-full">
@@ -347,7 +366,7 @@ export default function OrdersManagementPage() {
                   .filter(ord => {
                     const customerName = ord.consumer?.name || 'Guest';
                     const orderId = ord.id || ord._id || '';
-                    const pName = ord.items?.[0]?.product?.name || '';
+                    const pName = getProductName(ord.items?.[0]);
                     return (
                       customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                       orderId.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -367,6 +386,7 @@ export default function OrdersManagementPage() {
                   .map((ord, idx) => {
                     const firstItem = ord.items?.[0];
                     const product = firstItem?.product;
+                    const productName = getProductName(firstItem);
                     const orderId = ord.id || ord._id || `farmer-ord-${idx}`;
                     const formattedDate = new Date(ord.createdAt).toLocaleDateString(undefined, {
                       year: 'numeric',
@@ -403,11 +423,11 @@ export default function OrdersManagementPage() {
                         </td>
 
                         {/* Product */}
-                        <td className="py-4 px-6 font-medium text-gray-900">{product?.name || 'N/A'}</td>
+                        <td className="py-4 px-6 font-medium text-gray-900">{productName}</td>
 
                         {/* Quantity */}
                         <td className="py-4 px-6 font-bold text-gray-500">
-                          {firstItem?.quantity} {product?.unit || 'items'}
+                          {firstItem?.quantity} {typeof product === 'object' && product?.unit ? product.unit : 'items'}
                         </td>
 
                         {/* Total Price */}
@@ -568,7 +588,7 @@ export default function OrdersManagementPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">{t('dashboard.verifyModal.product')}</span>
-                <span>{confirmingOrder.items?.[0]?.product?.name || 'N/A'}</span>
+                <span>{getProductName(confirmingOrder.items?.[0])}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">{t('dashboard.verifyModal.amount')}</span>

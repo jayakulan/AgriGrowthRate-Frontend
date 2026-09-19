@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { Bell, User as UserIcon, Globe, ChevronDown } from 'lucide-react';
+import { Bell, User as UserIcon, Globe, ChevronDown, Menu } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import api from '@/lib/axios';
@@ -18,7 +18,7 @@ interface NotificationItem {
   updatedAt: string;
 }
 
-export default function DashboardHeader() {
+export default function DashboardHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () => void } = {}) {
   const pathname = usePathname();
   const { user } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
@@ -195,15 +195,26 @@ export default function DashboardHeader() {
   const displayName = isAdminHeader ? 'Nuha Nazardeen' : userName;
   
   return (
-    <header className="h-[84px] bg-[#edf4e2] flex items-center justify-between px-8 select-none shrink-0 relative z-50 border-b border-[#d2dfc2]">
-      {/* Left side: Title, Greeting, and Subtitle */}
-      <div>
-        <h1 className="text-2xl font-extrabold text-[#1e4d1e] leading-tight mb-0.5">{title}</h1>
-        <p className="text-xs text-gray-700 font-semibold">{description}</p>
+    <header className="min-h-[70px] md:h-[84px] bg-[#edf4e2] flex items-center justify-between px-4 sm:px-6 md:px-8 py-3 select-none shrink-0 relative z-40 border-b border-[#d2dfc2]">
+      {/* Left side: Hamburger Toggle (mobile) + Title & Subtitle */}
+      <div className="flex items-center gap-2.5 sm:gap-3">
+        {onMobileMenuToggle && (
+          <button
+            onClick={onMobileMenuToggle}
+            className="md:hidden p-2 text-[#1e4d1e] hover:bg-white/40 rounded-xl transition-colors cursor-pointer"
+            aria-label="Open Navigation Menu"
+          >
+            <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+        )}
+        <div>
+          <h1 className="text-base sm:text-xl md:text-2xl font-extrabold text-[#1e4d1e] leading-tight mb-0.5">{title}</h1>
+          <p className="text-[10px] sm:text-xs text-gray-700 font-semibold hidden sm:block">{description}</p>
+        </div>
       </div>
 
       {/* Right side: Notifications, Divider, Avatar, Name, Role */}
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-3 sm:gap-6">
         
         {/* Notifications */}
         <div className="relative" ref={dropdownRef}>

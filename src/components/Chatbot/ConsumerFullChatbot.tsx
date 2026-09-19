@@ -294,7 +294,7 @@ export default function ConsumerFullChatbot() {
                 <div className="text-center text-sm text-gray-400 mt-4">No chats found</div>
               ) : (
                 filteredChats.map((chat, idx) => {
-                  const chatId = chat.id || chat._id || `consumer-chat-${idx}`;
+                  const chatId = chat._id || chat.id || `consumer-chat-${idx}`;
                   return (
                     <div key={chatId} className={`group flex items-center justify-between p-3 rounded-xl cursor-pointer transition-colors ${activeChatId === chatId ? 'bg-[#e8f0e8] text-[#1e4d1e]' : 'hover:bg-gray-100 text-gray-700'}`} onClick={() => loadChat(chatId)}>
                       <div className="flex items-center gap-3 overflow-hidden">
@@ -386,7 +386,7 @@ export default function ConsumerFullChatbot() {
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  key={idx} 
+                  key={msg._id || `msg-${idx}-${msg.role}`} 
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div className={`flex items-start max-w-[85%] md:max-w-[75%] gap-3 md:gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
@@ -469,9 +469,9 @@ export default function ConsumerFullChatbot() {
           <p className="text-[11px] text-gray-500 font-medium mt-1">Current Season Trends</p>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {trendingProducts.map((product) => (
+          {trendingProducts.map((product, idx) => (
             <div 
-              key={product.id} 
+              key={product.id || `trending-${idx}`} 
               className="bg-white border border-[#e4e6df] rounded-2xl p-4 shadow-sm hover:shadow-md hover:border-[#1e4d1e]/30 transition-all cursor-pointer group"
               onClick={() => toast.success(`Viewing details for ${product.name}`)}
             >
