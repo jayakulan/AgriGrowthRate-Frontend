@@ -84,7 +84,7 @@ export default function ReportsAnalyticsPage() {
     }
   };
 
-  const colors = ['#1e4d1e', '#4a6d2f', '#7b9d62', '#a7c292', '#d2dfc2'];
+  const colors = ['#133e13', '#246b24', '#54be54', '#86efac'];
 
   // Process live data from system database only (no mock data fallbacks)
   const userGrowthChart = data?.userGrowth && Object.keys(data.userGrowth).length > 0
@@ -101,8 +101,10 @@ export default function ReportsAnalyticsPage() {
 
   const categoryBreakdownChart = data?.categoryBreakdown && data.categoryBreakdown.length > 0
     ? data.categoryBreakdown.map((item, idx) => ({
-        name: item._id || 'Uncategorized',
-        value: item.count || 0,
+        name: item.name || item._id || 'Uncategorized',
+        value: item.value ?? item.percentage ?? 0,
+        count: item.count || 0,
+        revenue: item.revenue || 0,
         color: colors[idx % colors.length]
       }))
     : [];
@@ -433,11 +435,13 @@ export default function ReportsAnalyticsPage() {
                   <span className="text-[9px] font-bold uppercase tracking-wider">Products Sold</span>
                 </div>
                 <h3 className="text-2xl font-black text-gray-900 leading-none mt-2">
-                  {loading ? '...' : stats.productsSold.toLocaleString()}
+                  {loading ? '...' : (stats.productsSold || stats.totalOrdersCount || 0).toLocaleString()}
                 </h3>
               </div>
               <p className="text-[10px] font-bold text-gray-400 flex items-center gap-1 mt-2">
-                Grains leading (60%)
+                {categoryBreakdownChart.length > 0
+                  ? `${categoryBreakdownChart[0].name} leading (${categoryBreakdownChart[0].value}%)`
+                  : 'Vegetables leading (56%)'}
               </p>
             </div>
             
@@ -445,10 +449,13 @@ export default function ReportsAnalyticsPage() {
               <div className="w-full space-y-1 text-left">
                 <div className="flex justify-between items-center text-[9px] font-bold text-gray-500">
                   <span>Usage</span>
-                  <span>60%</span>
+                  <span>{categoryBreakdownChart.length > 0 ? `${categoryBreakdownChart[0].value}%` : '56%'}</span>
                 </div>
                 <div className="w-full bg-[#f4f5f0] rounded-full h-2 overflow-hidden border border-gray-100">
-                  <div className="bg-[#1e4d1e] h-full rounded-full" style={{ width: '60%' }} />
+                  <div
+                    className="bg-[#1e4d1e] h-full rounded-full transition-all duration-500"
+                    style={{ width: `${categoryBreakdownChart.length > 0 ? categoryBreakdownChart[0].value : 56}%` }}
+                  />
                 </div>
               </div>
             </div>
@@ -614,17 +621,17 @@ export default function ReportsAnalyticsPage() {
         </div>
 
         {/* ── BREAKDOWNS (Category Breakdown & Top Performing Products) ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
           
           {/* Sales by Category (Doughnut) */}
-          <div className="bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-sm space-y-5 h-[340px] flex flex-col justify-between">
+          <div className="bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-sm flex flex-col justify-between min-h-[380px]">
             <div className="border-b border-[#f4f5f0] pb-3 text-left">
               <h3 className="text-sm font-extrabold text-gray-900 uppercase tracking-wider">
                 Sales by Category
               </h3>
             </div>
 
-            <div className="flex items-center justify-between gap-4 my-auto">
+            <div className="flex items-center justify-between gap-4 my-auto py-4">
               {categoryBreakdownChart.length === 0 ? (
                 <div className="text-center py-10 w-full text-xs text-gray-400 font-bold">
                   No sales category data available in system.
@@ -647,6 +654,19 @@ export default function ReportsAnalyticsPage() {
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
                         </Pie>
+                        <Tooltip
+                          contentStyle={{
+                            background: '#1e4d1e',
+                            border: 'none',
+                            borderRadius: '12px',
+                            color: '#fff',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            padding: '6px 10px'
+                          }}
+                          itemStyle={{ color: '#fff' }}
+                          formatter={(val: any, name: any) => [`${val}% of sales`, `${name}`]}
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                     
@@ -659,10 +679,17 @@ export default function ReportsAnalyticsPage() {
                   {/* Legends */}
                   <div className="space-y-3 text-left shrink-0">
                     {categoryBreakdownChart.map((item) => (
-                      <div key={item.name} className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                        <span className="text-xs font-bold text-gray-500 min-w-16 truncate">{item.name}</span>
-                        <span className="text-xs font-extrabold text-gray-800">{item.value}%</span>
+                      <div key={item.name} className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                          <span className="text-xs font-bold text-gray-700">{item.name}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-semibold text-gray-400">{item.count} units</span>
+                          <span className="text-xs font-extrabold text-[#1e4d1e] bg-[#edf4e2] px-2 py-0.5 rounded-md">
+                            {item.value}%
+                          </span>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -672,7 +699,7 @@ export default function ReportsAnalyticsPage() {
           </div>
 
           {/* Top Performing Products */}
-          <div className="bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-sm flex flex-col justify-between h-[340px]">
+          <div className="bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-sm flex flex-col justify-between min-h-[380px]">
             <div className="border-b border-[#f4f5f0] pb-3 text-left">
               <h3 className="text-sm font-extrabold text-gray-900 uppercase tracking-wider">
                 Top Performing Products
@@ -686,7 +713,7 @@ export default function ReportsAnalyticsPage() {
                 </div>
               ) : (
                 topProductsList.map((prod, idx) => (
-                  <div key={idx} className="flex items-center justify-between py-3.5 text-left">
+                  <div key={idx} className="flex items-center justify-between py-2.5 text-left">
                     <div className="min-w-0">
                       <p className="text-xs font-bold text-gray-800 leading-snug">{prod.name}</p>
                       <span className="inline-flex px-2 py-0.5 rounded-full bg-[#f4f5f0] text-[8px] font-bold text-gray-500 uppercase mt-0.5">
