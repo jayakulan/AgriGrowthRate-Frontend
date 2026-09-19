@@ -218,26 +218,28 @@ export default function AdminProfilePage() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error('Image must be less than 2MB');
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image must be less than 5MB');
         return;
       }
       const reader = new FileReader();
       reader.onloadend = async () => {
         const newAvatarUrl = reader.result as string;
         setAvatar(newAvatarUrl);
+        const toastId = toast.loading("Updating profile picture...");
         try {
           const response = await api.put('/admin/profile', { name, phone, address, avatar: newAvatarUrl }).catch(() => null);
           if (response && response.data && response.data.success) {
             updateUser(response.data.data);
-            toast.success('Avatar updated!');
+            if (response.data.data.avatar) setAvatar(response.data.data.avatar);
+            toast.success('Profile picture updated successfully!', { id: toastId });
           } else {
             updateUser({ name, phone, address, avatar: newAvatarUrl });
-            toast.success('Avatar updated (locally)!');
+            toast.success('Profile picture updated!', { id: toastId });
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error(error);
-          toast.success('Avatar updated (locally)!');
+          toast.error(error.response?.data?.message || 'Failed to update profile picture', { id: toastId });
         }
       };
       reader.readAsDataURL(file);
