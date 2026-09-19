@@ -175,7 +175,7 @@ export default function RegisterPage() {
       toast.success('Verification OTP code sent to your phone! 📱');
       setOtpDigits(['', '', '', '', '', '']);
       setShowOtpModal(true);
-      setOtpTimer(30);
+      setOtpTimer(60);
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || 'Failed to send verification SMS';
       toast.error(msg);
@@ -227,7 +227,7 @@ export default function RegisterPage() {
       const { authService } = await import('@/services/authService');
       await authService.sendOtp(form.phone, form.email);
       toast.success('New OTP verification code sent! 📱');
-      setOtpTimer(30);
+      setOtpTimer(60);
       setOtpDigits(['', '', '', '', '', '']);
       const firstInput = document.getElementById('otp-0');
       if (firstInput) firstInput.focus();
