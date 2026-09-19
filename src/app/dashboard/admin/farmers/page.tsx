@@ -397,191 +397,9 @@ export default function ManageFarmersPage() {
           </div>
         </div>
 
-        {/* ── USERS DATATABLE CONTAINER ── */}
-        <div className="bg-white border border-[#e4e6df] rounded-[24px] overflow-hidden shadow-sm">
-          {loading ? (
-            <div className="p-12 text-center text-gray-500 font-semibold flex flex-col items-center justify-center">
-              <Loader2 className="w-6 h-6 text-[#1e4d1e] animate-spin mb-2" />
-              <span>Fetching community list...</span>
-            </div>
-          ) : (
-            <div className="overflow-x-auto select-none">
-              <table className="w-full text-left border-collapse min-w-[700px]">
-                
-                {/* Table Header exactly styled in mock structure */}
-                <thead className="bg-[#fcfdfa]/80 border-b border-[#e4e6df]">
-                  <tr>
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Name</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Farmer Card Number</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Email</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Contact No</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Address</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-
-                <tbody className="divide-y divide-[#f4f5f0]">
-                  {users.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="px-6 py-12 text-center text-xs font-bold text-gray-400">
-                        No farmers registered in database yet.
-                      </td>
-                    </tr>
-                  ) : (
-                    users.map((user, idx) => {
-                      const userId = user.id || user._id || `farmer-${idx}`;
-                      return (
-                        <tr key={userId} className="hover:bg-[#f4f5f0]/20 transition-colors">
-                        
-                        {/* Name col with avatar details */}
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            {user.avatar ? (
-                              <img
-                                src={user.avatar}
-                                alt={user.name}
-                                className="w-9 h-9 rounded-full object-cover border border-[#edf4e2]"
-                              />
-                            ) : (
-                              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold ${user.initialsBg || 'bg-[#edf4e2] text-[#1e4d1e]'}`}>
-                                {user.initials || user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
-                              </div>
-                            )}
-                            <div className="text-left space-y-0.5">
-                              <p className="text-xs font-bold text-gray-900 leading-snug">{user.name}</p>
-                              <p className="text-[10px] text-gray-400 font-semibold leading-none">
-                                {user.registeredDate || 'Registered ' + new Date(user.createdAt).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Farmer Card Number */}
-                        <td className="px-6 py-4 text-xs font-semibold text-gray-800">
-                          {user.farmerCardNo || 'N/A'}
-                        </td>
-
-                        {/* Email address */}
-                        <td className="px-6 py-4 text-xs font-semibold text-gray-500">
-                          {user.email}
-                        </td>
-
-                        {/* Contact number */}
-                        <td className="px-6 py-4 text-xs font-semibold text-gray-500">
-                          {formatPhoneNumber(user.phone || user.contactNo)}
-                        </td>
-
-                        {/* Address */}
-                        <td className="px-6 py-4 text-xs font-semibold text-gray-500">
-                          {user.address || 'Galle, Sri Lanka'}
-                        </td>
-
-                        {/* Status with enable/disable option */}
-                        <td className="px-6 py-4 text-xs font-semibold text-gray-500">
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold ${user.isVerified ? 'bg-[#d8f6dc] text-[#166c2c]' : 'bg-[#f1f2f4] text-[#6b7280]'}`}>
-                            {user.isVerified ? 'Enabled' : 'Disabled'}
-                          </span>
-                        </td>
-
-                        {/* Actions */}
-                        <td className="px-6 py-4 text-xs font-semibold text-gray-500">
-                          {user.isVerified ? (
-                            <button
-                              onClick={() => confirmAndDisableUser(user)}
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors cursor-pointer"
-                              title="Disable User"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          ) : (
-                            <button
-                              disabled
-                              className="text-gray-300 p-2 cursor-not-allowed"
-                              title="Already Disabled"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
-                        </td>
-
-                      </tr>
-                    );
-                  })
-                )}
-                </tbody>
-
-              </table>
-            </div>
-          )}
-
-          {/* Pagination footer */}
-          {!loading && users.length > 0 && (
-            <div className="bg-[#fcfdfa]/80 border-t border-[#e4e6df] px-6 py-4 flex items-center justify-between select-none">
-              <span className="text-[10px] font-bold text-gray-400">
-                Showing {(currentPage - 1) * 10 + 1}–{Math.min(currentPage * 10, totalUsers)} of {totalUsers} farmers
-              </span>
-
-              <div className="inline-flex items-center gap-1.5">
-                <button
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  className="p-2 bg-white border border-[#e4e6df] hover:bg-gray-50 rounded-xl text-gray-500 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-
-                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                  const page = i + 1;
-                  return (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`w-8 h-8 rounded-xl text-[10px] font-bold cursor-pointer flex items-center justify-center transition-all ${
-                        currentPage === page
-                          ? 'bg-[#1e4d1e] text-white shadow-sm'
-                          : 'bg-white border border-[#e4e6df] hover:bg-gray-50 text-gray-500'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  );
-                })}
-
-                {totalPages > 5 && (
-                  <>
-                    <span className="text-gray-400 text-xs font-bold px-1">...</span>
-                    <button
-                      onClick={() => setCurrentPage(totalPages)}
-                      className={`w-8 h-8 rounded-xl text-[10px] font-bold cursor-pointer flex items-center justify-center transition-all ${
-                        currentPage === totalPages
-                          ? 'bg-[#1e4d1e] text-white shadow-sm'
-                          : 'bg-white border border-[#e4e6df] hover:bg-gray-50 text-gray-500'
-                      }`}
-                    >
-                      {totalPages}
-                    </button>
-                  </>
-                )}
-
-                <button
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                  className="p-2 bg-white border border-[#e4e6df] hover:bg-gray-50 rounded-xl text-gray-500 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
-
-
-        </div>
-
         {/* ── BOTTOM INFO STACK SIDE-BY-SIDE ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-
-          <div className="lg:col-span-8 bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-sm overflow-hidden select-none flex flex-col justify-between">
+        {/* ── GRAPH CONTAINER ── */}
+        <div className="w-full bg-white border border-[#e4e6df] rounded-[24px] p-6 shadow-sm overflow-hidden select-none flex flex-col justify-between">
             
             {/* Header: Title + Mode Switcher Tabs */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#f0f2eb] pb-5">
@@ -877,16 +695,184 @@ export default function ManageFarmersPage() {
 
           </div>
 
-          <div className="lg:col-span-4 flex">
-            <DailyLogisticsCard
-              className="w-full rounded-[24px] p-6 shadow-sm flex flex-col justify-between"
-              label="FARMER MANAGEMENT"
-              headline={analytics.totalFarmers > 0 ? `${Math.min(100, Math.round((analytics.activeFarmers / analytics.totalFarmers) * 100))}% of Farmers Active` : '100% Farmers Active'}
-              description={analytics.totalFarmers > 0
-                ? `Out of ${analytics.totalFarmers} total registered farmers on AgriGrowthRate, ${analytics.activeFarmers} are verified and currently trading active crop inventories.`
-                : "No registered farmers recorded in database yet."}
-            />
-          </div>
+        {/* ── USERS DATATABLE CONTAINER ── */}
+        <div className="bg-white border border-[#e4e6df] rounded-[24px] overflow-hidden shadow-sm">
+          {loading ? (
+            <div className="p-12 text-center text-gray-500 font-semibold flex flex-col items-center justify-center">
+              <Loader2 className="w-6 h-6 text-[#1e4d1e] animate-spin mb-2" />
+              <span>Fetching community list...</span>
+            </div>
+          ) : (
+            <div className="overflow-x-auto select-none">
+              <table className="w-full text-left border-collapse min-w-[700px]">
+                
+                {/* Table Header exactly styled in mock structure */}
+                <thead className="bg-[#fcfdfa]/80 border-b border-[#e4e6df]">
+                  <tr>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Name</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Farmer Card Number</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Email</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Contact No</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Address</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+
+                <tbody className="divide-y divide-[#f4f5f0]">
+                  {users.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-12 text-center text-xs font-bold text-gray-400">
+                        No farmers registered in database yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    users.map((user, idx) => {
+                      const userId = user.id || user._id || `farmer-${idx}`;
+                      return (
+                        <tr key={userId} className="hover:bg-[#f4f5f0]/20 transition-colors">
+                        
+                        {/* Name col with avatar details */}
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            {user.avatar ? (
+                              <img
+                                src={user.avatar}
+                                alt={user.name}
+                                className="w-9 h-9 rounded-full object-cover border border-[#edf4e2]"
+                              />
+                            ) : (
+                              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold ${user.initialsBg || 'bg-[#edf4e2] text-[#1e4d1e]'}`}>
+                                {user.initials || user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
+                              </div>
+                            )}
+                            <div className="text-left space-y-0.5">
+                              <p className="text-xs font-bold text-gray-900 leading-snug">{user.name}</p>
+                              <p className="text-[10px] text-gray-400 font-semibold leading-none">
+                                {user.registeredDate || 'Registered ' + new Date(user.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Farmer Card Number */}
+                        <td className="px-6 py-4 text-xs font-semibold text-gray-800">
+                          {user.farmerCardNo || 'N/A'}
+                        </td>
+
+                        {/* Email address */}
+                        <td className="px-6 py-4 text-xs font-semibold text-gray-500">
+                          {user.email}
+                        </td>
+
+                        {/* Contact number */}
+                        <td className="px-6 py-4 text-xs font-semibold text-gray-500">
+                          {formatPhoneNumber(user.phone || user.contactNo)}
+                        </td>
+
+                        {/* Address */}
+                        <td className="px-6 py-4 text-xs font-semibold text-gray-500">
+                          {user.address || 'Galle, Sri Lanka'}
+                        </td>
+
+                        {/* Status with enable/disable option */}
+                        <td className="px-6 py-4 text-xs font-semibold text-gray-500">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold ${user.isVerified ? 'bg-[#d8f6dc] text-[#166c2c]' : 'bg-[#f1f2f4] text-[#6b7280]'}`}>
+                            {user.isVerified ? 'Enabled' : 'Disabled'}
+                          </span>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="px-6 py-4 text-xs font-semibold text-gray-500">
+                          {user.isVerified ? (
+                            <button
+                              onClick={() => confirmAndDisableUser(user)}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors cursor-pointer"
+                              title="Disable User"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          ) : (
+                            <button
+                              disabled
+                              className="text-gray-300 p-2 cursor-not-allowed"
+                              title="Already Disabled"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </td>
+
+                      </tr>
+                    );
+                  })
+                )}
+                </tbody>
+
+              </table>
+            </div>
+          )}
+
+          {/* Pagination footer */}
+          {!loading && users.length > 0 && (
+            <div className="bg-[#fcfdfa]/80 border-t border-[#e4e6df] px-6 py-4 flex items-center justify-between select-none">
+              <span className="text-[10px] font-bold text-gray-400">
+                Showing {(currentPage - 1) * 10 + 1}–{Math.min(currentPage * 10, totalUsers)} of {totalUsers} farmers
+              </span>
+
+              <div className="inline-flex items-center gap-1.5">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 bg-white border border-[#e4e6df] hover:bg-gray-50 rounded-xl text-gray-500 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                  const page = i + 1;
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 rounded-xl text-[10px] font-bold cursor-pointer flex items-center justify-center transition-all ${
+                        currentPage === page
+                          ? 'bg-[#1e4d1e] text-white shadow-sm'
+                          : 'bg-white border border-[#e4e6df] hover:bg-gray-50 text-gray-500'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+
+                {totalPages > 5 && (
+                  <>
+                    <span className="text-gray-400 text-xs font-bold px-1">...</span>
+                    <button
+                      onClick={() => setCurrentPage(totalPages)}
+                      className={`w-8 h-8 rounded-xl text-[10px] font-bold cursor-pointer flex items-center justify-center transition-all ${
+                        currentPage === totalPages
+                          ? 'bg-[#1e4d1e] text-white shadow-sm'
+                          : 'bg-white border border-[#e4e6df] hover:bg-gray-50 text-gray-500'
+                      }`}
+                    >
+                      {totalPages}
+                    </button>
+                  </>
+                )}
+
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 bg-white border border-[#e4e6df] hover:bg-gray-50 rounded-xl text-gray-500 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
 
         </div>
 
