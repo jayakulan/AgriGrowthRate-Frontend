@@ -2,7 +2,7 @@
 
 import React, { useEffect, Suspense } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import axios from 'axios';
+import api from '@/lib/axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2, Sprout } from 'lucide-react';
@@ -19,11 +19,7 @@ function PaymentStatusHandler() {
       if (paymentStatus === 'success') {
         const confirmPayment = async () => {
           try {
-            const token = localStorage.getItem('token');
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
-            const { data } = await axios.post(`${apiUrl}/subscriptions/confirm`, {}, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
+            const { data } = await api.post('/subscriptions/confirm', {});
             if (data.success) {
               toast.success('Subscription activated successfully!');
             }

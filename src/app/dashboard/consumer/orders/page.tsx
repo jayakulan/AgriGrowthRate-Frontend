@@ -17,6 +17,7 @@ import {
 import { orderService } from '@/services/orderService';
 import { feedbackService } from '@/services/feedbackService';
 import toast from 'react-hot-toast';
+import { getImageUrl } from '@/lib/axios';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -193,7 +194,7 @@ export default function ConsumerOrdersPage() {
 
             // Image fallback resolver
             const productImg = product?.images && product.images[0]
-              ? (product.images[0].startsWith('http') || product.images[0].startsWith('data:') ? product.images[0] : `http://localhost:5001${product.images[0]}`)
+              ? getImageUrl(product.images[0])
               : 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=200&h=200&fit=crop';
 
             const itemsCount = order.items ? order.items.reduce((sum: number, it: any) => sum + it.quantity, 0) : 0;

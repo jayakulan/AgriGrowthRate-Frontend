@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '@/lib/axios';
 import { X, CreditCard, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -23,18 +23,14 @@ export default function SubscriptionModal({ isOpen, onClose, activeChatId }: { i
 
   const handleCheckout = async () => {
     setLoading(true);
-    const token = localStorage.getItem('token');
     
     if (activeChatId) {
       localStorage.setItem('pendingSubscriptionChatId', activeChatId);
     }
     
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
-      const { data } = await axios.post(`${apiUrl}/subscriptions/create-checkout-session`, {
+      const { data } = await api.post('/subscriptions/create-checkout-session', {
         returnUrl: window.location.href.split('?')[0],
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
 
       if (data.success && data.url) {

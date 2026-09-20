@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import api from '@/lib/axios';
 import {
   Zap,
   Smile,
@@ -88,10 +89,7 @@ export default function AIManagementPage() {
 
   const fetchKnowledgeBase = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5001/api/ai/knowledge', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/ai/knowledge');
       if (response.data.success) {
         setKnowledgeDocs(response.data.data);
         setPdfCount(response.data.data.length);
@@ -104,10 +102,7 @@ export default function AIManagementPage() {
   const fetchAIData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5001/api/admin/ai-management', {
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch(() => null);
+      const response = await api.get('/admin/ai-management').catch(() => null);
 
       if (response && response.data && response.data.data) {
         setData(response.data.data);
@@ -124,11 +119,8 @@ export default function AIManagementPage() {
     if (!docToDelete) return;
     setDeleting(true);
     try {
-      const token = localStorage.getItem('token');
       const docId = docToDelete.id || docToDelete._id;
-      const response = await axios.delete(`http://localhost:5001/api/ai/knowledge/${docId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.delete(`/ai/knowledge/${docId}`);
       if (response.data.success) {
         toast.success('Knowledge base deleted successfully');
         setShowDeleteConfirm(false);
@@ -158,15 +150,13 @@ export default function AIManagementPage() {
     setSyncing(true);
 
     try {
-      const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('pdf', datasetFile);
       if (datasetName) formData.append('datasetName', datasetName);
 
-      const response = await axios.post('http://localhost:5001/api/ai/upload-knowledge', formData, {
+      const response = await api.post('/ai/upload-knowledge', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`
         }
       });
 

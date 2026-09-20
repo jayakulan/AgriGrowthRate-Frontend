@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { getImageUrl } from '@/lib/axios';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Heart,
@@ -104,7 +105,7 @@ export default function ProductDetailsPage() {
 
   // Get image URLs, with fallbacks
   const productImages = product.images && product.images.length > 0 
-    ? product.images.map((img: string) => img.startsWith('http') || img.startsWith('data:') ? img : `http://localhost:5001${img}`)
+    ? product.images.map((img: string) => getImageUrl(img))
     : ['https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=800&h=600&fit=crop'];
 
   return (
@@ -258,9 +259,7 @@ export default function ProductDetailsPage() {
                     <img 
                       src={
                         product.farmer.avatar 
-                          ? (product.farmer.avatar.startsWith('http') || product.farmer.avatar.startsWith('data:') 
-                              ? product.farmer.avatar 
-                              : `http://localhost:5001${product.farmer.avatar}`)
+                          ? getImageUrl(product.farmer.avatar)
                           : 'https://images.unsplash.com/photo-1595858688461-8f5bc289569e?w=80&h=80&fit=crop'
                       } 
                       alt={product.farmer.name} 
@@ -472,7 +471,7 @@ export default function ProductDetailsPage() {
             {relatedProducts.map((prod, idx) => {
               const prodId = prod.id || prod._id || `rel-${idx}`;
               const prodImg = prod.images && prod.images[0] 
-                ? (prod.images[0].startsWith('http') || prod.images[0].startsWith('data:') ? prod.images[0] : `http://localhost:5001${prod.images[0]}`) 
+                ? getImageUrl(prod.images[0])
                 : 'https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=400&h=300&fit=crop';
 
               return (

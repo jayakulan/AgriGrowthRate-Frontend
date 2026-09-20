@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '@/lib/axios';
 import { Send, User, Sprout, AlertTriangle } from 'lucide-react';
 import SubscriptionModal from './SubscriptionModal';
 
@@ -27,12 +27,7 @@ export default function ConsumerChatbot() {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
-      
-      const response = await axios.post(`${apiUrl}/ai/chat`, { messages: newMessages }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.post('/ai/chat', { messages: newMessages });
 
       if (response.data.success) {
         setMessages([...newMessages, { role: 'assistant', content: response.data.reply }]);

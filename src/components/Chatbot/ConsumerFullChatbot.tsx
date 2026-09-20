@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import api from '@/lib/axios';
 import { Send, User, ShoppingCart, Plus, MessageSquare, Trash2, Edit2, Search, Menu, X, Monitor, HelpCircle, Paperclip, Mic, ArrowRight, TrendingUp, TrendingDown, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -87,10 +88,8 @@ export default function ConsumerFullChatbot() {
 
   const fetchChats = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
       // Fetching chats using 'consumer_recommendation' type if supported, or same chat endpoint
-      const { data } = await axios.get(`${apiUrl}/chat/history?type=consumer`, { headers: { Authorization: `Bearer ${token}` } });
+      const { data } = await api.get('/chat/history?type=consumer');
       if (data.success) setChats(data.data);
     } catch (error: any) {
       if (error?.response?.status !== 401) {
@@ -101,9 +100,7 @@ export default function ConsumerFullChatbot() {
 
   const fetchTrendingProducts = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
-      const { data } = await axios.get(`${apiUrl}/products?limit=5`, { headers: { Authorization: `Bearer ${token}` } });
+      const { data } = await api.get('/products?limit=5');
       if (data.success && data.data) {
         const mappedProducts = data.data.map((p: any) => {
           const score = (p.rating || (p.farmer && p.farmer.avgRating) || 4.5) * 20;
@@ -131,9 +128,7 @@ export default function ConsumerFullChatbot() {
 
   const loadChat = async (chatId: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
-      const { data } = await axios.get(`${apiUrl}/chat/${chatId}`, { headers: { Authorization: `Bearer ${token}` } });
+      const { data } = await api.get(`/chat/${chatId}`);
       if (data.success) {
         setActiveChatId(chatId);
         setMessages(data.data.messages);
@@ -156,9 +151,7 @@ export default function ConsumerFullChatbot() {
       return;
     }
     try {
-      const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
-      await axios.put(`${apiUrl}/chat/${chatToRename.id}/rename`, { title: newChatTitle }, { headers: { Authorization: `Bearer ${token}` } });
+      await api.put(`/chat/${chatToRename.id}/rename`, { title: newChatTitle });
       fetchChats();
     } catch (error) {
       toast.error('Failed to rename chat');
@@ -176,9 +169,7 @@ export default function ConsumerFullChatbot() {
   const handleDeleteSubmit = async () => {
     if (!chatToDelete) return;
     try {
-      const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
-      await axios.delete(`${apiUrl}/chat/${chatToDelete}`, { headers: { Authorization: `Bearer ${token}` } });
+      await api.delete(`/chat/${chatToDelete}`);
       if (activeChatId === chatToDelete) startNewChat();
       fetchChats();
     } catch (error) {
@@ -199,17 +190,12 @@ export default function ConsumerFullChatbot() {
   };
 
   const sendMessageToAPI = async (messageText: string) => {
-    const token = localStorage.getItem('token');
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
-    
     // Using context 'consumer_recommendation' so the backend knows the restrictions
-    const response = await axios.post(`${apiUrl}/chat/message`, { 
+    const response = await api.post('/chat/message', { 
       message: messageText,
       chatId: activeChatId,
       context: 'consumer_recommendation',
       type: 'consumer' // optional to differentiate chat type in DB if needed
-    }, {
-      headers: { Authorization: `Bearer ${token}` }
     });
 
     if (response.data.success) {

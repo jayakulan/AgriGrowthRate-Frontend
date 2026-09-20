@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import api from '@/lib/axios';
 import { Send, User, MessageSquare, Trash2, Edit2, Search, Menu, X, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -51,9 +52,7 @@ export default function RetailerChatbot() {
 
   const fetchChats = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
-      const { data } = await axios.get(`${apiUrl}/chat/history`, { headers: { Authorization: `Bearer ${token}` } });
+      const { data } = await api.get('/chat/history');
       if (data.success) setChats(data.data);
     } catch (error) {
       console.error('Failed to fetch chats');
@@ -68,9 +67,7 @@ export default function RetailerChatbot() {
 
   const loadChat = async (chatId: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
-      const { data } = await axios.get(`${apiUrl}/chat/${chatId}`, { headers: { Authorization: `Bearer ${token}` } });
+      const { data } = await api.get(`/chat/${chatId}`);
       if (data.success) {
         setActiveChatId(chatId);
         setMessages(data.data.messages);
@@ -93,9 +90,7 @@ export default function RetailerChatbot() {
       return;
     }
     try {
-      const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
-      await axios.put(`${apiUrl}/chat/${chatToRename.id}/rename`, { title: newChatTitle }, { headers: { Authorization: `Bearer ${token}` } });
+      await api.put(`/chat/${chatToRename.id}/rename`, { title: newChatTitle });
       fetchChats();
     } catch (error) {
       toast.error('Failed to rename chat');
@@ -113,9 +108,7 @@ export default function RetailerChatbot() {
   const handleDeleteSubmit = async () => {
     if (!chatToDelete) return;
     try {
-      const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
-      await axios.delete(`${apiUrl}/chat/${chatToDelete}`, { headers: { Authorization: `Bearer ${token}` } });
+      await api.delete(`/chat/${chatToDelete}`);
       if (activeChatId === chatToDelete) startNewChat();
       fetchChats();
     } catch (error) {
@@ -127,15 +120,10 @@ export default function RetailerChatbot() {
   };
 
   const sendMessageToAPI = async (messageText: string) => {
-    const token = localStorage.getItem('token');
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
-    
-    const response = await axios.post(`${apiUrl}/chat/message`, { 
+    const response = await api.post('/chat/message', { 
       message: messageText,
       chatId: activeChatId,
       context: 'general'
-    }, {
-      headers: { Authorization: `Bearer ${token}` }
     });
 
     if (response.data.success) {

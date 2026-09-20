@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { orderService } from '@/services/orderService';
-import api from '@/lib/axios';
+import api, { getImageUrl } from '@/lib/axios';
 import {
   ShoppingBag,
   Truck,
@@ -136,7 +136,7 @@ export default function ConsumerDashboardPage() {
                     <img 
                       key={f.id || f._id || f.farmerId?.id || f.farmerId?._id || `fav-farmer-${i}`} 
                       className="w-8 h-8 rounded-full border-2 border-white object-cover bg-gray-100" 
-                      src={f.farmerId?.avatar ? (f.farmerId.avatar.startsWith('http') || f.farmerId.avatar.startsWith('data:') ? f.farmerId.avatar : `http://localhost:5001${f.farmerId.avatar}`) : "https://images.unsplash.com/photo-1595858688461-8f5bc289569e?w=100&h=100&fit=crop"} 
+                      src={f.farmerId?.avatar ? getImageUrl(f.farmerId.avatar) : "https://images.unsplash.com/photo-1595858688461-8f5bc289569e?w=100&h=100&fit=crop"} 
                       alt="Farmer" 
                     />
                   ))}

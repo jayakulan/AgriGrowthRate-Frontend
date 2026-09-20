@@ -106,4 +106,30 @@ api.interceptors.response.use(
   }
 );
 
+export const getBackendUrl = () => {
+  if (typeof window !== 'undefined') {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:5001';
+    }
+    return `${window.location.protocol}//${window.location.host}`;
+  }
+  return process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5001';
+};
+
+export const getImageUrl = (path?: string) => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
+    return path;
+  }
+  const cleanPath = path.startsWith('/') ? path : '/' + path;
+  if (typeof window !== 'undefined') {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return `http://localhost:5001${cleanPath}`;
+    }
+    return `${window.location.protocol}//${window.location.host}${cleanPath}`;
+  }
+  return cleanPath;
+};
+
 export default api;
+

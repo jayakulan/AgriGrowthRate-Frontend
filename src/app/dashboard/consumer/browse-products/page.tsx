@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { getImageUrl } from '@/lib/axios';
 import {
   Grid3X3,
   Carrot,
@@ -153,7 +154,7 @@ export default function BrowseProductsPage() {
           {products.map((product, idx) => {
             const productId = product.id || product._id || `product-${idx}`;
             const productImg = product.images && product.images[0]
-              ? (product.images[0].startsWith('http') || product.images[0].startsWith('data:') ? product.images[0] : `http://localhost:5001${product.images[0]}`)
+              ? getImageUrl(product.images[0])
               : 'https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=400&h=300&fit=crop';
 
             return (
