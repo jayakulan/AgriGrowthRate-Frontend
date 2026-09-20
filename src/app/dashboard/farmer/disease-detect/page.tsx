@@ -37,18 +37,34 @@ export default function DiseaseDetectionPage() {
     fetchAssessments();
   }, []);
 
+  const getAiServiceUrl = () => {
+    if (typeof window !== 'undefined') {
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return 'http://localhost:8000/api/detect/';
+      }
+      return `${window.location.protocol}//${window.location.hostname}:8000/api/detect/`;
+    }
+    return process.env.NEXT_PUBLIC_AI_URL || 'http://localhost:8000/api/detect/';
+  };
+
   const fetchAssessments = async () => {
     try {
       const res = await api.get('/ai/assessments');
       if (res.data && res.data.success) {
-        const mappedScans = (res.data.data.recentScans || []).map((scan: any, index: number) => ({
-          id: scan._id || scan.id || `scan-${index}-${Date.now()}`,
-          title: `${scan.crop} - ${scan.diseaseName}`,
-          details: new Date(scan.createdAt).toLocaleDateString(),
-          image: scan.image,
-          treatment: scan.treatment,
-          confidence: scan.confidence,
-        }));
+        const mappedScans = (res.data.data.recentScans || []).map((scan: any, index: number) => {
+          let rawImg = scan.image || '';
+          if (rawImg.startsWith('blob:') || rawImg.includes('localhost:3000')) {
+            rawImg = '/register.jpg';
+          }
+          return {
+            id: scan._id || scan.id || `scan-${index}-${Date.now()}`,
+            title: `${scan.crop} - ${scan.diseaseName}`,
+            details: new Date(scan.createdAt).toLocaleDateString(),
+            image: rawImg || '/register.jpg',
+            treatment: scan.treatment,
+            confidence: scan.confidence,
+          };
+        });
         setRecentScans(mappedScans);
         setMonthlyStats(res.data.data.monthlyStats || [0,0,0,0,0,0,0]);
       }
@@ -93,7 +109,7 @@ export default function DiseaseDetectionPage() {
       formData.append('file', file);
       formData.append('crop', selectedCrop);
 
-      const apiPromise = fetch('http://localhost:8000/api/detect/', {
+      const apiPromise = fetch(getAiServiceUrl(), {
         method: 'POST',
         body: formData,
       }).then(async (res) => {

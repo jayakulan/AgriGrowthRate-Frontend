@@ -449,7 +449,7 @@ export default function AdminDashboardPage() {
                   
                   {/* Left Donut */}
                   <div className="sm:col-span-6 relative flex items-center justify-center h-[230px]">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                       <PieChart>
                         <Pie
                           data={farmerDistrictList}
@@ -576,7 +576,7 @@ export default function AdminDashboardPage() {
               ) : farmerGraphView === 'bar' ? (
                 /* ── VIEW 2: RANKED DISTRICT BARS ── */
                 <div className="w-full h-[250px]">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                     <BarChart data={farmerDistrictList} margin={{ top: 15, right: 15, left: -15, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#edf4e2" />
                       <XAxis
@@ -619,7 +619,7 @@ export default function AdminDashboardPage() {
               ) : (
                 /* ── VIEW 3: CONTINUOUS 6-MONTH GROWTH CURVE ── */
                 <div className="w-full h-[250px]">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                     <AreaChart data={farmerChartDataList} margin={{ top: 15, right: 15, left: -15, bottom: 0 }}>
                       <defs>
                         <linearGradient id="farmerGradientMain" x1="0" y1="0" x2="0" y2="1">
@@ -745,7 +745,7 @@ export default function AdminDashboardPage() {
                   
                   {/* Left Donut */}
                   <div className="sm:col-span-6 relative flex items-center justify-center h-[230px]">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                       <PieChart>
                         <Pie
                           data={retailerDistrictList}
@@ -872,7 +872,7 @@ export default function AdminDashboardPage() {
               ) : retailerGraphView === 'bar' ? (
                 /* ── VIEW 2: RANKED DISTRICT BARS ── */
                 <div className="w-full h-[250px]">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                     <BarChart data={retailerDistrictList} margin={{ top: 15, right: 15, left: -15, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#edf4e2" />
                       <XAxis
@@ -915,7 +915,7 @@ export default function AdminDashboardPage() {
               ) : (
                 /* ── VIEW 3: CONTINUOUS 6-MONTH GROWTH CURVE ── */
                 <div className="w-full h-[250px]">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                     <AreaChart data={retailerChartDataList} margin={{ top: 15, right: 15, left: -15, bottom: 0 }}>
                       <defs>
                         <linearGradient id="retailerGradientMain" x1="0" y1="0" x2="0" y2="1">

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '@/lib/axios';
 import { 
   Search, 
   ChevronDown, 
@@ -140,10 +140,7 @@ export default function ManageFarmersPage() {
     const fetchAnalytics = async () => {
       try {
         setAnalyticsLoading(true);
-        const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:5001/api/admin/analytics', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await api.get('/admin/analytics');
         if (res.data && res.data.success) {
           const { activeFarmers, users: usersSummary, farmerGrowthTrend, farmerDistrictDistribution } = res.data.data;
           const totalCount = usersSummary?.farmers || 0;
@@ -232,14 +229,10 @@ export default function ManageFarmersPage() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       const params: any = { page: currentPage, limit: 10, role: 'farmer' };
       if (searchTerm) params.search = searchTerm;
 
-      const response = await axios.get('http://localhost:5001/api/admin/users', {
-        headers: { Authorization: `Bearer ${token}` },
-        params,
-      }).catch(() => null);
+      const response = await api.get('/admin/users', { params }).catch(() => null);
 
       if (response && response.data && response.data.data) {
         setUsers(response.data.data);
@@ -271,10 +264,7 @@ export default function ManageFarmersPage() {
 
     setAddingCard(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5001/api/admin/farmer-cards', { cardNumber }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.post('/admin/farmer-cards', { cardNumber });
       toast.success('Farmer Card Number added successfully!');
       setShowCardModal(false);
       setCardNumber('');
@@ -287,12 +277,7 @@ export default function ManageFarmersPage() {
 
   const handleUpdateRole = async (userId: string, newRole: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.patch(
-        `http://localhost:5001/api/admin/users/${userId}/role`,
-        { role: newRole },
-        { headers: { Authorization: `Bearer ${token}` } }
-      ).catch(() => null);
+      const response = await api.patch(`/admin/users/${userId}/role`, { role: newRole }).catch(() => null);
 
       if (response) {
         toast.success('User authorization role updated successfully');
@@ -309,12 +294,7 @@ export default function ManageFarmersPage() {
 
   const handleToggleStatus = async (userId: string, currentStatus: boolean) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.patch(
-        `http://localhost:5001/api/admin/users/${userId}/status`,
-        { isVerified: !currentStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
-      ).catch(() => null);
+      const response = await api.patch(`/admin/users/${userId}/status`, { isVerified: !currentStatus }).catch(() => null);
 
       if (response) {
         toast.success('Status key updated successfully');
@@ -331,10 +311,7 @@ export default function ManageFarmersPage() {
   const handleDeleteUser = async (userId: string) => {
     if (!confirm('Are you sure you want to terminate this user profile?')) return;
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.delete(`http://localhost:5001/api/admin/users/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch(() => null);
+      const response = await api.delete(`/admin/users/${userId}`).catch(() => null);
 
       if (response) {
         toast.success('User terminated successfully');
@@ -355,12 +332,7 @@ export default function ManageFarmersPage() {
 
   const handleDisableUserConfirmed = async (userId: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.patch(
-        `http://localhost:5001/api/admin/users/${userId}/status`,
-        { isVerified: false },
-        { headers: { Authorization: `Bearer ${token}` } }
-      ).catch(() => null);
+      const response = await api.patch(`/admin/users/${userId}/status`, { isVerified: false }).catch(() => null);
 
       if (response) {
         toast.success('User disabled successfully');
@@ -472,7 +444,7 @@ export default function ManageFarmersPage() {
                   
                   {/* Left Donut with Center KPI */}
                   <div className="md:col-span-6 relative flex items-center justify-center h-[260px]">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                       <PieChart>
                         <Pie
                           data={districtList}

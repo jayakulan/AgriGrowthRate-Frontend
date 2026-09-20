@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '@/lib/axios';
 import { 
   Search, 
   ChevronDown, 
@@ -135,10 +135,7 @@ export default function ManageRetailersPage() {
     const fetchAnalytics = async () => {
       try {
         setAnalyticsLoading(true);
-        const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:5001/api/admin/analytics', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await api.get('/admin/analytics');
         if (res.data && res.data.success) {
           const { activeRetailers, users: usersSummary, retailerGrowthTrend, retailerDistrictDistribution } = res.data.data;
           const totalCount = usersSummary?.consumers || 0;
@@ -227,14 +224,10 @@ export default function ManageRetailersPage() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       const params: any = { page: currentPage, limit: 10, role: 'consumer' };
       if (searchTerm) params.search = searchTerm;
 
-      const response = await axios.get('http://localhost:5001/api/admin/users', {
-        headers: { Authorization: `Bearer ${token}` },
-        params,
-      }).catch(() => null);
+      const response = await api.get('/admin/users', { params }).catch(() => null);
 
       if (response && response.data && response.data.data) {
         setUsers(response.data.data);
@@ -271,12 +264,7 @@ export default function ManageRetailersPage() {
 
   const handleUpdateRole = async (userId: string, newRole: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.patch(
-        `http://localhost:5001/api/admin/users/${userId}/role`,
-        { role: newRole },
-        { headers: { Authorization: `Bearer ${token}` } }
-      ).catch(() => null);
+      const response = await api.patch(`/admin/users/${userId}/role`, { role: newRole }).catch(() => null);
 
       if (response) {
         toast.success('User authorization role updated successfully');
@@ -293,12 +281,7 @@ export default function ManageRetailersPage() {
 
   const handleToggleStatus = async (userId: string, currentStatus: boolean) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.patch(
-        `http://localhost:5001/api/admin/users/${userId}/status`,
-        { isVerified: !currentStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
-      ).catch(() => null);
+      const response = await api.patch(`/admin/users/${userId}/status`, { isVerified: !currentStatus }).catch(() => null);
 
       if (response) {
         toast.success('Status key updated successfully');
@@ -315,10 +298,7 @@ export default function ManageRetailersPage() {
   const handleDeleteUser = async (userId: string) => {
     if (!confirm('Are you sure you want to terminate this user profile?')) return;
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.delete(`http://localhost:5001/api/admin/users/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch(() => null);
+      const response = await api.delete(`/admin/users/${userId}`).catch(() => null);
 
       if (response) {
         toast.success('User terminated successfully');
@@ -339,12 +319,7 @@ export default function ManageRetailersPage() {
 
   const handleDisableUserConfirmed = async (userId: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.patch(
-        `http://localhost:5001/api/admin/users/${userId}/status`,
-        { isVerified: false },
-        { headers: { Authorization: `Bearer ${token}` } }
-      ).catch(() => null);
+      const response = await api.patch(`/admin/users/${userId}/status`, { isVerified: false }).catch(() => null);
 
       if (response) {
         toast.success('User disabled successfully');
