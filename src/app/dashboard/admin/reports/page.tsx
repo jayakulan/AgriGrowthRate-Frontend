@@ -32,7 +32,7 @@ interface ReportsData {
   topProducts: Array<{ name: string; price: number; category: string; salesCount: number }>;
   userGrowth: Record<string, number>;
   revenueData: Record<string, number>;
-  categoryBreakdown: Array<{ _id: string; count: number; revenue: number }>;
+  categoryBreakdown: Array<{ _id: string; name?: string; value?: number; percentage?: number; count: number; revenue: number }>;
 }
 
 export default function ReportsAnalyticsPage() {

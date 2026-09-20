@@ -252,14 +252,29 @@ export default function FarmerProfilePage() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error('Image must be less than 2MB');
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image must be less than 5MB');
         return;
       }
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatar(reader.result as string);
-        toast.success("Avatar updated!");
+      reader.onloadend = async () => {
+        const newAvatarUrl = reader.result as string;
+        setAvatar(newAvatarUrl);
+        const toastId = toast.loading("Updating profile picture...");
+        try {
+          const response = await api.put('/auth/profile', { avatar: newAvatarUrl });
+          if (response && response.data && response.data.success) {
+            updateUser(response.data.data);
+            if (response.data.data.avatar) setAvatar(response.data.data.avatar);
+            toast.success("Profile picture updated successfully!", { id: toastId });
+          } else {
+            updateUser({ avatar: newAvatarUrl });
+            toast.success("Profile picture updated!", { id: toastId });
+          }
+        } catch (error: any) {
+          console.error("Avatar update error:", error);
+          toast.error(error.response?.data?.message || "Failed to update profile picture", { id: toastId });
+        }
       };
       reader.readAsDataURL(file);
     }
