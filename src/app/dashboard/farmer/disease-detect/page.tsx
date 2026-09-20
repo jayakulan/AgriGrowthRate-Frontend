@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/axios';
@@ -14,6 +14,9 @@ import {
   RefreshCw,
   Activity,
   Sparkles,
+  AlertTriangle,
+  AlertCircle,
+  Info,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -21,7 +24,9 @@ export default function DiseaseDetectionPage() {
   const [scanning, setScanning] = useState(false);
   const [scanStep, setScanStep] = useState(0);
   const [hasResult, setHasResult] = useState(false);
+  const [isLowConfidence, setIsLowConfidence] = useState(false);
   const [selectedCrop, setSelectedCrop] = useState('tomato');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   // Backend data states
@@ -73,6 +78,9 @@ export default function DiseaseDetectionPage() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Reset low confidence and previous status
+      setIsLowConfidence(false);
+
       // Create local preview URL
       const previewUrl = URL.createObjectURL(file);
       setDiseaseImage(previewUrl);
@@ -114,14 +122,28 @@ export default function DiseaseDetectionPage() {
         const [apiResult] = await Promise.all([apiPromise, stepPromise]);
 
         const finalDiseaseName = apiResult.disease_name || apiResult.detected_name;
-        const finalConfidence = apiResult.confidence || 0;
+        const finalConfidence = Number(apiResult.confidence) || 0;
         const finalTreatment = apiResult.suggestion || 'No suggestion available.';
 
         setScanning(false);
-        setHasResult(true);
-        setDiseaseName(finalDiseaseName);
         setConfidence(finalConfidence);
+        setDiseaseName(finalDiseaseName);
         setTreatment(finalTreatment);
+
+        // Check if confidence is below 40% threshold
+        if (finalConfidence < 40) {
+          setIsLowConfidence(true);
+          setHasResult(true);
+          toast.error(
+            `Confidence score is below 40% (${finalConfidence}%). This may not be a crop leaf, or the image is unclear. Please upload a proper crop disease image.`,
+            { duration: 6000 }
+          );
+          return; // Do NOT save low confidence detection to history
+        }
+
+        // Confidence is valid (>= 40%)
+        setIsLowConfidence(false);
+        setHasResult(true);
         toast.success(`AI Diagnostics complete! ${finalDiseaseName} identified.`);
 
         // Save scan history to backend
@@ -140,9 +162,14 @@ export default function DiseaseDetectionPage() {
         }
       } catch (error: any) {
         setScanning(false);
+        setIsLowConfidence(false);
         toast.error(`Diagnostics failed: ${error.message || 'Check if ML service is running.'}`);
         console.error('Error during leaf diagnostic scan:', error);
       }
+    }
+    // Clear the input value so user can upload the same file again if desired
+    if (e.target) {
+      e.target.value = '';
     }
   };
 
@@ -151,6 +178,7 @@ export default function DiseaseDetectionPage() {
     setConfidence(scan.confidence);
     setDiseaseImage(scan.image);
     setTreatment(scan.treatment);
+    setIsLowConfidence(false);
     setHasResult(true);
     toast.success(`Loaded scan results for ${scan.title}`);
   };
@@ -181,6 +209,37 @@ export default function DiseaseDetectionPage() {
             </div>
           </div>
 
+          {/* Low Confidence Warning Alert Banner */}
+          {isLowConfidence && (
+            <div className="bg-red-50 border-2 border-red-300 rounded-2xl p-4 flex items-start gap-3.5 shadow-sm text-red-900 transition-all">
+              <div className="w-9 h-9 rounded-xl bg-red-100 border border-red-300 flex items-center justify-center shrink-0 mt-0.5 text-red-600">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between flex-wrap gap-1">
+                  <h4 className="text-sm font-bold text-red-900">
+                    Low Confidence Detection ({confidence}%)
+                  </h4>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wide bg-red-200/80 text-red-800 px-2 py-0.5 rounded-full">
+                    Score Below 40%
+                  </span>
+                </div>
+                <p className="text-xs text-red-700 mt-1 leading-relaxed">
+                  The uploaded image could not be identified with confidence. Either <strong>this is not a crop leaf</strong> or the <strong>image is unclear / poorly lit</strong>. Please upload a proper crop disease image.
+                </p>
+                <div className="mt-3 flex items-center gap-2">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm cursor-pointer"
+                  >
+                    <UploadCloud className="w-3.5 h-3.5" />
+                    <span>Upload Proper Crop Leaf Image</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Upload Box */}
           <div className="border-2 border-dashed border-[#d2dfc2] rounded-2xl bg-white p-8 text-center relative group min-h-[220px] flex flex-col justify-center items-center shadow-sm hover:border-[#1e4d1e] transition-colors">
             {scanning ? (
@@ -208,6 +267,7 @@ export default function DiseaseDetectionPage() {
                   Supports JPG, PNG, and WebP (Max 10MB). Hold camera close to the affected spot.
                 </p>
                 <input
+                  ref={fileInputRef}
                   type="file"
                   accept="image/*"
                   onChange={handleFileUpload}
@@ -264,73 +324,168 @@ export default function DiseaseDetectionPage() {
         <div className="lg:col-span-5 space-y-6">
           {/* AI Analysis Results Card placed in Right Column */}
           {hasResult ? (
-            <div className="bg-white border border-[#edf4e2] rounded-2xl p-5 shadow-sm flex flex-col justify-between min-h-[300px]">
-              <div>
-                {/* Header details */}
-                <div className="flex justify-between items-center pb-3 border-b border-[#f4f5f0] mb-3">
-                  <h3 className="text-lg font-extrabold text-gray-900">Analysis Output</h3>
-                  <span className="flex items-center gap-1 text-[11px] font-extrabold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
-                    <CheckCircle className="w-3 h-3 text-green-600" /> Completed
-                  </span>
-                </div>
-
-                {/* Main Results Inner Grid */}
-                <div className="grid grid-cols-1 gap-4 items-start">
-                  {/* Left part: preview crop image */}
-                  <div>
-                    <div className="aspect-[4/3] w-full rounded-xl overflow-hidden relative border border-[#edf4e2] p-1 bg-gray-50">
-                      <div className="absolute inset-1 rounded-lg border border-[#1e4d1e]/20 pointer-events-none z-10" />
-                      <img
-                        src={diseaseImage}
-                        alt="Diseased Leaf Preview"
-                        className="w-full h-full object-cover rounded-lg"
-                      />
+            isLowConfidence ? (
+              /* Low Confidence Error Card */
+              <div className="bg-white border-2 border-red-300 rounded-2xl p-5 shadow-sm flex flex-col justify-between min-h-[320px]">
+                <div className="space-y-4">
+                  {/* Header details with Warning badge */}
+                  <div className="flex justify-between items-center pb-3 border-b border-red-100">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                      <h3 className="text-lg font-extrabold text-gray-900">Analysis Output</h3>
                     </div>
+                    <span className="flex items-center gap-1 text-[11px] font-extrabold text-red-700 bg-red-50 border border-red-200 px-2.5 py-0.5 rounded-full">
+                      <AlertTriangle className="w-3.5 h-3.5 text-red-600" /> Low Confidence ({confidence}%)
+                    </span>
                   </div>
 
-                  {/* Right part: statistics and labels */}
-                  <div className="space-y-3">
+                  {/* Main Results Inner Grid */}
+                  <div className="grid grid-cols-1 gap-4 items-start">
+                    {/* Leaf preview image */}
                     <div>
-                      <span className="text-[11px] font-bold text-gray-400 block uppercase tracking-wider">Identified Condition</span>
-                      <h4 className="text-xl font-extrabold text-gray-900 leading-tight mt-0.5">{diseaseName}</h4>
+                      <div className="aspect-[4/3] w-full rounded-xl overflow-hidden relative border-2 border-red-200 p-1 bg-red-50/40">
+                        <div className="absolute top-3 right-3 z-10 bg-red-600/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" /> Below 40% Threshold
+                        </div>
+                        <img
+                          src={diseaseImage}
+                          alt="Uploaded Leaf Preview"
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      </div>
                     </div>
 
-                    {/* Confidence bar */}
-                    <div>
-                      <div className="flex justify-between text-xs font-bold text-gray-500 mb-1">
-                        <span>Confidence Index</span>
-                        <span className="text-[#1e4d1e] font-extrabold">{confidence}%</span>
+                    {/* Confidence bar & details */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-xs font-bold text-gray-700">
+                        <span>Confidence Score</span>
+                        <span className="text-red-600 font-extrabold">
+                          {confidence}% <span className="text-gray-400 font-normal text-[11px]">(Min. 40% required)</span>
+                        </span>
                       </div>
-                      <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                      <div className="w-full bg-red-100 h-2.5 rounded-full overflow-hidden">
                         <div
-                          className="bg-[#1e4d1e] h-full rounded-full transition-all duration-500"
-                          style={{ width: `${confidence}%` }}
+                          className="bg-red-500 h-full rounded-full transition-all duration-500"
+                          style={{ width: `${Math.max(confidence, 6)}%` }}
                         />
                       </div>
                     </div>
                   </div>
+
+                  {/* Prominent Error Message Card */}
+                  <div className="bg-red-50/90 border border-red-200 rounded-xl p-3.5 space-y-2">
+                    <div className="flex items-start gap-2.5">
+                      <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="text-xs font-extrabold text-red-900 uppercase tracking-wide">
+                          Unable to Identify Disease Confidently
+                        </h4>
+                        <p className="text-xs text-red-800 leading-relaxed mt-1 font-medium">
+                          The confidence score is <strong>{confidence}%</strong>, which is below the 40% reliability threshold.
+                        </p>
+                        <ul className="text-[11px] text-red-700 mt-2 space-y-1 list-disc list-inside">
+                          <li><strong>Not a crop leaf:</strong> The uploaded image may not be a crop or plant leaf.</li>
+                          <li><strong>Unclear image:</strong> The photo might be blurry, dark, out of focus, or taken too far away.</li>
+                          <li><strong>Please re-upload:</strong> Upload a clear, proper crop disease image showing visible symptoms.</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-[11px] text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-100 flex items-center gap-1.5">
+                    <Info className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    <span>Supported crops: Rice, Corn, Potato, Wheat, Tomato, and Apple.</span>
+                  </div>
                 </div>
 
-                {/* Treatment details */}
-                <div className="pt-3 mt-4 border-t border-[#f4f5f0] space-y-1">
-                  <h4 className="text-sm font-bold text-gray-900">Recommended Action</h4>
-                  <p className="text-xs text-gray-500 leading-relaxed font-medium">
-                    {treatment}
-                  </p>
+                {/* Action Buttons */}
+                <div className="flex flex-col gap-2.5 mt-5 pt-3 border-t border-gray-100">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center justify-center gap-2 py-2.5 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl text-sm transition-colors shadow-sm cursor-pointer"
+                  >
+                    <UploadCloud className="w-4 h-4" />
+                    <span>Upload Proper Crop Disease Image</span>
+                  </button>
+                  <button
+                    onClick={() => router.push('/dashboard/farmer/ai')}
+                    className="flex items-center justify-center gap-2 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-xs transition-colors cursor-pointer"
+                  >
+                    <img src="/logo.png" alt="Logo" className="w-3.5 h-3.5 object-contain" />
+                    <span>Ask AI Assistant for Help</span>
+                  </button>
                 </div>
               </div>
+            ) : (
+              /* Normal AI Analysis Results Card (Confidence >= 40%) */
+              <div className="bg-white border border-[#edf4e2] rounded-2xl p-5 shadow-sm flex flex-col justify-between min-h-[300px]">
+                <div>
+                  {/* Header details */}
+                  <div className="flex justify-between items-center pb-3 border-b border-[#f4f5f0] mb-3">
+                    <h3 className="text-lg font-extrabold text-gray-900">Analysis Output</h3>
+                    <span className="flex items-center gap-1 text-[11px] font-extrabold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                      <CheckCircle className="w-3 h-3 text-green-600" /> Completed
+                    </span>
+                  </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-col gap-3 mt-5">
-                <button
-                  onClick={() => router.push('/dashboard/farmer/ai')}
-                  className="flex items-center justify-center gap-2 py-2.5 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl text-base transition-colors shadow-sm cursor-pointer"
-                >
-                  <img src="/logo.png" alt="Logo" className="w-3.5 h-3.5 object-contain" />
-                  <span>Ask AI Assistant</span>
-                </button>
+                  {/* Main Results Inner Grid */}
+                  <div className="grid grid-cols-1 gap-4 items-start">
+                    {/* Left part: preview crop image */}
+                    <div>
+                      <div className="aspect-[4/3] w-full rounded-xl overflow-hidden relative border border-[#edf4e2] p-1 bg-gray-50">
+                        <div className="absolute inset-1 rounded-lg border border-[#1e4d1e]/20 pointer-events-none z-10" />
+                        <img
+                          src={diseaseImage}
+                          alt="Diseased Leaf Preview"
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Right part: statistics and labels */}
+                    <div className="space-y-3">
+                      <div>
+                        <span className="text-[11px] font-bold text-gray-400 block uppercase tracking-wider">Identified Condition</span>
+                        <h4 className="text-xl font-extrabold text-gray-900 leading-tight mt-0.5">{diseaseName}</h4>
+                      </div>
+
+                      {/* Confidence bar */}
+                      <div>
+                        <div className="flex justify-between text-xs font-bold text-gray-500 mb-1">
+                          <span>Confidence Index</span>
+                          <span className="text-[#1e4d1e] font-extrabold">{confidence}%</span>
+                        </div>
+                        <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                          <div
+                            className="bg-[#1e4d1e] h-full rounded-full transition-all duration-500"
+                            style={{ width: `${confidence}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Treatment details */}
+                  <div className="pt-3 mt-4 border-t border-[#f4f5f0] space-y-1">
+                    <h4 className="text-sm font-bold text-gray-900">Recommended Action</h4>
+                    <p className="text-xs text-gray-500 leading-relaxed font-medium">
+                      {treatment}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col gap-3 mt-5">
+                  <button
+                    onClick={() => router.push('/dashboard/farmer/ai')}
+                    className="flex items-center justify-center gap-2 py-2.5 bg-[#1e4d1e] hover:bg-[#163d16] text-white font-bold rounded-xl text-base transition-colors shadow-sm cursor-pointer"
+                  >
+                    <img src="/logo.png" alt="Logo" className="w-3.5 h-3.5 object-contain" />
+                    <span>Ask AI Assistant</span>
+                  </button>
+                </div>
               </div>
-            </div>
+            )
           ) : (
             /* Result Empty State */
             <div className="bg-white border border-[#edf4e2] rounded-2xl p-6 shadow-sm flex flex-col justify-center items-center text-center min-h-[300px] text-gray-400">

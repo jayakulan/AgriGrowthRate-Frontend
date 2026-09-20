@@ -396,9 +396,9 @@ export default function OrdersManagementPage() {
 
                     return (
                       <tr key={orderId} className="text-xs text-gray-700 hover:bg-[#f9f9f6]/40 transition-colors">
-                        {/* Order ID */}
-                        <td className="py-4 px-6 font-bold font-mono text-[#1e4d1e]" title={orderId}>
-                          {ord.orderConfirmationNumber ? ord.orderConfirmationNumber.replace(/^AGR-/, '#') : (orderId ? '#' + orderId.slice(-6).toUpperCase() : 'N/A')}
+                        {/* Order ID (First 8 characters of AWS Object ID) */}
+                        <td className="py-4 px-6 font-bold font-mono text-[#1e4d1e] select-all" title={orderId}>
+                          {orderId ? String(orderId).slice(0, 8) : 'N/A'}
                         </td>
 
                         {/* Customer */}
@@ -582,6 +582,12 @@ export default function OrdersManagementPage() {
 
             {/* Info details */}
             <div className="bg-[#f4f5f0] border border-[#e4e6df] rounded-xl p-4 mb-4 text-xs font-semibold text-gray-700 space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Order ID</span>
+                <span className="font-mono font-bold text-[#1e4d1e] select-all" title={confirmingOrder.id || confirmingOrder._id}>
+                  {String(confirmingOrder.id || confirmingOrder._id).slice(0, 8)}
+                </span>
+              </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">{t('dashboard.verifyModal.customer')}</span>
                 <span>{confirmingOrder.consumer?.name || t('dashboard.table.anonymous')}</span>
@@ -744,7 +750,7 @@ export default function OrdersManagementPage() {
             {/* Modal Body */}
             <div className="text-left mb-6">
               <p className="text-sm font-medium text-gray-600 leading-relaxed">
-                Are you sure you want to cancel order <span className="font-extrabold text-gray-900">{orderToCancel.orderConfirmationNumber ? orderToCancel.orderConfirmationNumber.replace(/^AGR-/, '#') : (orderToCancel.id || orderToCancel._id ? '#' + (orderToCancel.id || orderToCancel._id).slice(-6).toUpperCase() : '')}</span>? This action will release the reserved stock back to the marketplace.
+                Are you sure you want to cancel order <span className="font-extrabold text-gray-900 font-mono select-all" title={orderToCancel.id || orderToCancel._id}>{String(orderToCancel.id || orderToCancel._id).slice(0, 8)}</span>? This action will release the reserved stock back to the marketplace.
               </p>
             </div>
 

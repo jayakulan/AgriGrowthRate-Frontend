@@ -2,20 +2,21 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { Bell, User as UserIcon, Globe, ChevronDown, Menu } from 'lucide-react';
+import { Bell, User as UserIcon, Globe, ChevronDown, Menu, ShoppingBag, CheckCircle2, AlertCircle, MessageSquare, Sparkles, Check, Info } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import api from '@/lib/axios';
 
 interface NotificationItem {
-  _id: string;
+  id?: string;
+  _id?: string;
   recipient: string;
   type: string;
   title: string;
   message: string;
   read: boolean;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
 export default function DashboardHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () => void } = {}) {
@@ -35,7 +36,7 @@ export default function DashboardHeader({ onMobileMenuToggle }: { onMobileMenuTo
     if (!user) return;
     try {
       const response = await api.get('/notifications');
-      if (response.data && response.data.success) {
+      if (response.data && response.data.success && Array.isArray(response.data.data)) {
         setNotifications(response.data.data);
       }
     } catch (error) {
@@ -47,7 +48,7 @@ export default function DashboardHeader({ onMobileMenuToggle }: { onMobileMenuTo
   useEffect(() => {
     if (user) {
       fetchNotifications();
-      const interval = setInterval(fetchNotifications, 15000); // poll every 15 seconds
+      const interval = setInterval(fetchNotifications, 10000); // poll every 10 seconds
       return () => clearInterval(interval);
     }
   }, [user]);
@@ -66,10 +67,11 @@ export default function DashboardHeader({ onMobileMenuToggle }: { onMobileMenuTo
 
   // Mark a single notification as read
   const handleMarkSingleAsRead = async (id: string) => {
+    if (!id) return;
     try {
       const response = await api.patch('/notifications/read', { id });
       if (response.data && response.data.success) {
-        setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
+        setNotifications(prev => prev.map(n => ((n.id === id || n._id === id) ? { ...n, read: true } : n)));
       }
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
@@ -78,19 +80,44 @@ export default function DashboardHeader({ onMobileMenuToggle }: { onMobileMenuTo
 
   // Timeago helper
   const formatTimeAgo = (dateStr: string) => {
-    const seconds = Math.floor((new Date().getTime() - new Date(dateStr).getTime()) / 1000);
-    if (seconds < 0) return 'just now';
+    if (!dateStr) return 'just now';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return 'recently';
+    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+    if (seconds < 45) return 'just now';
     let interval = seconds / 31536000;
-    if (interval > 1) return Math.floor(interval) + 'y ago';
+    if (interval >= 1) return Math.floor(interval) + 'y ago';
     interval = seconds / 2592000;
-    if (interval > 1) return Math.floor(interval) + 'mo ago';
+    if (interval >= 1) return Math.floor(interval) + 'mo ago';
     interval = seconds / 86400;
-    if (interval > 1) return Math.floor(interval) + 'd ago';
+    if (interval >= 1) return Math.floor(interval) + 'd ago';
     interval = seconds / 3600;
-    if (interval > 1) return Math.floor(interval) + 'h ago';
+    if (interval >= 1) return Math.floor(interval) + 'h ago';
     interval = seconds / 60;
-    if (interval > 1) return Math.floor(interval) + 'm ago';
+    if (interval >= 1) return Math.floor(interval) + 'm ago';
     return 'just now';
+  };
+
+  // Helper for notification type icon
+  const getNotifIcon = (type: string) => {
+    switch (type) {
+      case 'order':
+      case 'order_status':
+        return <ShoppingBag className="w-4 h-4 text-emerald-600 shrink-0" />;
+      case 'product_approval':
+        return <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />;
+      case 'product_submission':
+      case 'product':
+        return <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />;
+      case 'order_cancelled':
+      case 'product_rejection':
+        return <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />;
+      case 'feedback':
+      case 'contact':
+        return <MessageSquare className="w-4 h-4 text-blue-600 shrink-0" />;
+      default:
+        return <Info className="w-4 h-4 text-[#1e4d1e] shrink-0" />;
+    }
   };
 
   useEffect(() => {
@@ -192,7 +219,7 @@ export default function DashboardHeader({ onMobileMenuToggle }: { onMobileMenuTo
   const isAdminHeader = pathname.includes('/dashboard/admin');
   const roleLabel = role === 'consumer' ? 'retailer' : role;
   const displayRole = isAdminHeader ? 'AGRI ADMIN' : roleLabel;
-  const displayName = isAdminHeader ? 'Nuha Nazardeen' : userName;
+  const displayName = user?.name?.trim() || (isAdminHeader ? 'Admin' : userName);
   
   return (
     <header className="min-h-[70px] md:h-[84px] bg-[#edf4e2] flex items-center justify-between px-4 sm:px-6 md:px-8 py-3 select-none shrink-0 relative z-40 border-b border-[#d2dfc2]">
@@ -220,58 +247,85 @@ export default function DashboardHeader({ onMobileMenuToggle }: { onMobileMenuTo
         <div className="relative" ref={dropdownRef}>
           <button 
             onClick={() => setShowNotifications(!showNotifications)}
-            className="text-[#1e4d1e] hover:text-[#163d16] transition-colors p-2 rounded-full hover:bg-white/40 relative focus:outline-none cursor-pointer"
+            className="text-[#1e4d1e] hover:text-[#163d16] transition-colors p-2 rounded-full hover:bg-white/50 relative focus:outline-none cursor-pointer"
+            aria-label="Notifications"
           >
             <Bell className="w-[22px] h-[22px]" />
             {notifications.some(n => !n.read) && (
-              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#edf4e2]"></span>
+              <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-extrabold rounded-full flex items-center justify-center border-2 border-[#edf4e2] animate-pulse">
+                {notifications.filter(n => !n.read).length > 9 ? '9+' : notifications.filter(n => !n.read).length}
+              </span>
             )}
           </button>
           
           {showNotifications && (
-            <div className="absolute right-0 mt-3 w-80 bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="p-4 bg-gray-50/50 border-b border-gray-100 flex items-center justify-between">
-                <span className="font-bold text-sm text-gray-900">Notifications</span>
-                {notifications.filter(n => !n.read).length > 0 ? (
-                  <span className="text-[10px] bg-[#1e4d1e] text-white px-2 py-0.5 rounded-full font-bold">
-                    {notifications.filter(n => !n.read).length} New
-                  </span>
-                ) : (
-                  <span className="text-[10px] bg-gray-300 text-gray-700 px-2 py-0.5 rounded-full font-bold">0 New</span>
-                )}
-              </div>
-              <div className="max-h-80 overflow-y-auto">
-                {notifications.length === 0 ? (
-                  <div className="p-6 text-center text-xs text-gray-500">
-                    No notifications yet.
-                  </div>
-                ) : (
-                  notifications.map(n => (
-                    <div 
-                      key={n._id} 
-                      onClick={() => !n.read && handleMarkSingleAsRead(n._id)}
-                      className={`p-4 border-b border-gray-50 hover:bg-[#f9f9f6] transition-colors cursor-pointer flex gap-3 items-start ${!n.read ? 'bg-green-50/20' : ''}`}
-                    >
-                      {!n.read && <div className="w-2 h-2 rounded-full bg-[#1e4d1e] mt-1.5 shrink-0" />}
-                      <div className={n.read ? 'pl-5' : ''}>
-                        <p className="text-[13px] text-gray-800 font-semibold leading-snug">{n.title}</p>
-                        <p className="text-[12px] text-gray-600 mt-1 leading-snug">{n.message}</p>
-                        <p className="text-[11px] text-gray-400 mt-1.5 font-medium">{formatTimeAgo(n.createdAt)}</p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-              {notifications.some(n => !n.read) && (
-                <div className="p-3 text-center border-t border-gray-100 bg-gray-50/50">
+            <div className="absolute right-0 mt-3 w-84 sm:w-96 bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="p-3.5 sm:p-4 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="font-extrabold text-sm text-gray-900">Notifications</span>
+                  {notifications.filter(n => !n.read).length > 0 ? (
+                    <span className="text-[10px] bg-[#1e4d1e] text-white px-2 py-0.5 rounded-full font-bold">
+                      {notifications.filter(n => !n.read).length} New
+                    </span>
+                  ) : (
+                    <span className="text-[10px] bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full font-semibold">0 New</span>
+                  )}
+                </div>
+                {notifications.some(n => !n.read) && (
                   <button 
                     onClick={handleMarkAllAsRead}
-                    className="text-xs text-[#1e4d1e] font-bold hover:text-[#163d16] transition-colors cursor-pointer"
+                    className="text-[11px] text-[#1e4d1e] font-bold hover:underline cursor-pointer flex items-center gap-1"
                   >
-                    Mark all as read
+                    <Check className="w-3 h-3" /> Mark all as read
                   </button>
-                </div>
-              )}
+                )}
+              </div>
+              <div className="max-h-96 overflow-y-auto divide-y divide-gray-50">
+                {notifications.length === 0 ? (
+                  <div className="p-8 text-center flex flex-col items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-emerald-50 text-[#1e4d1e] flex items-center justify-center mb-2">
+                      <Bell className="w-5 h-5 opacity-60" />
+                    </div>
+                    <p className="text-sm font-semibold text-gray-700">All caught up!</p>
+                    <p className="text-xs text-gray-400 mt-0.5">No notifications right now.</p>
+                  </div>
+                ) : (
+                  notifications.map((n, index) => {
+                    const notifId = n.id || n._id || String(index);
+                    return (
+                      <div 
+                        key={notifId} 
+                        onClick={() => !n.read && handleMarkSingleAsRead(notifId)}
+                        className={`p-3.5 sm:p-4 hover:bg-[#f9fbf7] transition-all cursor-pointer flex gap-3 items-start relative ${
+                          !n.read ? 'bg-[#f4f8ee]/60' : 'bg-white'
+                        }`}
+                      >
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+                          !n.read ? 'bg-white shadow-xs border border-emerald-100' : 'bg-gray-50'
+                        }`}>
+                          {getNotifIcon(n.type)}
+                        </div>
+                        <div className="flex-1 min-w-0 pr-2">
+                          <div className="flex items-center justify-between gap-1">
+                            <p className={`text-[13px] leading-snug truncate ${!n.read ? 'text-gray-900 font-bold' : 'text-gray-700 font-medium'}`}>
+                              {n.title}
+                            </p>
+                            {!n.read && (
+                              <span className="w-2 h-2 rounded-full bg-[#1e4d1e] shrink-0" />
+                            )}
+                          </div>
+                          <p className="text-[12px] text-gray-600 mt-1 leading-relaxed break-words">
+                            {n.message}
+                          </p>
+                          <p className="text-[10px] text-gray-400 mt-1.5 font-medium">
+                            {formatTimeAgo(n.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -324,7 +378,7 @@ export default function DashboardHeader({ onMobileMenuToggle }: { onMobileMenuTo
           {user?.avatar ? (
             <img
               src={user.avatar}
-              alt={`${userName} Avatar`}
+              alt={`${displayName} Avatar`}
               className="w-11 h-11 rounded-full object-cover border border-[#d2dfc2]"
             />
           ) : (

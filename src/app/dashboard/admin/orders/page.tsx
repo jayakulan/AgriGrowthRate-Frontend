@@ -93,15 +93,21 @@ export default function OrdersMonitoringPage() {
       if (response.data && response.data.data) {
         const raw = response.data.data;
 
-        const formatted: Order[] = raw.map((item: any) => ({
-          _id: item._id,
-          orderNumber: item.orderConfirmationNumber ? item.orderConfirmationNumber.replace(/^AGR-/, '#') : `#${String(item._id).slice(-6).toUpperCase()}`,
-          customerName: item.consumer?.name || item.buyerName || 'Unknown Customer',
+        const formatted: Order[] = raw.map((item: any) => {
+          const rawId = String(item.id || item._id || '');
+          const trimmedId = rawId ? rawId.slice(0, 8) : '';
+          return {
+            _id: item.id || item._id,
+            id: item.id || item._id,
+            orderNumber: trimmedId,
+            customerName: item.consumer?.name || item.buyerName || 'Unknown Customer',
           customerInitials: initials(item.consumer?.name || item.buyerName || 'UK'),
           farmerName:
-            item.items?.[0]?.product?.farmer?.name ||
             item.farmerName ||
-            'Local Farm',
+            item.farmer?.name ||
+            item.items?.[0]?.product?.farmer?.name ||
+            item.items?.[0]?.product?.farmerName ||
+            'Farmer',
           dateStr: new Date(item.createdAt).toLocaleString('en-IN', {
             day: '2-digit',
             month: 'short',
@@ -111,7 +117,8 @@ export default function OrdersMonitoringPage() {
           }),
           totalAmount: item.totalAmount || 0,
           status: item.status || 'Pending',
-        }));
+        };
+      });
 
         setOrders(formatted);
 
@@ -177,7 +184,7 @@ export default function OrdersMonitoringPage() {
                 </div>
                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-2.5">Revenue</p>
                 <h3 className="text-xl font-extrabold text-gray-900 leading-none">
-                  {loading ? '...' : `₹${stats.revenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                  {loading ? '...' : `Rs ${stats.revenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 </h3>
               </div>
               <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100 shrink-0">Live</span>
@@ -292,8 +299,8 @@ export default function OrdersMonitoringPage() {
                     return (
                       <tr key={oid} className="hover:bg-[#f4f5f0]/20 transition-colors">
 
-                      <td className="px-6 py-4 text-xs font-extrabold text-[#1e4d1e] tracking-tight">
-                        {ord.orderNumber}
+                      <td className="px-6 py-4 text-xs font-extrabold font-mono text-[#1e4d1e] tracking-tight select-all" title={ord.id || ord._id}>
+                        {String(ord.orderNumber || ord.id || ord._id || '').slice(0, 8)}
                       </td>
 
                       <td className="px-6 py-4">
@@ -310,7 +317,7 @@ export default function OrdersMonitoringPage() {
                       <td className="px-6 py-4 text-[11px] font-semibold text-gray-400 leading-normal">{ord.dateStr}</td>
 
                       <td className="px-6 py-4 text-xs font-extrabold text-gray-900">
-                        ₹{ord.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        Rs {ord.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </td>
 
                       <td className="px-6 py-4">
@@ -427,7 +434,7 @@ export default function OrdersMonitoringPage() {
 
               <div className="mb-6 space-y-1">
                 <p className="text-gray-500 text-[13px] leading-relaxed">
-                  Update the status for order <span className="text-[#1e4d1e] font-bold">{selectedOrder.orderNumber}</span>.
+                  Update the status for order <span className="text-[#1e4d1e] font-bold font-mono select-all" title={selectedOrder.id || selectedOrder._id}>{String(selectedOrder.orderNumber || selectedOrder.id || selectedOrder._id || '').slice(0, 8)}</span>.
                 </p>
                 <p className="text-[10px] text-gray-400 font-semibold">
                   Current: <span className={`px-2 py-0.5 rounded-full border text-[9px] font-bold ${statusColor(selectedOrder.status)}`}>{selectedOrder.status}</span>
